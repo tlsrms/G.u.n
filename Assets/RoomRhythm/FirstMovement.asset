@@ -1,0 +1,194 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
+  m_Name: FirstMovement
+  m_EditorClassIdentifier: 
+  music: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
+  startingRoomId: start
+  bpm: 120
+  timing:
+    early: 0.07
+    accurate: 0.038
+    late: 0.07
+  moveDuration: 0.18
+  aimRadius: 2.2
+  aimHalfAngle: 45
+  judgmentLineWidth: 0.2
+  enemyLineWidth: 0.1
+  passageWidth: 2.8
+  roomLeadTime: 2
+  enemyLeadTime: 1.5
+  doorCloseDuration: 0.2
+  appearanceStartAlpha: 0.05
+  moves:
+  - destinationId: north
+    direction: 0
+    time: 4
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: east
+    direction: 3
+    time: 0
+    hasDoor: 1
+    doorTime: 8
+    moveDelay: 1
+  - destinationId: south
+    direction: 2
+    time: 12
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: far-east
+    direction: 3
+    time: 0
+    hasDoor: 1
+    doorTime: 13.5
+    moveDelay: 0.5
+  - destinationId: far-north
+    direction: 0
+    time: 0
+    hasDoor: 1
+    doorTime: 17.5
+    moveDelay: 0.5
+  enemyReadTime: 0.25
+  enemies:
+  - id: north-upper-left
+    roomId: north
+    direction: 7
+    time: 6
+  - id: east-upper-right
+    roomId: east
+    direction: 1
+    time: 10.5
+  - id: far-east-lower-left
+    roomId: far-east
+    direction: 5
+    time: 15.5
+  - id: far-east-upper-left
+    roomId: far-east
+    direction: 7
+    time: 16
+  - id: far-north-right
+    roomId: far-north
+    direction: 2
+    time: 19
+  - id: far-north-upper-right
+    roomId: far-north
+    direction: 1
+    time: 19.5
+  - id: far-north-lower-left
+    roomId: far-north
+    direction: 5
+    time: 20
+  beatChart:
+    bpm: 120
+    startingRoomId: start
+    offsetSeconds: 0
+    beatsPerBar: 4
+    subdivision: 4
+    toleranceBeats: 0.07
+    accurateBeats: 0.038
+    roomLeadBeats: 4
+    enemyLeadBeats: 3
+    notes:
+    - kind: 0
+      beat: 8
+      roomId: north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 18
+      roomId: east
+      enemyId: 
+      moveDirection: 3
+      enemyDirection: 0
+    - kind: 1
+      beat: 16
+      roomId: east
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 24
+      roomId: south
+      enemyId: 
+      moveDirection: 2
+      enemyDirection: 0
+    - kind: 0
+      beat: 28
+      roomId: far-east
+      enemyId: 
+      moveDirection: 3
+      enemyDirection: 0
+    - kind: 1
+      beat: 27
+      roomId: far-east
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 36
+      roomId: far-north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 1
+      beat: 35
+      roomId: far-north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 2
+      beat: 12
+      roomId: north
+      enemyId: north-upper-left
+      moveDirection: 0
+      enemyDirection: 7
+    - kind: 2
+      beat: 21
+      roomId: east
+      enemyId: east-upper-right
+      moveDirection: 0
+      enemyDirection: 1
+    - kind: 2
+      beat: 31
+      roomId: far-east
+      enemyId: far-east-lower-left
+      moveDirection: 0
+      enemyDirection: 5
+    - kind: 2
+      beat: 32
+      roomId: far-east
+      enemyId: far-east-upper-left
+      moveDirection: 0
+      enemyDirection: 7
+    - kind: 2
+      beat: 38
+      roomId: far-north
+      enemyId: far-north-right
+      moveDirection: 0
+      enemyDirection: 2
+    - kind: 2
+      beat: 39
+      roomId: far-north
+      enemyId: far-north-upper-right
+      moveDirection: 0
+      enemyDirection: 1
+    - kind: 2
+      beat: 40
+      roomId: far-north
+      enemyId: far-north-lower-left
+      moveDirection: 0
+      enemyDirection: 5
+  beatChartMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}

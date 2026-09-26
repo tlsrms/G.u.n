@@ -1,0 +1,233 @@
+using System;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+namespace Gun.RoomRhythm.Editor
+{
+    // Only explicitly bound map objects are replaced. Player, HUD and other scene content stay intact.
+    internal static class MapSceneStore
+    {
+        internal static RoomSession Session(RoomChart chart)
+        {
+            RoomSession match = null;
+            foreach (var session in UnityEngine.Object.FindObjectsByType<RoomSession>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (session.Chart != chart) continue;
+                if (match != null) throw new ArgumentException("이 채보를 사용하는 Session이 여러 개입니다. 편집할 씬 하나만 열어 주세요.");
+                match = session;
+            }
+            if (match == null) throw new ArgumentException("열린 씬의 Room Session에 이 채보를 연결하세요.");
+            return match;
+        }
+        private static T[] References<T>(UnityEngine.Object owner, string name) where T : UnityEngine.Object
+        {
+            var array = new SerializedObject(owner).FindProperty(name);
+            var result = new T[array.arraySize];
+            for (int i = 0; i < result.Length; i++) result[i] = array.GetArrayElementAtIndex(i).objectReferenceValue as T;
+            return result;
+        }
+        private static void References(UnityEngine.Object owner, string name, UnityEngine.Object[] values)
+        {
+            var serialized = new SerializedObject(owner);
+            var array = serialized.FindProperty(name); array.arraySize = values.Length;
+            for (int i = 0; i < values.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            serialized.ApplyModifiedProperties();
+        }
+        private static T Reference<T>(UnityEngine.Object owner, string name) where T : UnityEngine.Object
+            => new SerializedObject(owner).FindProperty(name).objectReferenceValue as T;
+        private static void Id(UnityEngine.Object owner, string field, string value)
+        {
+            var serialized = new SerializedObject(owner); serialized.FindProperty(field).stringValue = value; serialized.ApplyModifiedProperties();
+        }
+
+        internal static MapChart Import(RoomChart chart)
+        {
+            var session = Session(chart);
+            var bindings = References<RoomBinding>(session, "rooms");
+            var start = Array.Find(bindings, r => r != null && r.Id == chart.startingRoomId);
+            if (start == null) throw new ArgumentException("시작 방 연결이 없습니다.");
+            var map = new MapChart { settings = BeatChartCompiler.Import(chart.bpm, chart.Timing, chart.roomLeadTime, chart.enemyLeadTime, chart.moves, chart.enemies),
+                roomSize = start.SideLength, originX = start.Center.x, originY = start.Center.y };
+            map.settings.startingRoomId = chart.startingRoomId;
+            var rooms = new List<MapRoom>(); var groups = new List<MapGroup>(); var enemies = new List<MapEnemy>();
+            foreach (var binding in bindings)
+            {
+                if (binding == null) throw new ArgumentException("빈 방 연결입니다.");
+                var note = Array.Find(chart.moves, n => n.destinationId == binding.Id);
+                double appearance = binding == start ? 0 : chart.RoomAppearsAt(note);
+                string groupId = "group_" + binding.Id;
+                groups.Add(new MapGroup { id = groupId, name = "Bundle", appearBeat = map.settings.Beat(appearance) });
+                float gx = (binding.Center.x - start.Center.x) / map.roomSize, gy = (binding.Center.y - start.Center.y) / map.roomSize;
+                if (Mathf.Abs(gx - Mathf.Round(gx)) > .001f || Mathf.Abs(gy - Mathf.Round(gy)) > .001f || Mathf.Abs(binding.SideLength - map.roomSize) > .001f)
+                    throw new ArgumentException("같은 크기의 정사각 격자 방만 가져올 수 있습니다.");
+                rooms.Add(new MapRoom { id = binding.Id, x = Mathf.RoundToInt(gx), y = Mathf.RoundToInt(gy), groupId = groupId,
+                    hitBeat = map.settings.Beat(note.HitTime), frameBeat = map.settings.Beat(note.customAppearance ? note.frameStartTime : appearance), door = note.hasDoor,
+                    doorBeat = map.settings.Beat(note.doorTime), doorFrameBeat = map.settings.Beat(note.customAppearance ? note.doorFrameStartTime : appearance) });
+            }
+            foreach (var note in chart.enemies ?? Array.Empty<EnemyNote>())
+            {
+                double appearance = note.customAppearance ? note.appearanceTime : Math.Max(0, note.time - chart.enemyLeadTime);
+                enemies.Add(new MapEnemy { id = note.id, roomId = note.roomId, direction = note.direction, hitBeat = map.settings.Beat(note.time),
+                    appearBeat = map.settings.Beat(appearance), frameBeat = map.settings.Beat(note.customAppearance ? note.frameStartTime : appearance) });
+            }
+            map.rooms = rooms.ToArray(); map.groups = groups.ToArray(); map.enemies = enemies.ToArray();
+            map.MigrateAppearance();
+            foreach (var camera in session.gameObject.scene.GetRootGameObjects())
+                foreach (var component in camera.GetComponentsInChildren<RoomCamera>(true))
+                {
+                    map.cameraX = component.transform.position.x; map.cameraY = component.transform.position.y;
+                    var view = component.GetComponent<Camera>(); if (view != null) map.cameraSize = view.orthographicSize;
+                }
+            return map;
+        }
+
+        internal static CompiledBeatChart Validate(RoomChart chart)
+        {
+            if (chart.mapDraftMusic == null) throw new ArgumentException("곡 설정 탭에서 음악을 지정하세요.");
+            var map = chart.mapDraft;
+            var compiled = MapChartCompiler.Compile(map, chart.moveDuration, chart.enemyReadTime, chart.mapDraftMusic.length, chart.judgmentLineWidth);
+            if (!(chart.passageWidth > 0 && chart.passageWidth < map.roomSize - chart.judgmentLineWidth)
+                || !(chart.aimRadius + .38f + chart.enemyLineWidth / 2 < map.roomSize / 2))
+                throw new ArgumentException("방 크기는 통로와 적 배치 반경보다 충분히 커야 합니다.");
+            return compiled;
+        }
+
+        internal static void Save(RoomChart chart)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new ArgumentException("Play 종료 후 저장하세요.");
+            var compiled = Validate(chart);
+            var session = Session(chart);
+            var scene = session.gameObject.scene;
+            if (string.IsNullOrEmpty(scene.path) || !scene.isLoaded) throw new ArgumentException("먼저 대상 씬을 파일로 저장하세요.");
+            var oldRooms = References<RoomBinding>(session, "rooms");
+            var combat = Reference<RoomCombat>(session, "combat");
+            if (combat == null) throw new ArgumentException("Room Combat 연결이 없습니다.");
+            var oldEnemies = References<RoomEnemy>(combat, "enemies");
+            var template = Array.Find(oldRooms, r => r != null && r.Door != null && Reference<Transform>(r, "judgmentFrame") != null);
+            if (template == null) throw new ArgumentException("씬에 문과 판정선을 갖춘 방 템플릿이 하나 필요합니다.");
+            template.ValidateReferences(true);
+            EnsureOwnedReferences(template, template.transform);
+            EnsureOwnedReferences(template.Door, template.transform);
+            var enemyTemplate = Array.Find(oldEnemies, e => e != null);
+            // Keep reusable authored templates after a map with no enemies is saved.
+            if (enemyTemplate == null)
+                foreach (var root in scene.GetRootGameObjects())
+                    if (root.name == "Map Editor Templates") enemyTemplate = root.GetComponentInChildren<RoomEnemy>(true);
+            if (enemyTemplate == null) throw new ArgumentException("적 원형/판정선을 가진 씬 템플릿이 필요합니다.");
+            enemyTemplate.ValidateReferences();
+            EnsureOwnedReferences(enemyTemplate, enemyTemplate.transform);
+            foreach (var room in oldRooms)
+                if (room == null || room.gameObject.scene != scene) throw new ArgumentException("다른 씬 또는 누락된 방 연결이 있습니다.");
+            foreach (var enemy in oldEnemies)
+                if (enemy == null || enemy.gameObject.scene != scene) throw new ArgumentException("다른 씬 또는 누락된 적 연결이 있습니다.");
+            Undo.IncrementCurrentGroup(); int undo = Undo.GetCurrentGroup(); Undo.SetCurrentGroupName("시각적 맵과 채보 저장");
+            try
+            {
+                Undo.RecordObject(chart, "게임 채보 적용");
+                var map = chart.mapDraft;
+                chart.music = chart.mapDraftMusic; chart.bpm = (float)map.settings.bpm; chart.startingRoomId = map.settings.startingRoomId;
+                chart.moves = compiled.Moves; chart.enemies = compiled.Enemies; chart.timing = compiled.Timing;
+                chart.roomLeadTime = (float)compiled.RoomLeadSeconds; chart.enemyLeadTime = (float)compiled.EnemyLeadSeconds;
+                chart.appliedMap = JsonUtility.FromJson<MapChart>(JsonUtility.ToJson(map));
+                var newRooms = new List<RoomBinding>(); var newEnemies = new List<RoomEnemy>();
+                foreach (var room in map.rooms)
+                {
+                    var clone = UnityEngine.Object.Instantiate(template.gameObject, template.transform.parent);
+                    Undo.RegisterCreatedObjectUndo(clone, "방 배치"); clone.name = map.RoomLabel(room); clone.SetActive(true);
+                    // Existing rooms contain their authored enemies. Those are rebuilt separately from the draft.
+                    foreach (var embedded in clone.GetComponentsInChildren<RoomEnemy>(true)) Undo.DestroyObjectImmediate(embedded.gameObject);
+                    clone.transform.SetPositionAndRotation(new Vector3(map.WorldX(room), map.WorldY(room), 0), Quaternion.identity);
+                    var binding = clone.GetComponent<RoomBinding>(); Id(binding, "roomId", room.id);
+                    var fields = new SerializedObject(binding); fields.FindProperty("sideLength").floatValue = map.roomSize; fields.ApplyModifiedProperties();
+                    binding.Configure(chart);
+                    var surfaces = References<SpriteRenderer>(binding, "surfaces");
+                    if (surfaces.Length > 0) surfaces[0].transform.localScale = new Vector3(map.roomSize, map.roomSize, 1);
+                    Reference<GameObject>(binding, "visuals").SetActive(true);
+                    Transform frame = Reference<Transform>(binding, "judgmentFrame");
+                    frame.gameObject.SetActive(false); Square(References<SpriteRenderer>(binding, "frameEdges"), map.roomSize, chart.judgmentLineWidth);
+                    MoveNote note = Array.Find(compiled.Moves, n => n.destinationId == room.id);
+                    Vector2 toward = Direction(note.direction);
+                    var door = binding.Door;
+                    door.transform.position = binding.Center - (Vector3)(toward * map.roomSize * .5f);
+                    door.transform.rotation = Quaternion.Euler(0, 0, toward.x != 0 ? 90 : 0);
+                    Transform doorFrame = Reference<Transform>(door, "judgmentFrame");
+                    doorFrame.SetPositionAndRotation(binding.Center, Quaternion.identity);
+                    Square(References<SpriteRenderer>(door, "frameEdges"), map.roomSize, chart.judgmentLineWidth);
+                    door.Present(room.door && room.id != map.settings.startingRoomId, false, 1, 0, note.doorTime, 0, double.PositiveInfinity);
+                    newRooms.Add(binding);
+                }
+                foreach (var enemy in map.enemies)
+                {
+                    var parent = newRooms.Find(r => r.Id == enemy.roomId).transform;
+                    var clone = UnityEngine.Object.Instantiate(enemyTemplate.gameObject, parent);
+                    Undo.RegisterCreatedObjectUndo(clone, "적 배치"); clone.name = "Enemy - " + enemy.id; clone.SetActive(true);
+                    var binding = clone.GetComponent<RoomEnemy>(); Id(binding, "enemyId", enemy.id);
+                    var room = map.Room(enemy.roomId);
+                    binding.Configure(new Vector3(map.WorldX(room), map.WorldY(room), 0), enemy.direction, chart);
+                    binding.Present(true, 1, 0, 0, false); newEnemies.Add(binding);
+                }
+                if (newEnemies.Count == 0 && oldEnemies.Length > 0)
+                {
+                    bool retainedAlready = Array.Exists(scene.GetRootGameObjects(), r => r.name == "Map Editor Templates" && r.GetComponentInChildren<RoomEnemy>(true) != null);
+                    if (!retainedAlready)
+                    {
+                        var root = new GameObject("Map Editor Templates"); Undo.RegisterCreatedObjectUndo(root, "템플릿 보존");
+                        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root, scene);
+                        var retained = UnityEngine.Object.Instantiate(enemyTemplate.gameObject, root.transform);
+                        Undo.RegisterCreatedObjectUndo(retained, "적 템플릿 보존"); root.SetActive(false);
+                    }
+                }
+                References(session, "rooms", newRooms.ToArray()); References(combat, "enemies", newEnemies.ToArray());
+                var player = Reference<Transform>(session, "player");
+                if (player != null)
+                {
+                    Undo.RecordObject(player, "시작 위치"); var start = map.Room(map.settings.startingRoomId);
+                    player.position = new Vector3(map.WorldX(start), map.WorldY(start), player.position.z);
+                }
+                foreach (var root in scene.GetRootGameObjects())
+                    foreach (var camera in root.GetComponentsInChildren<RoomCamera>(true))
+                    {
+                        if (Reference<Transform>(camera, "player") != player) continue;
+                        var fields = new SerializedObject(camera); fields.FindProperty("session").objectReferenceValue = session; fields.ApplyModifiedProperties();
+                        var pose = map.CameraAt(map.settings.Beat(0), player.position.x, player.position.y);
+                        Undo.RecordObject(camera.transform, "초기 카메라 위치"); camera.transform.position = new Vector3(pose.x, pose.y, camera.transform.position.z);
+                        var view = camera.GetComponent<Camera>(); if (view != null) { Undo.RecordObject(view, "초기 카메라 크기"); view.orthographicSize = pose.size; }
+                    }
+                session.ValidateConfiguration(); // Original objects still exist until the complete replacement is valid.
+                foreach (var room in oldRooms) Undo.DestroyObjectImmediate(room.gameObject);
+                foreach (var enemy in oldEnemies) if (enemy != null) Undo.DestroyObjectImmediate(enemy.gameObject);
+                chart.NotifyChartChanged(); EditorUtility.SetDirty(chart);
+                EditorSceneManager.MarkSceneDirty(scene);
+                if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("씬 저장에 실패했습니다.");
+                AssetDatabase.SaveAssetIfDirty(chart);
+                Undo.CollapseUndoOperations(undo);
+            }
+            catch { Undo.RevertAllDownToGroup(undo); throw; }
+        }
+        internal static Vector2 Direction(MoveDirection direction) => direction == MoveDirection.Up ? Vector2.up : direction == MoveDirection.Down ? Vector2.down : direction == MoveDirection.Left ? Vector2.left : Vector2.right;
+        private static void EnsureOwnedReferences(Component component, Transform owner)
+        {
+            var iterator = new SerializedObject(component).GetIterator();
+            while (iterator.Next(true))
+            {
+                if (iterator.propertyType != SerializedPropertyType.ObjectReference) continue;
+                var reference = iterator.objectReferenceValue;
+                var transform = reference is GameObject go ? go.transform : reference is Component c ? c.transform : null;
+                if (transform != null && !transform.IsChildOf(owner))
+                    throw new ArgumentException("템플릿 바깥을 참조합니다: " + component.name + "/" + iterator.propertyPath);
+            }
+        }
+        private static void Square(SpriteRenderer[] edges, float size, float width)
+        {
+            foreach (var edge in edges)
+            {
+                var p = edge.transform.localPosition;
+                bool horizontal = Mathf.Abs(p.y) > Mathf.Abs(p.x);
+                edge.transform.localPosition = horizontal ? new Vector3(0, Mathf.Sign(p.y) * size / 2, 0) : new Vector3(Mathf.Sign(p.x) * size / 2, 0, 0);
+                edge.transform.localScale = horizontal ? new Vector3(size + width, width, 1) : new Vector3(width, size + width, 1);
+            }
+        }
+    }
+}

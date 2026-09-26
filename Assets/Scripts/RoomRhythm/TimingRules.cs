@@ -1,0 +1,82 @@
+using System;
+
+namespace Gun.RoomRhythm
+{
+    // Equal-width strokes touch when their centerlines are one stroke width apart.
+    // This maps the SAME timing window used by Judge to the visible overlap.
+    public static class ApproachGeometry
+    {
+        public static double ExpandingRadius(double time, double target, double radius, double width, TimingWindow window)
+            => Math.Max(0, radius + (time - target) * Speed(width, window));
+
+        public static double Speed(double width, TimingWindow window) => width / window.Symmetric.early;
+
+        public static double Radius(double time, double target, double radius, double width, TimingWindow window)
+        {
+            // No separate anticipation phase: spawn size follows time remaining at the same speed.
+            // Keep moving past separation. Clamping at radius-width leaves the two strokes
+            // touching forever on the failure screen, falsely suggesting a valid overlap.
+            return Math.Max(0, radius + (target - time) * Speed(width, window));
+        }
+    }
+
+    public enum MoveDirection { Up, Left, Down, Right }
+    public enum TimingGrade { None, TooEarly, Early, Accurate, Late, TooLate }
+    public enum EnemyDirection { Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft }
+
+    [Serializable]
+    public struct EnemyNote
+    {
+        public string id;
+        public string roomId;
+        public EnemyDirection direction;
+        public double time;
+        public bool customAppearance;
+        public double appearanceTime;
+        public double frameStartTime;
+    }
+
+    [Serializable]
+    public struct TimingWindow
+    {
+        public double early;
+        public double accurate;
+        public double late;
+        public TimingWindow Symmetric => new TimingWindow
+        {
+            early = (early + late) * 0.5,
+            accurate = accurate,
+            late = (early + late) * 0.5
+        };
+
+        public bool IsValid => early > 0 && late > 0 && accurate >= 0
+            && accurate < early && accurate < late
+            && !double.IsInfinity(early) && !double.IsInfinity(late);
+
+        public TimingGrade Judge(double input, double target)
+        {
+            if (input < target - early) return TimingGrade.TooEarly;
+            if (input >= target + late) return TimingGrade.TooLate;
+            if (input < target - accurate) return TimingGrade.Early;
+            return input <= target + accurate ? TimingGrade.Accurate : TimingGrade.Late;
+        }
+    }
+
+    [Serializable]
+    public struct MoveNote
+    {
+        public string destinationId;
+        public MoveDirection direction;
+        public double time;
+        // Derived from the chart's room lead time; not a second authoring control.
+        [NonSerialized] public double appearTime;
+        public bool customAppearance;
+        public double appearanceTime;
+        public double frameStartTime;
+        public double doorFrameStartTime;
+        public bool hasDoor;
+        public double doorTime;
+        public double moveDelay;
+        public double HitTime => hasDoor ? doorTime + moveDelay : time;
+    }
+}
