@@ -14,9 +14,9 @@ namespace Gun.RoomRhythm
     public sealed class RoomCinematics : MonoBehaviour
     {
         private RoomFeedback feedback;
-        private SpriteRenderer player, trace, traceCore;
+        private SpriteRenderer player, roomFlash;
         private readonly SpriteRenderer[] shutters = new SpriteRenderer[8];
-        private Vector3 origin, center, direction, shooter;
+        private Vector3 origin, center, direction;
         private float side, passage, thickness, started, lastTrail;
         private bool combatFocus;
         private float focusChangedAt = -10, zoomFrom = 1;
@@ -26,9 +26,12 @@ namespace Gun.RoomRhythm
         public Vector3 CameraCenter => center;
         public float DeathElapsed => Death == DeathPresentation.None ? 0 : Time.unscaledTime - started;
         public bool Complete => Death != DeathPresentation.None && DeathElapsed >= 1.3f;
-        private float HitAt => .49f + .08f * Vector3.Distance(shooter, origin) / (Vector3.Distance(shooter, origin) + side);
-        public float PlayerAlpha => Death == DeathPresentation.Execution
-            ? 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(HitAt, HitAt + .7f, DeathElapsed)) : 1;
+        public float PlayerAlpha => Death == DeathPresentation.Execution && DeathElapsed >= .24f ? 0 : 1;
+        public static Color DeathFlash(float elapsed)
+        {
+            float alpha = elapsed < .06f ? Mathf.Clamp01(elapsed / .06f) : 1 - Mathf.InverseLerp(.06f, .24f, elapsed);
+            return new Color(.52f, .27f, .28f, alpha * .85f);
+        }
         public float ZoomMultiplier
         {
             get
@@ -48,12 +51,10 @@ namespace Gun.RoomRhythm
         public void Configure(SpriteRenderer body, RoomFeedback effects)
         {
             player = body; feedback = effects;
-            if (trace == null)
+            if (roomFlash == null)
             {
-                trace = feedback.CreateVisual(transform, "Piercing shot", Color.white, true);
-                traceCore = feedback.CreateVisual(transform, "Piercing shot core", Color.white);
-                trace.sortingOrder = 2100;
-                traceCore.sortingOrder = 2101;
+                roomFlash = feedback.CreateVisual(transform, "Room death flash", Color.white);
+                roomFlash.sortingOrder = 2100;
                 for (int i = 0; i < shutters.Length; i++)
                     shutters[i] = feedback.CreateVisual(transform, "Sealing door " + i, Color.white);
             }
@@ -64,9 +65,9 @@ namespace Gun.RoomRhythm
         {
             Death = DeathPresentation.None; impact = false; lastTrail = -10;
             combatFocus = false; focusChangedAt = -10; zoomFrom = 1;
-            if (trace == null) return;
-            trace.gameObject.SetActive(false);
-            traceCore.gameObject.SetActive(false);
+            if (roomFlash == null) return;
+            roomFlash.gameObject.SetActive(false);
+
             foreach (var shutter in shutters) shutter.gameObject.SetActive(false);
             player.enabled = true;
         }
@@ -93,7 +94,7 @@ namespace Gun.RoomRhythm
             passage = chart.passageWidth; thickness = chart.judgmentLineWidth;
             direction = run.DeathDirection == MoveDirection.Up ? Vector3.up : run.DeathDirection == MoveDirection.Down ? Vector3.down
                 : run.DeathDirection == MoveDirection.Left ? Vector3.left : Vector3.right;
-            shooter = enemy != null ? enemy.transform.position : origin + Vector3.up * side * .45f;
+
         }
 
         private void LateUpdate()
@@ -102,25 +103,10 @@ namespace Gun.RoomRhythm
             float t = DeathElapsed;
             if (Death == DeathPresentation.Execution)
             {
-                float alpha = Mathf.Clamp01(1 - (t - .62f) / .28f);
-                bool show = t >= .49f && t < .9f;
-                trace.gameObject.SetActive(show);
-                traceCore.gameObject.SetActive(show);
-                Vector3 ray = (origin - shooter).normalized;
-                Vector3 end = Vector3.Lerp(shooter, origin + ray * side, Mathf.Clamp01((t - .49f) / .08f));
-                trace.transform.position = (shooter + end) * .5f;
-                trace.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(ray.y, ray.x) * Mathf.Rad2Deg);
-                float length = Vector3.Distance(shooter, end);
-                RoomFeedback.Size(trace, new Vector2(length, .28f));
-                trace.color = new Color(1, .8f, .3f, alpha);
-                traceCore.transform.SetPositionAndRotation(trace.transform.position, trace.transform.rotation);
-                RoomFeedback.Size(traceCore, new Vector2(length, .065f));
-                traceCore.color = new Color(1, 1, .95f, alpha);
-                if (!impact && t >= HitAt)
-                {
-                    impact = true; feedback.DeathBlood(origin, ray);
-                    feedback.DeathSpark(shooter);
-                }
+                roomFlash.gameObject.SetActive(t < .24f);
+                roomFlash.transform.position = center;
+                RoomFeedback.Size(roomFlash, Vector2.one * side);
+                roomFlash.color = DeathFlash(t);
             }
             else if (Death == DeathPresentation.Collision)
             {
@@ -146,3 +132,4 @@ namespace Gun.RoomRhythm
         private void OnDisable() => ResetPresentation();
     }
 }
+

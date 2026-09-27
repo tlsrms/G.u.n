@@ -95,7 +95,8 @@ namespace Gun.RoomRhythm
             for (int i = run.CompletedMoves; i < chart.moves.Length; i++)
             {
                 MoveNote note = chart.moves[i];
-                if (note.hasDoor && !run.DoorBroken(i) && run.RoomVisible(i + 1, time, previousRoomOccurrences[i + 1]))
+                if (note.hasDoor && !run.DoorBroken(i) && time >= (note.customAppearance ? note.doorFrameStartTime : chart.RoomAppearsAt(note))
+                    && previousRoomOccurrences[i + 1] < run.CompletedMoves)
                     AddCandidate(orderedEnemies.Length + i, path[i + 1].Door.Target - origin, note.doorTime);
             }
             return TargetSelection.Select(candidates, direction.x, direction.y, chart.aimHalfAngle);

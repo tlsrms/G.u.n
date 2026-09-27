@@ -51,7 +51,9 @@ namespace Gun.RoomRhythm
             {
                 ConfigureText(status);
                 run = BuildValidatedRun();
-                foreach (RoomBinding room in path) room.Configure(chart);
+                for (int i = 0; i < path.Length; i++)
+                    path[i].Configure(chart, i < chart.moves.Length ? chart.moves[i].direction : (MoveDirection?)null,
+                        i > 0 ? (MoveDirection)(((int)chart.moves[i - 1].direction + 2) % 4) : (MoveDirection?)null);
                 aim.Configure(chart.aimRadius, chart.aimHalfAngle, feedback);
                 previousRoomOccurrences = new int[path.Length];
                 for (int i = 0; i < path.Length; i++)
@@ -286,11 +288,12 @@ namespace Gun.RoomRhythm
                 float progress = isCurrent || movingInto ? 1f : Progress(time, note.appearTime, note.HitTime);
                 double frameStart = note.customAppearance ? note.frameStartTime : note.appearTime;
                 path[i].Present(visible, isCurrent, future, progress, deathFrames != null ? deathFrames[i] : run.RoomFrameVisible(i, time),
-                    time, note.HitTime, Progress(time, frameStart, note.HitTime));
+                    time, note.HitTime, Progress(time, frameStart, note.HitTime), isCurrent && run.Death == DeathPresentation.Collision);
                 if (path[i].Door != null)
-                    path[i].Door.Present(visible && i > current && note.hasDoor && !run.DoorBroken(i - 1),
-                        future, Progress(time, note.appearTime, note.doorTime), time, note.doorTime, note.appearTime,
-                        note.customAppearance ? note.doorFrameStartTime : note.appearTime,
+                    path[i].Door.Present(i > current && note.hasDoor && !run.DoorBroken(i - 1)
+                        && run.Phase != RunPhase.Ready && time >= note.DoorAppearsAt && previousRoomOccurrences[i] < current,
+                        future, Progress(time, note.DoorAppearsAt, note.doorTime), time, note.doorTime, note.DoorAppearsAt,
+                        note.DoorAppearsAt,
                         deathDoorFrames != null ? deathDoorFrames[i] : run.RoomFrameVisible(i, time, true));
             }
             player.position = run.Phase == RunPhase.Dead ? cinematics.DeathPosition : PlayerPosition(time);

@@ -33,7 +33,7 @@ internal static class MapChartChecks
         Near(shift.Earliest, 0, "Batch origin is earliest selected start");
         shift.Apply(3, 0, 60);
         Near(map.rooms[1].appearBeat, 3, "Shared room/door start is moved once");
-        Near(map.rooms[1].doorFrameBeat, 3, "Door and room starts stay synchronized");
+        Near(map.rooms[1].doorFrameBeat, 6, "Door preserves its independent start during batch movement");
         Near(map.rooms[1].hitBeat, 11, "Room target moves by group delta");
         Near(map.rooms[1].doorBeat, 9, "Door target moves by group delta");
         Near(map.enemies[0].appearBeat, 12, "Enemy appearance moves with its selected interval");
@@ -150,17 +150,25 @@ internal static class MapChartChecks
         Near(compiled.Moves[0].appearTime, 0, "Group time was replaced by lead time");
         Near(compiled.Moves[1].appearTime, 0, "Rooms in same group must appear together");
         Near(compiled.Moves[0].frameStartTime, 0, "Room frame begins with room appearance");
-        Near(compiled.Moves[0].doorFrameStartTime, 0, "Door frame begins with room appearance");
+        Near(compiled.Moves[0].doorFrameStartTime, 1.5, "Door uses its independent appearance");
         var sharedStarts = Example();
         sharedStarts.MigrateAppearance();
         Check(!sharedStarts.NeedsRoomStartSynchronization, "Migration synchronizes all room starts");
         sharedStarts.SetRoomStart(sharedStarts.rooms[1], 2);
         Check(sharedStarts.rooms[1].appearBeat == 2 && sharedStarts.rooms[1].frameBeat == 2
-            && sharedStarts.rooms[1].doorFrameBeat == 2, "Changing either timeline start updates all three starts");
+            && sharedStarts.rooms[1].doorFrameBeat == 3, "Changing room start preserves door start");
         var sharedCompiled = Compile(sharedStarts);
         Near(sharedCompiled.Moves[0].appearanceTime, 1, "Shared start conversion");
         Near(sharedCompiled.Moves[0].frameStartTime, 1, "Movement line uses shared start");
-        Near(sharedCompiled.Moves[0].doorFrameStartTime, 1, "Door line uses shared start");
+        Near(sharedCompiled.Moves[0].doorFrameStartTime, 1.5, "Door line keeps independent start");
+        var doorOnly = new MapTimelineShift(sharedStarts, new[] { new MapTimelineItem(0, 1) });
+        doorOnly.Apply(1, 0, 60);
+        Near(sharedStarts.rooms[1].doorFrameBeat, 4, "Door-only drag changes door appearance");
+        Near(sharedStarts.rooms[1].appearBeat, 2, "Door-only drag leaves room appearance intact");
+        Near(sharedStarts.rooms[1].hitBeat, 8, "Door-only drag leaves movement target intact");
+        var roomOnly = new MapTimelineShift(sharedStarts, new[] { new MapTimelineItem(1, 1) });
+        roomOnly.Apply(1, 0, 60);
+        Near(sharedStarts.rooms[1].doorFrameBeat, 4, "Room-only drag leaves door appearance intact");
         Near(compiled.Enemies[0].appearanceTime, 4.5, "Enemy appearance conversion");
         Near(compiled.Enemies[0].frameStartTime, 4.5, "Enemy frame begins with appearance");
         var run = new RoomRun(compiled.Moves, compiled.Timing, .18, compiled.Enemies, "start", .25, compiled.EnemyLeadSeconds);
@@ -180,7 +188,7 @@ internal static class MapChartChecks
         Reject(m => { m.rooms[2].x = 0; m.rooms[2].y = 1; });
         Reject(m => m.SetRoomStart(m.rooms[1], 9));
         Compile(WithLateFrame());
-        Reject(m => m.groups[0].appearBeat = 7);
+        var roomAfterDoor = Example(); roomAfterDoor.MigrateAppearance(); roomAfterDoor.SetRoomStart(roomAfterDoor.rooms[1], 7); Compile(roomAfterDoor);
         Reject(m => m.enemies[0].appearBeat = 13);
         var shortReveal = Example(); shortReveal.enemies[0].appearBeat = 11.7;
         Compile(shortReveal);
@@ -263,7 +271,7 @@ internal static class MapChartChecks
     {
         var map = MapChart.CreateEmpty(new BeatChart { bpm = 121, offsetSeconds = 240.0 / 121, roomLeadBeats = 3 });
         map.rooms = new[] { map.rooms[0],
-            new MapRoom { id = "right", x = 1, hitBeat = 1, door = true, doorBeat = 0 },
+            new MapRoom { id = "right", x = 1, hitBeat = 1, door = true, doorBeat = 0, doorFrameBeat = -2 },
             new MapRoom { id = "return", x = 0, hitBeat = 2 },
             new MapRoom { id = "right-again", x = 1, hitBeat = 3 } };
         map.SetRoomStart(map.rooms[1], -2);
@@ -293,7 +301,7 @@ internal static class MapChartChecks
         Check(run.Phase == RunPhase.Cleared, "Alternating-tile screenshot sequence clears");
         run.Reset();
         Check(!run.RoomFrameVisible(2, map.settings.Seconds(2)), "Reset hides previously displayed frames");
-        map.rooms[3].door = true; map.rooms[3].doorBeat = 2.8;
+        map.rooms[3].door = true; map.rooms[3].doorBeat = 2.8; map.rooms[3].doorFrameBeat = 0;
         compiled = Compile(map);
         run = new RoomRun(compiled.Moves, compiled.Timing, .18);
         run.Begin();
@@ -305,3 +313,6 @@ internal static class MapChartChecks
         Check(rejected, "A door whose entire input window expires while its tile is occupied remains invalid");
     }
 }
+
+
+

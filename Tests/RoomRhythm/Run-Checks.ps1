@@ -1,3 +1,4 @@
+param([switch]$SkipAuthoredAssets)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $output = Join-Path $env:TEMP 'Gun-RoomRhythm-Checks'
@@ -30,7 +31,8 @@ $response = Join-Path $output 'checks.rsp'
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks did not compile.' }
 '{"runtimeOptions":{"tfm":"net9.0","framework":{"name":"Microsoft.NETCore.App","version":"9.0.0"}}}' |
     Set-Content -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json')
-& dotnet $testDll (Join-Path $root 'Assets/RoomRhythm/FirstMovement.asset')
+if ($SkipAuthoredAssets) { & dotnet $testDll }
+else { & dotnet $testDll (Join-Path $root 'Assets/RoomRhythm/FirstMovement.asset') }
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks failed.' }
 
 $offsetDll = Join-Path $output 'SongOffsetChecks.dll'
@@ -72,4 +74,5 @@ $editorLines | Set-Content -LiteralPath $editorResponse
 & $runtime $compiler "@$editorResponse"
 if ($LASTEXITCODE -ne 0) { throw 'Inspector compilation failed.' }
 Write-Output 'PASS: editor inspector compilation.'
-& (Join-Path $PSScriptRoot 'Check-Scene.ps1')
+if (-not $SkipAuthoredAssets) { & (Join-Path $PSScriptRoot 'Check-Scene.ps1') }
+

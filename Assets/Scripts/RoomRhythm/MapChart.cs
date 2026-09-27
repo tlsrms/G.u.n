@@ -98,11 +98,11 @@ namespace Gun.RoomRhythm
         }
         public bool NeedsAppearanceMigration => Array.Exists(rooms, r => !r.individualAppearance);
         public bool NeedsRoomStartSynchronization => Array.Exists(rooms,
-            room => room.frameBeat != AppearanceBeat(room) || room.doorFrameBeat != AppearanceBeat(room));
+            room => room.frameBeat != AppearanceBeat(room));
         public void SetRoomStart(MapRoom room, double beat)
         {
             room.individualAppearance = true;
-            room.appearBeat = room.frameBeat = room.doorFrameBeat = beat;
+            room.appearBeat = room.frameBeat = beat;
         }
         public void SynchronizeRoomStarts()
         {
@@ -250,7 +250,7 @@ namespace Gun.RoomRhythm
                 notes.Add(new BeatNote { kind = BeatNoteKind.Move, roomId = room.id, beat = room.hitBeat, moveDirection = direction });
                 if (room.door)
                 {
-                    Frame(s, map.AppearanceBeat(room), map.AppearanceBeat(room), room.doorBeat, "문 " + map.RoomLabel(room));
+                    Frame(s, room.doorFrameBeat, room.doorFrameBeat, room.doorBeat, "문 " + map.RoomLabel(room));
                     notes.Add(new BeatNote { kind = BeatNoteKind.Door, roomId = room.id, beat = room.doorBeat });
                 }
                 previous = room;
@@ -274,7 +274,7 @@ namespace Gun.RoomRhythm
                 result.Moves[i].customAppearance = true;
                 result.Moves[i].appearanceTime = result.Moves[i].appearTime = s.Seconds(map.AppearanceBeat(room));
                 result.Moves[i].frameStartTime = result.Moves[i].appearanceTime;
-                result.Moves[i].doorFrameStartTime = result.Moves[i].appearanceTime;
+                result.Moves[i].doorFrameStartTime = s.Seconds(room.doorFrameBeat);
                 Require(result.Moves[i].HitTime <= musicLength, "음원 종료 이후의 방 이동: " + room.id);
             }
             for (int i = 0; i < result.Enemies.Length; i++)

@@ -222,6 +222,10 @@ namespace Gun.RoomRhythm.Editor
             serialized.Update(); var map = serialized.FindProperty("mapDraft"); var settings = map.FindPropertyRelative("settings");
             propertiesScroll = EditorGUILayout.BeginScrollView(propertiesScroll);
             EditorGUILayout.LabelField("곡 설정", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serialized.FindProperty("roomStartBrightness"), new GUIContent("방 초기 밝기"));
+            EditorGUILayout.PropertyField(serialized.FindProperty("roomRevealStart"), new GUIContent("방 급등장 시작 비율"));
+            EditorGUILayout.PropertyField(serialized.FindProperty("appearanceStartAlpha"), new GUIContent("등장 초기 불투명도"));
+            EditorGUILayout.PropertyField(serialized.FindProperty("doorCloseDuration"), new GUIContent("문 닫힘 시간 (초)"));
             EditorGUILayout.PropertyField(serialized.FindProperty("mapDraftMusic"), new GUIContent("음악 소스"));
             double previousBpm = settings.FindPropertyRelative("bpm").doubleValue;
             GUI.SetNextControlName("MapInput:BPM");
@@ -366,11 +370,11 @@ namespace Gun.RoomRhythm.Editor
             {
                 Field(data, "appearBeat", "방·판정선 시작 박");
                 data.FindPropertyRelative("frameBeat").doubleValue = data.FindPropertyRelative("appearBeat").doubleValue;
-                data.FindPropertyRelative("doorFrameBeat").doubleValue = data.FindPropertyRelative("appearBeat").doubleValue;
+
                 Field(data, "hitBeat", "방 이동 정확 박");
                 EditorGUILayout.Space(); Field(data, "door", "입구 문");
                 if (data.FindPropertyRelative("door").boolValue)
-                { Field(data, "doorBeat", "문 사격 정확 박"); }
+                { Field(data, "doorFrameBeat", "문 등장 박"); Field(data, "doorBeat", "문 사격 정확 박"); }
             }
             else EditorGUILayout.HelpBox("시작 방은 처음부터 표시됩니다.", MessageType.None);
             if (serialized.ApplyModifiedProperties()) message = null;
@@ -506,3 +510,4 @@ namespace Gun.RoomRhythm.Editor
         }
     }
 }
+

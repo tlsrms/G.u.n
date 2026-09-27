@@ -40,7 +40,7 @@ namespace Gun.RoomRhythm.Editor
                     start = () => Map.AppearanceBeat(room), end = () => room.hitBeat, setStart = b => Map.SetRoomStart(room, b), setEnd = b => room.hitBeat = b, select = () => PickRoom(room, false, false) });
                 if (room.door)
                     spans.Add(new TimelineSpan { item = new MapTimelineItem(0, Array.IndexOf(Map.rooms, room)), roomId = room.id, lane = 0, label = Map.RoomLabel(room, room.doorBeat), color = Orange,
-                        start = () => Map.AppearanceBeat(room), end = () => room.doorBeat, setStart = b => Map.SetRoomStart(room, b), setEnd = b => room.doorBeat = b, select = () => PickRoom(room, false, false) });
+                        start = () => room.doorFrameBeat, end = () => room.doorBeat, setStart = b => room.doorFrameBeat = b, setEnd = b => room.doorBeat = b, select = () => PickRoom(room, false, false) });
             }
             for (int i = 0; i < Map.enemies.Length; i++)
             {
@@ -322,3 +322,4 @@ namespace Gun.RoomRhythm.Editor
             : Math.Max(Map.settings.Beat(0), Math.Min(EndBeat(), beat));
     }
 }
+

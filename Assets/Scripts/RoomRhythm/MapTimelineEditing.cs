@@ -24,15 +24,15 @@ namespace Gun.RoomRhythm
 
         public MapTimelineShift(MapChart map, IEnumerable<MapTimelineItem> items)
         {
-            var starts = new HashSet<int>();
             foreach (var item in new HashSet<MapTimelineItem>(items))
             {
                 double start, end;
                 if (item.Lane <= 1)
                 {
                     var room = map.rooms[item.Index];
-                    start = map.AppearanceBeat(room); end = item.Lane == 0 ? room.doorBeat : room.hitBeat;
-                    if (starts.Add(item.Index)) Capture(start, value => map.SetRoomStart(room, value));
+                    start = item.Lane == 0 ? room.doorFrameBeat : map.AppearanceBeat(room); end = item.Lane == 0 ? room.doorBeat : room.hitBeat;
+                    if (item.Lane == 0) Capture(start, value => room.doorFrameBeat = value);
+                    else Capture(start, value => map.SetRoomStart(room, value));
                     if (item.Lane == 0) Capture(end, value => room.doorBeat = value);
                     else Capture(end, value => room.hitBeat = value);
                 }
@@ -80,7 +80,7 @@ namespace Gun.RoomRhythm
                 if (item.Lane > 1 || roomIndices.ContainsKey(item.Index)) continue;
                 var source = map.rooms[item.Index];
                 var copy = new MapRoom { id = "room_" + Guid.NewGuid().ToString("N"), x = source.x, y = source.y,
-                    hitBeat = source.hitBeat, door = source.door, doorBeat = source.doorBeat };
+                    hitBeat = source.hitBeat, door = source.door, doorBeat = source.doorBeat, doorFrameBeat = source.doorFrameBeat };
                 map.SetRoomStart(copy, map.AppearanceBeat(source));
                 roomIndices.Add(item.Index, Append(ref map.rooms, copy)); roomCopies.Add(source.id, copy.id);
             }

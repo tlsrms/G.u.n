@@ -55,10 +55,13 @@ namespace Gun.RoomRhythm
                     || !Enum.IsDefined(typeof(MoveDirection), notes[i].direction))
                     throw new ArgumentException("Invalid movement note.");
                 if (double.IsNaN(note.appearTime) || double.IsInfinity(note.appearTime)
-                    || note.appearTime < 0 || note.appearTime > (note.hasDoor ? note.doorTime : note.HitTime))
+                    || note.appearTime < 0 || note.appearTime > note.HitTime)
                     throw new ArgumentException("방 등장은 첫 정확 판정 이후일 수 없습니다.");
                 if (note.hasDoor && (!(note.moveDelay > 0) || double.IsNaN(note.doorTime) || double.IsInfinity(note.doorTime) || note.doorTime < 0))
                     throw new ArgumentException("문 정확 판정은 이동보다 앞서야 합니다.");
+                if (note.hasDoor && (double.IsNaN(note.DoorAppearsAt) || double.IsInfinity(note.DoorAppearsAt)
+                    || note.DoorAppearsAt < 0 || note.DoorAppearsAt > note.doorTime))
+                    throw new ArgumentException("문 등장은 문 판정 이전의 유효한 시각이어야 합니다.");
                 if (i > 0 && note.HitTime <= notes[i - 1].HitTime)
                     throw new ArgumentException("방 이동 정확 판정은 시간순으로 배치해야 합니다.");
                 double earliestInput = Math.Max(earliestArrivals[i], Math.Max(note.appearTime, note.HitTime - window.early));
@@ -273,7 +276,7 @@ namespace Gun.RoomRhythm
             Advance(time);
             if (!IsActive || index < CompletedMoves || index >= notes.Length) return false;
             MoveNote note = notes[index];
-            if (!note.hasDoor || brokenDoors[index] || time < note.appearTime) return false;
+            if (!note.hasDoor || brokenDoors[index] || time < note.DoorAppearsAt) return false;
             TimingGrade grade = window.Judge(time, note.doorTime);
             if (grade == TimingGrade.TooEarly || grade == TimingGrade.TooLate)
                 return false;
@@ -290,9 +293,11 @@ namespace Gun.RoomRhythm
             DeathTime = fatalAt ?? lastTime;
             if (reason == FailureReason.MissedEnemy && FailedEnemy < 0) FailedEnemy = NextEnemyIndex();
             DeathDirection = movementInput ?? MoveDirection.Up;
-            Death = reason == FailureReason.DoorCollision ? DeathPresentation.Collision
-                : movementInput.HasValue && reason != FailureReason.MissedEnemy && reason != FailureReason.MissedDoor
-                    ? DeathPresentation.Departure : DeathPresentation.Execution;
+            bool earlyExit = movementInput.HasValue && reason == FailureReason.TooEarly
+                && CompletedMoves < notes.Length && movementInput.Value == notes[CompletedMoves].direction
+                && (!notes[CompletedMoves].hasDoor || brokenDoors[CompletedMoves]);
+            Death = earlyExit ? DeathPresentation.Departure
+                : movementInput.HasValue ? DeathPresentation.Collision : DeathPresentation.Execution;
             Phase = RunPhase.Dead;
             Failure = reason;
             LastGrade = grade;

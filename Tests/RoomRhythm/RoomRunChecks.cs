@@ -309,10 +309,18 @@ internal static class RoomRunChecks
         nearDoor.Begin(); nearDoor.Press(MoveDirection.Up, .1);
         Check(nearDoor.Death == DeathPresentation.Collision, "closed door collision takes precedence over early movement");
         nearDoor.Begin(); nearDoor.Press(MoveDirection.Right, .1);
-        Check(nearDoor.Death == DeathPresentation.Departure && nearDoor.DeathDirection == MoveDirection.Right,
-            "wrong direction seals the previous room");
+        Check(nearDoor.Death == DeathPresentation.Collision && nearDoor.DeathDirection == MoveDirection.Right,
+            "wrong direction collides with the wall");
         nearDoor.Begin(); nearDoor.Advance(1.126);
         Check(nearDoor.Death == DeathPresentation.Execution, "unshot door expires into execution");
+        var earlyExit = NewRun(); earlyExit.Press(MoveDirection.Up, .1);
+        Check(earlyExit.Death == DeathPresentation.Departure, "Early movement through the next opening retains departure");
+        var independentDoor = new RoomRun(new[] { new MoveNote { destinationId = "north", direction = MoveDirection.Up,
+            hasDoor = true, doorTime = 2, moveDelay = 1, customAppearance = true, appearTime = 2.5,
+            appearanceTime = 2.5, doorFrameStartTime = 1.95 } }, Window, .125);
+        independentDoor.Begin();
+        Check(!independentDoor.ShootDoor(0, 1.9), "Even an in-window shot cannot hit a door before its independent appearance");
+        Check(independentDoor.ShootDoor(0, 2), "Door can be shot before the destination room appears");
         nearDoor.Reset();
         Check(nearDoor.Death == DeathPresentation.None && nearDoor.FailedEnemy == -1, "reset clears cinematic state");
 
@@ -461,9 +469,10 @@ internal static class RoomRunChecks
         Check(combat.ShootEnemy(2, 7) && combat.ShootEnemy(3, 7.5) && combat.ShootEnemy(4, 8)
             && combat.Phase == RunPhase.Cleared, "full scene enemy-door-movement chart clears");
         Console.WriteLine($"PASS: {checks} movement timing/state checks.");
-        AuthoredChartChecks.Run(args[0]);
+        if (args.Length > 0) AuthoredChartChecks.Run(args[0]);
         BeatChartChecks.Run();
         MapChartChecks.Run();
         OffsetCalibrationChecks.Run();
     }
 }
+

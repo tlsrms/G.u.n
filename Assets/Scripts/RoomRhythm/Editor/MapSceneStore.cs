@@ -178,7 +178,13 @@ namespace Gun.RoomRhythm.Editor
                     clone.transform.SetPositionAndRotation(new Vector3(map.WorldX(room), map.WorldY(room), 0), Quaternion.identity);
                     var binding = clone.GetComponent<RoomBinding>(); Id(binding, "roomId", room.id);
                     var fields = new SerializedObject(binding); fields.FindProperty("sideLength").floatValue = map.roomSize; fields.ApplyModifiedProperties();
-                    binding.Configure(chart);
+                    var route = map.OrderedRooms();
+                    int routeIndex = Array.IndexOf(route, room);
+                    MoveDirection? exit = routeIndex + 1 < route.Length
+                        ? Array.Find(compiled.Moves, n => n.destinationId == route[routeIndex + 1].id).direction : (MoveDirection?)null;
+                    MoveNote entranceNote = Array.Find(compiled.Moves, n => n.destinationId == room.id);
+                    binding.Configure(chart, exit, routeIndex > 0 ? (MoveDirection)(((int)entranceNote.direction + 2) % 4) : (MoveDirection?)null);
+                    binding.Present(true, routeIndex == 0, false, 1, false, 0, 0);
                     var surfaces = References<SpriteRenderer>(binding, "surfaces");
                     if (surfaces.Length > 0) surfaces[0].transform.localScale = new Vector3(map.roomSize, map.roomSize, 1);
                     Reference<GameObject>(binding, "visuals").SetActive(true);
@@ -190,11 +196,7 @@ namespace Gun.RoomRhythm.Editor
                     var door = binding.Door;
                     door.transform.position = binding.Center - (Vector3)(toward * map.roomSize * .5f);
                     door.transform.rotation = Quaternion.Euler(0, 0, toward.x != 0 ? 90 : 0);
-                    Transform doorFrame = Reference<Transform>(door, "judgmentFrame");
-                    doorFrame.SetPositionAndRotation(binding.Center, Quaternion.identity);
-                    Square(References<SpriteRenderer>(door, "frameEdges"), map.roomSize, chart.judgmentLineWidth);
-                    door.RefreshFrameDirections();
-                    door.Present(room.door && room.id != map.settings.startingRoomId, false, 1, 0, note.doorTime, 0, double.PositiveInfinity);
+                    door.Present(room.door && room.id != map.settings.startingRoomId, false, 1, chart.doorCloseDuration, note.doorTime, 0, showFrame: false);
                     newRooms.Add(binding);
                 }
                 foreach (var enemy in map.enemies)
@@ -273,3 +275,4 @@ namespace Gun.RoomRhythm.Editor
         }
     }
 }
+

@@ -14,7 +14,7 @@ namespace Gun.RoomRhythm.Editor
             if (GUILayout.Button("시각적 맵 에디터 열기")) MapChartWindow.Open((RoomChart)target);
             if (DrawDefaultInspector()) result = null;
             var currentChart = (RoomChart)target;
-            EditorGUILayout.HelpBox("Room Lead Time: 방 이동 판정 몇 초 전 등장\nEnemy Lead Time: 적 판정 몇 초 전 등장 (방 도착 이후)\n문은 방과 함께 등장합니다. 문 판정보다 충분히 먼저 방이 나타나도록 설정하세요.", MessageType.Info);
+            EditorGUILayout.HelpBox("Room Lead Time: 방 이동 판정 몇 초 전 등장\nEnemy Lead Time: 적 판정 몇 초 전 등장 (방 도착 이후)\n맵 에디터의 문 등장 박으로 문을 독립적으로 표시합니다.\nRoom Start Brightness: 초기 밝기 / Room Reveal Start: 급격히 밝아지기 시작하는 진행률", MessageType.Info);
             EditorGUILayout.LabelField("방 축소 속도 (유닛/초)",
                 ApproachGeometry.Speed(currentChart.judgmentLineWidth, currentChart.Timing).ToString("0.###"));
             EditorGUILayout.LabelField("적 축소 속도 (유닛/초)",
@@ -68,3 +68,5 @@ namespace Gun.RoomRhythm.Editor
         }
     }
 }
+
+

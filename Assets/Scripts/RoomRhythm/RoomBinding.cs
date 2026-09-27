@@ -16,13 +16,16 @@ namespace Gun.RoomRhythm
         private Vector3[] frameDirections;
         private bool completed;
         private double flashAt = -10;
+        private MoveDirection? exitDirection, entranceDirection;
         public string Id => roomId;
         public Vector3 Center => transform.position;
         public RoomDoor Door => door;
         public float SideLength => sideLength;
-        public void Configure(RoomChart settings)
+        public void Configure(RoomChart settings, MoveDirection? exit = null, MoveDirection? entrance = null)
         {
             chart = settings;
+            exitDirection = exit; entranceDirection = entrance;
+            if (baseColors == null || baseColors.Length != surfaces.Length) Awake();
             completed = false; flashAt = -10;
             float half = sideLength * 0.5f;
             float length = half - chart.passageWidth * 0.5f + chart.judgmentLineWidth * 0.5f;
@@ -62,7 +65,7 @@ namespace Gun.RoomRhythm
         }
 
         public void Present(bool visible, bool current, bool future, float progress, bool showFrame,
-            double time, double target, float frameProgress = -1)
+            double time, double target, float frameProgress = -1, bool sealExit = false)
         {
             // Keep the hierarchy alive: room surfaces and timing frames have separate lifetimes.
             visuals.SetActive(true);
@@ -72,16 +75,33 @@ namespace Gun.RoomRhythm
             if (progress >= 1 && !completed)
             { completed = true; if (Application.isPlaying && time > 0) flashAt = time; }
             float flash = Mathf.Clamp01((float)(1 - (time - flashAt) / .12));
-            float reveal = current ? 1f : Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.65f, 1f, progress));
+            float reveal = current ? 1f : chart.RoomReveal(progress);
             float alpha = current ? 1f : Mathf.Lerp(chart.appearanceStartAlpha, 1f, reveal);
             for (int i = 0; i < surfaces.Length; i++)
             {
                 Color color = baseColors[i];
                 if (future) color = new Color(color.grayscale * 0.65f, color.grayscale * 0.65f, color.grayscale * 0.65f, color.a);
-                float brightness = Mathf.Lerp(.95f, 1f, reveal);
+                float brightness = current ? 1 : chart.RoomBrightness(progress);
                 color.r *= brightness; color.g *= brightness; color.b *= brightness;
                 color.a *= alpha;
                 surfaces[i].color = RoomPalette.Tint(Color.Lerp(color, Color.white, flash * (i == 0 ? .18f : 1)), 0);
+                if (i > 0)
+                {
+                    Transform wall = surfaces[i].transform;
+                    Vector3 p = wall.localPosition;
+                    bool horizontal = wall.localScale.x > wall.localScale.y;
+                    MoveDirection side = horizontal ? (p.y > 0 ? MoveDirection.Up : MoveDirection.Down)
+                        : (p.x > 0 ? MoveDirection.Right : MoveDirection.Left);
+                    bool open = !sealExit && (side == exitDirection || !current && side == entranceDirection);
+                    float half = sideLength * .5f;
+                    float gap = open ? chart.passageWidth * .5f : 0;
+                    float length = half - gap + chart.judgmentLineWidth * .5f;
+                    float middle = (half + gap + chart.judgmentLineWidth * .5f) * .5f;
+                    wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * middle, Mathf.Sign(p.y) * half, 0)
+                        : new Vector3(Mathf.Sign(p.x) * half, Mathf.Sign(p.y) * middle, 0);
+                    wall.localScale = horizontal ? new Vector3(length, chart.judgmentLineWidth, 1)
+                        : new Vector3(chart.judgmentLineWidth, length, 1);
+                }
             }
             if (judgmentFrame == null) return;
             judgmentFrame.localScale = Vector3.one;

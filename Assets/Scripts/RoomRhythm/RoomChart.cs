@@ -20,12 +20,14 @@ namespace Gun.RoomRhythm
         [Range(0.01f, 0.37f)] public float enemyLineWidth = 0.05f;
         [Min(0.1f)] public float passageWidth = 2.8f;
         [Header("등장 시점 (초)")]
-        [Tooltip("방 이동 판정 몇 초 전에 방과 문을 표시할지 설정합니다.")]
+        [Tooltip("방 이동 판정 몇 초 전에 방을 표시할지 설정합니다.")]
         [Min(0.01f)] public float roomLeadTime = 2f;
         [Tooltip("적 판정 몇 초 전에 표시할지 설정합니다. 방 도착 전에는 표시하지 않습니다.")]
         [Min(0.01f)] public float enemyLeadTime = 1.5f;
         [Header("등장 연출")]
-        [Tooltip("사격 판정 구간 직전에 문이 닫히는 최대 시간입니다. 등장부터 판정 구간까지의 마지막 35% 안에서 닫힙니다.")]
+        [Range(0f, 1f)] public float roomStartBrightness = .15f;
+        [Range(0f, .99f)] public float roomRevealStart = .88f;
+        [Tooltip("문 등장 직후 닫히는 시간입니다.")]
         [Min(0.01f)] public float doorCloseDuration = 0.2f;
         [Tooltip("방·문·적과 판정선이 등장할 때의 불투명도입니다. 정확 시각까지 1로 증가합니다.")]
         [Range(0f, 1f)] public float appearanceStartAlpha = 0.05f;
@@ -47,6 +49,8 @@ namespace Gun.RoomRhythm
 
         public double RoomAppearsAt(MoveNote note) => note.customAppearance ? note.appearanceTime : System.Math.Max(0, note.HitTime - roomLeadTime);
         public float AppearanceAlpha(float progress) => Mathf.Lerp(appearanceStartAlpha, 1f, Mathf.Clamp01(progress));
+        public float RoomReveal(float progress) => Mathf.SmoothStep(0, 1, Mathf.InverseLerp(roomRevealStart, 1, progress));
+        public float RoomBrightness(float progress) => Mathf.Lerp(roomStartBrightness, 1, RoomReveal(progress));
 
         public MoveNote[] BuildMovementNotes()
         {

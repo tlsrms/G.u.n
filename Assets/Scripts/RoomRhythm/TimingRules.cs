@@ -97,5 +97,6 @@ namespace Gun.RoomRhythm
         public double doorTime;
         public double moveDelay;
         public double HitTime => hasDoor ? doorTime + moveDelay : time;
+        public double DoorAppearsAt => customAppearance ? doorFrameStartTime : appearTime;
     }
 }
