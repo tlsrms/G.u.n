@@ -1,0 +1,901 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
+  m_Name: FirstMovement
+  m_EditorClassIdentifier: 
+  music: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
+  inputOffsetMs: 0
+  startingRoomId: start
+  bpm: 120
+  moveDuration: 0.18
+  aimRadius: 2.2
+  aimHalfAngle: 38
+  judgmentLineWidth: 0.1
+  enemyLineWidth: 0.05
+  passageWidth: 2.8
+  roomLeadTime: 2
+  enemyLeadTime: 1.5
+  doorCloseDuration: 0.2
+  appearanceStartAlpha: 0.05
+  moves:
+  - destinationId: north
+    direction: 0
+    time: 4
+    customAppearance: 1
+    appearanceTime: 2
+    frameStartTime: 2
+    doorFrameStartTime: 2
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: east
+    direction: 3
+    time: 9
+    customAppearance: 1
+    appearanceTime: 7
+    frameStartTime: 7
+    doorFrameStartTime: 7
+    hasDoor: 1
+    doorTime: 8
+    moveDelay: 1
+  - destinationId: south
+    direction: 2
+    time: 12
+    customAppearance: 1
+    appearanceTime: 10
+    frameStartTime: 10
+    doorFrameStartTime: 10
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: far-east
+    direction: 3
+    time: 14
+    customAppearance: 1
+    appearanceTime: 12
+    frameStartTime: 12
+    doorFrameStartTime: 12
+    hasDoor: 1
+    doorTime: 13.5
+    moveDelay: 0.5
+  - destinationId: far-north
+    direction: 0
+    time: 18
+    customAppearance: 1
+    appearanceTime: 16
+    frameStartTime: 16
+    doorFrameStartTime: 16
+    hasDoor: 1
+    doorTime: 17.5
+    moveDelay: 0.5
+  - destinationId: room_7793a5
+    direction: 3
+    time: 20.5
+    customAppearance: 1
+    appearanceTime: 18.5
+    frameStartTime: 18.5
+    doorFrameStartTime: 18.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_2255f4
+    direction: 3
+    time: 21
+    customAppearance: 1
+    appearanceTime: 19
+    frameStartTime: 19
+    doorFrameStartTime: 19
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_08ad9c
+    direction: 3
+    time: 21.5
+    customAppearance: 1
+    appearanceTime: 19.5
+    frameStartTime: 19.5
+    doorFrameStartTime: 19.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_b18ec926
+    direction: 3
+    time: 22
+    customAppearance: 1
+    appearanceTime: 20
+    frameStartTime: 20
+    doorFrameStartTime: 20
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_8a911a1b
+    direction: 3
+    time: 22.5
+    customAppearance: 1
+    appearanceTime: 20.5
+    frameStartTime: 20.5
+    doorFrameStartTime: 20.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_9a6efa05
+    direction: 3
+    time: 23
+    customAppearance: 1
+    appearanceTime: 21
+    frameStartTime: 21
+    doorFrameStartTime: 21
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_5640575c
+    direction: 3
+    time: 23.5
+    customAppearance: 1
+    appearanceTime: 21.5
+    frameStartTime: 21.5
+    doorFrameStartTime: 21.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  enemyReadTime: 0.25
+  enemies:
+  - id: north-upper-left
+    roomId: north
+    direction: 7
+    time: 6
+    customAppearance: 1
+    appearanceTime: 4.5
+    frameStartTime: 4.5
+  - id: east-upper-right
+    roomId: east
+    direction: 1
+    time: 10.5
+    customAppearance: 1
+    appearanceTime: 9
+    frameStartTime: 9
+  - id: far-east-lower-left
+    roomId: far-east
+    direction: 5
+    time: 15.5
+    customAppearance: 1
+    appearanceTime: 14
+    frameStartTime: 14
+  - id: far-east-upper-left
+    roomId: far-east
+    direction: 7
+    time: 16
+    customAppearance: 1
+    appearanceTime: 14.5
+    frameStartTime: 14.5
+  - id: far-north-right
+    roomId: far-north
+    direction: 2
+    time: 19
+    customAppearance: 1
+    appearanceTime: 17.5
+    frameStartTime: 17.5
+  - id: far-north-upper-right
+    roomId: far-north
+    direction: 1
+    time: 19.5
+    customAppearance: 1
+    appearanceTime: 18
+    frameStartTime: 18
+  - id: far-north-lower-left
+    roomId: far-north
+    direction: 5
+    time: 20
+    customAppearance: 1
+    appearanceTime: 18.5
+    frameStartTime: 18.5
+  beatChart:
+    bpm: 120
+    startingRoomId: start
+    offsetSeconds: 0
+    musicDelaySeconds: 0
+    loopMusic: 0
+    beatsPerBar: 4
+    subdivision: 4
+    roomLeadBeats: 4
+    enemyLeadBeats: 3
+    notes:
+    - kind: 0
+      beat: 8
+      roomId: north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 18
+      roomId: east
+      enemyId: 
+      moveDirection: 3
+      enemyDirection: 0
+    - kind: 1
+      beat: 16
+      roomId: east
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 24
+      roomId: south
+      enemyId: 
+      moveDirection: 2
+      enemyDirection: 0
+    - kind: 0
+      beat: 28
+      roomId: far-east
+      enemyId: 
+      moveDirection: 3
+      enemyDirection: 0
+    - kind: 1
+      beat: 27
+      roomId: far-east
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 36
+      roomId: far-north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 1
+      beat: 35
+      roomId: far-north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 2
+      beat: 12
+      roomId: north
+      enemyId: north-upper-left
+      moveDirection: 0
+      enemyDirection: 7
+    - kind: 2
+      beat: 21
+      roomId: east
+      enemyId: east-upper-right
+      moveDirection: 0
+      enemyDirection: 1
+    - kind: 2
+      beat: 31
+      roomId: far-east
+      enemyId: far-east-lower-left
+      moveDirection: 0
+      enemyDirection: 5
+    - kind: 2
+      beat: 32
+      roomId: far-east
+      enemyId: far-east-upper-left
+      moveDirection: 0
+      enemyDirection: 7
+    - kind: 2
+      beat: 38
+      roomId: far-north
+      enemyId: far-north-right
+      moveDirection: 0
+      enemyDirection: 2
+    - kind: 2
+      beat: 39
+      roomId: far-north
+      enemyId: far-north-upper-right
+      moveDirection: 0
+      enemyDirection: 1
+    - kind: 2
+      beat: 40
+      roomId: far-north
+      enemyId: far-north-lower-left
+      moveDirection: 0
+      enemyDirection: 5
+  beatChartMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
+  mapDraft:
+    settings:
+      bpm: 120
+      startingRoomId: start
+      offsetSeconds: 0
+      musicDelaySeconds: 0
+      loopMusic: 0
+      beatsPerBar: 4
+      subdivision: 4
+      roomLeadBeats: 4
+      enemyLeadBeats: 3
+      notes:
+      - kind: 0
+        beat: 8
+        roomId: north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 18
+        roomId: east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 16
+        roomId: east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 24
+        roomId: south
+        enemyId: 
+        moveDirection: 2
+        enemyDirection: 0
+      - kind: 0
+        beat: 28
+        roomId: far-east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 27
+        roomId: far-east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 36
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 1
+        beat: 35
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 2
+        beat: 12
+        roomId: north
+        enemyId: north-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 21
+        roomId: east
+        enemyId: east-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 31
+        roomId: far-east
+        enemyId: far-east-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+      - kind: 2
+        beat: 32
+        roomId: far-east
+        enemyId: far-east-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 38
+        roomId: far-north
+        enemyId: far-north-right
+        moveDirection: 0
+        enemyDirection: 2
+      - kind: 2
+        beat: 39
+        roomId: far-north
+        enemyId: far-north-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 40
+        roomId: far-north
+        enemyId: far-north-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+    roomSize: 6
+    originX: 0
+    originY: 0
+    cameraX: 0
+    cameraY: 0
+    cameraSize: 9.5
+    cameraTrack: 0
+    rooms:
+    - id: start
+      x: 0
+      y: 0
+      hitBeat: 0
+      frameBeat: 0
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 0
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 0
+    - id: north
+      x: 0
+      y: 1
+      hitBeat: 8
+      frameBeat: 4
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 4
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 4
+    - id: east
+      x: 1
+      y: 1
+      hitBeat: 18
+      frameBeat: 14
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 14
+      door: 1
+      doorBeat: 16
+      doorFrameBeat: 14
+    - id: south
+      x: 1
+      y: 0
+      hitBeat: 24
+      frameBeat: 20
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 20
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 20
+    - id: far-east
+      x: 2
+      y: 0
+      hitBeat: 28
+      frameBeat: 24
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 24
+      door: 1
+      doorBeat: 27
+      doorFrameBeat: 24
+    - id: far-north
+      x: 2
+      y: 1
+      hitBeat: 36
+      frameBeat: 32
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 32
+      door: 1
+      doorBeat: 35
+      doorFrameBeat: 32
+    - id: room_7793a5
+      x: 3
+      y: 1
+      hitBeat: 41
+      frameBeat: 37
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 37
+      door: 0
+      doorBeat: 40
+      doorFrameBeat: 37
+    - id: room_2255f4
+      x: 4
+      y: 1
+      hitBeat: 42
+      frameBeat: 38
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 38
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 38
+    - id: room_08ad9c
+      x: 5
+      y: 1
+      hitBeat: 43
+      frameBeat: 39
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 39
+      door: 0
+      doorBeat: 48
+      doorFrameBeat: 39
+    - id: room_b18ec926
+      x: 6
+      y: 1
+      hitBeat: 44
+      frameBeat: 40
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 40
+      door: 0
+      doorBeat: 43
+      doorFrameBeat: 40
+    - id: room_8a911a1b
+      x: 7
+      y: 1
+      hitBeat: 45
+      frameBeat: 41
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 41
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 41
+    - id: room_9a6efa05
+      x: 8
+      y: 1
+      hitBeat: 46
+      frameBeat: 42
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 42
+      door: 0
+      doorBeat: 45
+      doorFrameBeat: 42
+    - id: room_5640575c
+      x: 9
+      y: 1
+      hitBeat: 47
+      frameBeat: 43
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 43
+      door: 0
+      doorBeat: 46
+      doorFrameBeat: 43
+    enemies:
+    - id: north-upper-left
+      roomId: north
+      direction: 7
+      hitBeat: 12
+      appearBeat: 9
+      frameBeat: 9
+    - id: east-upper-right
+      roomId: east
+      direction: 1
+      hitBeat: 21
+      appearBeat: 18
+      frameBeat: 18
+    - id: far-east-lower-left
+      roomId: far-east
+      direction: 5
+      hitBeat: 31
+      appearBeat: 28
+      frameBeat: 28
+    - id: far-east-upper-left
+      roomId: far-east
+      direction: 7
+      hitBeat: 32
+      appearBeat: 29
+      frameBeat: 29
+    - id: far-north-right
+      roomId: far-north
+      direction: 2
+      hitBeat: 38
+      appearBeat: 35
+      frameBeat: 35
+    - id: far-north-upper-right
+      roomId: far-north
+      direction: 1
+      hitBeat: 39
+      appearBeat: 36
+      frameBeat: 36
+    - id: far-north-lower-left
+      roomId: far-north
+      direction: 5
+      hitBeat: 40
+      appearBeat: 37
+      frameBeat: 37
+    groups: []
+    cameras: []
+    shakes: []
+  mapDraftMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
+  appliedMap:
+    settings:
+      bpm: 120
+      startingRoomId: start
+      offsetSeconds: 0
+      musicDelaySeconds: 0
+      loopMusic: 0
+      beatsPerBar: 4
+      subdivision: 4
+      roomLeadBeats: 4
+      enemyLeadBeats: 3
+      notes:
+      - kind: 0
+        beat: 8
+        roomId: north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 18
+        roomId: east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 16
+        roomId: east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 24
+        roomId: south
+        enemyId: 
+        moveDirection: 2
+        enemyDirection: 0
+      - kind: 0
+        beat: 28
+        roomId: far-east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 27
+        roomId: far-east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 36
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 1
+        beat: 35
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 2
+        beat: 12
+        roomId: north
+        enemyId: north-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 21
+        roomId: east
+        enemyId: east-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 31
+        roomId: far-east
+        enemyId: far-east-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+      - kind: 2
+        beat: 32
+        roomId: far-east
+        enemyId: far-east-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 38
+        roomId: far-north
+        enemyId: far-north-right
+        moveDirection: 0
+        enemyDirection: 2
+      - kind: 2
+        beat: 39
+        roomId: far-north
+        enemyId: far-north-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 40
+        roomId: far-north
+        enemyId: far-north-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+    roomSize: 6
+    originX: 0
+    originY: 0
+    cameraX: 0
+    cameraY: 0
+    cameraSize: 9.5
+    cameraTrack: 0
+    rooms:
+    - id: start
+      x: 0
+      y: 0
+      hitBeat: 0
+      frameBeat: 0
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 0
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 0
+    - id: north
+      x: 0
+      y: 1
+      hitBeat: 8
+      frameBeat: 4
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 4
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 4
+    - id: east
+      x: 1
+      y: 1
+      hitBeat: 18
+      frameBeat: 14
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 14
+      door: 1
+      doorBeat: 16
+      doorFrameBeat: 14
+    - id: south
+      x: 1
+      y: 0
+      hitBeat: 24
+      frameBeat: 20
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 20
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 20
+    - id: far-east
+      x: 2
+      y: 0
+      hitBeat: 28
+      frameBeat: 24
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 24
+      door: 1
+      doorBeat: 27
+      doorFrameBeat: 24
+    - id: far-north
+      x: 2
+      y: 1
+      hitBeat: 36
+      frameBeat: 32
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 32
+      door: 1
+      doorBeat: 35
+      doorFrameBeat: 32
+    - id: room_7793a5
+      x: 3
+      y: 1
+      hitBeat: 41
+      frameBeat: 37
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 37
+      door: 0
+      doorBeat: 40
+      doorFrameBeat: 37
+    - id: room_2255f4
+      x: 4
+      y: 1
+      hitBeat: 42
+      frameBeat: 38
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 38
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 38
+    - id: room_08ad9c
+      x: 5
+      y: 1
+      hitBeat: 43
+      frameBeat: 39
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 39
+      door: 0
+      doorBeat: 48
+      doorFrameBeat: 39
+    - id: room_b18ec926
+      x: 6
+      y: 1
+      hitBeat: 44
+      frameBeat: 40
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 40
+      door: 0
+      doorBeat: 43
+      doorFrameBeat: 40
+    - id: room_8a911a1b
+      x: 7
+      y: 1
+      hitBeat: 45
+      frameBeat: 41
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 41
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 41
+    - id: room_9a6efa05
+      x: 8
+      y: 1
+      hitBeat: 46
+      frameBeat: 42
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 42
+      door: 0
+      doorBeat: 45
+      doorFrameBeat: 42
+    - id: room_5640575c
+      x: 9
+      y: 1
+      hitBeat: 47
+      frameBeat: 43
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 43
+      door: 0
+      doorBeat: 46
+      doorFrameBeat: 43
+    enemies:
+    - id: north-upper-left
+      roomId: north
+      direction: 7
+      hitBeat: 12
+      appearBeat: 9
+      frameBeat: 9
+    - id: east-upper-right
+      roomId: east
+      direction: 1
+      hitBeat: 21
+      appearBeat: 18
+      frameBeat: 18
+    - id: far-east-lower-left
+      roomId: far-east
+      direction: 5
+      hitBeat: 31
+      appearBeat: 28
+      frameBeat: 28
+    - id: far-east-upper-left
+      roomId: far-east
+      direction: 7
+      hitBeat: 32
+      appearBeat: 29
+      frameBeat: 29
+    - id: far-north-right
+      roomId: far-north
+      direction: 2
+      hitBeat: 38
+      appearBeat: 35
+      frameBeat: 35
+    - id: far-north-upper-right
+      roomId: far-north
+      direction: 1
+      hitBeat: 39
+      appearBeat: 36
+      frameBeat: 36
+    - id: far-north-lower-left
+      roomId: far-north
+      direction: 5
+      hitBeat: 40
+      appearBeat: 37
+      frameBeat: 37
+    groups: []
+    cameras: []
+    shakes: []

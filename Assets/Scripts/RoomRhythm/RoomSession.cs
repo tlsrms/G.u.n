@@ -13,7 +13,6 @@ namespace Gun.RoomRhythm
         [SerializeField] private SpriteRenderer playerSprite;
         [SerializeField] private RoomBinding[] rooms;
         [SerializeField] private TextMesh status;
-        [SerializeField] private TextMesh cue;
         [SerializeField] private RoomAim aim;
         [SerializeField] private RoomCombat combat;
         [SerializeField] private RoomFeedback feedback;
@@ -21,37 +20,58 @@ namespace Gun.RoomRhythm
         private RunPhase lastFeedbackPhase;
         private readonly List<TimedCommand> commands = new List<TimedCommand>();
         private RoomBinding[] path;
+        private int[] previousRoomOccurrences;
         private RoomRun run;
         private int configuredRevision;
+        private int configuredJudgmentRevision;
         private double presentationTime;
+        private RoomCinematics cinematics;
+        private RoomRestartTransition restartTransition;
+        private bool[] deathRooms, deathFrames, deathDoorFrames;
+        public RoomCinematics Cinematics => cinematics;
         public double PresentationTime => presentationTime;
         public RoomChart Chart => chart;
         [SerializeField] private bool logInputTiming = true;
         private readonly Color alive = new Color(0.3f, 1f, 0.8f);
 
-        private void Start() => InitializeRun();
+        private void Start()
+        {
+            restartTransition = GetComponent<RoomRestartTransition>();
+            if (restartTransition == null) restartTransition = gameObject.AddComponent<RoomRestartTransition>();
+            InitializeRun();
+        }
 
         private void InitializeRun()
         {
             if (timeline != null) timeline.Stop();
             if (combat != null) combat.Suspend();
             configuredRevision = chart != null ? chart.Revision : 0;
+            configuredJudgmentRevision = JudgmentSettings.Revision;
             try
             {
                 ConfigureText(status);
-                ConfigureText(cue);
                 run = BuildValidatedRun();
                 foreach (RoomBinding room in path) room.Configure(chart);
-                aim.Configure(chart.aimRadius, chart.aimHalfAngle);
-                combat.Configure(chart, path, run, aim, feedback);
+                aim.Configure(chart.aimRadius, chart.aimHalfAngle, feedback);
+                previousRoomOccurrences = new int[path.Length];
+                for (int i = 0; i < path.Length; i++)
+                {
+                    previousRoomOccurrences[i] = -1;
+                    for (int j = i - 1; j >= 0; j--)
+                        if ((path[i].Center - path[j].Center).sqrMagnitude < .0001f)
+                        { previousRoomOccurrences[i] = j; break; }
+                }
+                combat.Configure(chart, path, run, aim, feedback, previousRoomOccurrences);
+                cinematics = GetComponent<RoomCinematics>();
+                if (cinematics == null) cinematics = gameObject.AddComponent<RoomCinematics>();
+                cinematics.Configure(playerSprite, feedback);
                 ResetRun();
             }
             catch (Exception error)
             {
                 Debug.LogError("Room chart configuration: " + error.Message, this);
-                if (status != null) status.text = "CHART SETUP ERROR";
+                if (status != null) status.text = "";
                 run = null;
-                if (cue != null) cue.text = "FIX CHART SETTINGS";
             }
         }
 
@@ -85,7 +105,7 @@ namespace Gun.RoomRhythm
         private void ValidateBindings()
         {
             if (chart == null || chart.music == null || timeline == null || keyboard == null
-                || player == null || playerSprite == null || status == null || cue == null || aim == null || combat == null || feedback == null)
+                || player == null || playerSprite == null || status == null || aim == null || combat == null || feedback == null)
                 throw new InvalidOperationException("Missing required scene reference.");
             if (rooms == null || chart.moves == null || chart.moves.Length == 0 || !(chart.bpm > 0))
                 throw new InvalidOperationException("Chart needs rooms, movement notes and a positive BPM.");
@@ -125,15 +145,15 @@ namespace Gun.RoomRhythm
             foreach (RoomBinding room in path)
                 if (!(chart.passageWidth > 0 && chart.passageWidth < room.SideLength - chart.judgmentLineWidth))
                     throw new InvalidOperationException("Invalid central passage width.");
-            if (chart.moves[chart.moves.Length - 1].HitTime + chart.Timing.late + chart.moveDuration > chart.music.length)
-                throw new InvalidOperationException("Music ends before the last movement finishes.");
+            if (!chart.LoopMusic && chart.moves[chart.moves.Length - 1].HitTime > chart.music.length + chart.MusicDelaySeconds)
+                throw new InvalidOperationException("마지막 방의 정확 판정 시각이 음원 종료 이후입니다.");
         }
 
         private void Update()
         {
             // The model copies timing and notes, while visuals read the chart. Rebuild BOTH
             // when the Inspector changes the asset; never mix old judgments with new visuals.
-            if (chart != null && chart.Revision != configuredRevision)
+            if (chart != null && (chart.Revision != configuredRevision || JudgmentSettings.Revision != configuredJudgmentRevision))
             {
                 InitializeRun();
                 keyboard.DrainInto(commands);
@@ -141,19 +161,27 @@ namespace Gun.RoomRhythm
             }
             if (run == null) return;
             keyboard.DrainInto(commands);
+            if (restartTransition.BlocksInput) return;
+            bool continuePressed = commands.Exists(command => command.Command == RoomCommand.Continue);
+            if (run.Phase == RunPhase.Ready)
+            {
+                if (continuePressed)
+                {
+                    timeline.Begin(chart.music, chart.MusicDelaySeconds, chart.LoopMusic, InputOffsetSettings.Milliseconds(chart));
+                    run.Begin();
+                }
+                Present();
+                return;
+            }
+            if ((run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared) && continuePressed)
+            {
+                restartTransition.Begin(InitializeRun);
+                return;
+            }
             double frameTime = run.Phase == RunPhase.Ready ? 0 : timeline.FromInputTime(keyboard.ProcessedThroughTime);
             foreach (TimedCommand command in commands)
             {
-                if (command.Command == RoomCommand.Reset) { InitializeRun(); return; }
-                if (command.Command == RoomCommand.Start)
-                {
-                    if (run.Phase == RunPhase.Ready)
-                    {
-                        timeline.Begin(chart.music); run.Begin();
-                        frameTime = timeline.FromInputTime(keyboard.ProcessedThroughTime);
-                    }
-                    continue;
-                }
+                if (command.Command == RoomCommand.Continue) continue;
                 if (!run.IsActive) continue;
                 double time = timeline.FromInputTime(command.Time);
                 frameTime = Math.Max(frameTime, time);
@@ -177,9 +205,20 @@ namespace Gun.RoomRhythm
             }
             else if (commands.Count > 0 && lastFeedbackPhase != run.Phase)
                 presentationTime = frameTime;
-            if (run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared) timeline.Stop();
             if (run.Phase != lastFeedbackPhase && (run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared))
-                feedback.Outcome(PlayerPosition(presentationTime), run.Phase == RunPhase.Cleared);
+            {
+                if (run.Phase == RunPhase.Dead)
+                {
+                    FreezePresentation();
+                    cinematics.BeginDeath(run, path[run.CompletedMoves], chart, PlayerPosition(presentationTime), combat.FailureEnemy());
+                    aim.SetPresentation(false);
+                }
+                else feedback.Outcome(PlayerPosition(presentationTime), true);
+            }
+            if (run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared) timeline.Stop();
+            if (run.Phase == RunPhase.Dead)
+                presentationTime = run.DeathTime;
+            cinematics.SetCombatFocus(run.IsActive && run.Phase != RunPhase.Moving && combat.HasLivingEnemies(run.CompletedMoves));
             lastFeedbackPhase = run.Phase;
             Present();
         }
@@ -191,6 +230,8 @@ namespace Gun.RoomRhythm
             presentationTime = 0;
             aim.ResetAim();
             feedback.ResetFeedback();
+            cinematics.ResetPresentation();
+            deathRooms = deathFrames = deathDoorFrames = null;
             lastFeedbackPhase = RunPhase.Ready;
             Present();
         }
@@ -201,6 +242,21 @@ namespace Gun.RoomRhythm
             if (!run.IsActive) return;
             Vector3 origin = PlayerPosition(time);
             combat.Shoot(pointer, time, origin);
+        }
+
+        private void FreezePresentation()
+        {
+            double time = run.DeathTime;
+            int current = run.CompletedMoves;
+            deathRooms = new bool[path.Length];
+            deathFrames = new bool[path.Length];
+            deathDoorFrames = new bool[path.Length];
+            for (int i = 0; i < path.Length; i++)
+            {
+                deathRooms[i] = (i == current || run.Death != DeathPresentation.Departure)
+                    && run.RoomVisible(i, time, previousRoomOccurrences[i]);
+            }
+            combat.FreezeAtDeath(time);
         }
 
         private Vector3 PlayerPosition(double time)
@@ -223,27 +279,34 @@ namespace Gun.RoomRhythm
                 bool isCurrent = i == current;
                 MoveNote note = i > 0 ? chart.moves[i - 1] : default;
                 note.appearTime = i > 0 ? chart.RoomAppearsAt(note) : 0;
-                bool visible = isCurrent || (i > current && run.Phase != RunPhase.Ready && time >= note.appearTime);
+                bool visible = run.RoomVisible(i, time, previousRoomOccurrences[i]);
+                if (deathRooms != null) visible = deathRooms[i];
                 bool future = i > current + 1;
                 bool movingInto = run.Phase == RunPhase.Moving && i == current + 1;
                 float progress = isCurrent || movingInto ? 1f : Progress(time, note.appearTime, note.HitTime);
                 double frameStart = note.customAppearance ? note.frameStartTime : note.appearTime;
-                path[i].Present(visible, isCurrent, future, progress, i > current && !movingInto && time >= frameStart,
+                path[i].Present(visible, isCurrent, future, progress, deathFrames != null ? deathFrames[i] : run.RoomFrameVisible(i, time),
                     time, note.HitTime, Progress(time, frameStart, note.HitTime));
                 if (path[i].Door != null)
                     path[i].Door.Present(visible && i > current && note.hasDoor && !run.DoorBroken(i - 1),
                         future, Progress(time, note.appearTime, note.doorTime), time, note.doorTime, note.appearTime,
-                        note.customAppearance ? note.doorFrameStartTime : note.appearTime);
+                        note.customAppearance ? note.doorFrameStartTime : note.appearTime,
+                        deathDoorFrames != null ? deathDoorFrames[i] : run.RoomFrameVisible(i, time, true));
             }
-            player.position = PlayerPosition(time);
+            player.position = run.Phase == RunPhase.Dead ? cinematics.DeathPosition : PlayerPosition(time);
             combat.Present(time);
-            playerSprite.color = run.Phase == RunPhase.Dead ? new Color(1f, 0.3f, 0.35f) : alive;
+            Color playerColor = RoomPalette.Tint(alive);
+            playerColor.a *= cinematics.PlayerAlpha;
+            playerSprite.color = playerColor;
+            playerSprite.enabled = cinematics.PlayerVisible;
+            if (run.Phase == RunPhase.Dead && cinematics.Death == DeathPresentation.Execution)
+                aim.FadeWithPlayer(cinematics.PlayerAlpha);
+            if (run.Phase == RunPhase.Moving) cinematics.Trail();
             bool showGrade = run.JudgmentVersion > 0 && time - run.LastJudgedAt < 0.9;
             status.color = Color.white;
-            cue.color = Color.white;
-            if (timingBar != null && run.Phase != RunPhase.Waiting && run.Phase != RunPhase.Dead)
+            if (timingBar != null && run.Phase != RunPhase.Waiting)
                 timingBar.Hide();
-            if (timingBar != null && (run.Phase == RunPhase.Waiting || run.Phase == RunPhase.Dead))
+            if (timingBar != null && run.Phase == RunPhase.Waiting)
             {
                 int nextEnemy = run.NextEnemyIndex();
                 if (nextEnemy >= 0) timingBar.Present(time, chart.enemies[nextEnemy].time, chart.Timing);
@@ -254,49 +317,15 @@ namespace Gun.RoomRhythm
                 }
                 else timingBar.Hide();
             }
-            if (run.Phase == RunPhase.Ready)
-            {
-                status.text = "SPACE : START     R : RESET";
-                cue.text = "WASD : MOVE / AIM + CLICK : SHOOT";
-            }
-            else if (run.Phase == RunPhase.Dead)
-            {
-                status.text = run.Failure == FailureReason.WrongDirection ? "WRONG DIRECTION"
-                    : JudgmentPresentation.Text(run.LastGrade);
-                status.color = JudgmentPresentation.Tint(run.Failure == FailureReason.WrongDirection
-                    ? TimingGrade.TooLate : run.LastGrade);
-                cue.text = (run.Failure == FailureReason.MissedEnemy ? "MISSED ENEMY / "
-                    : run.Failure == FailureReason.MissedDoor ? "MISSED DOOR / " : "") + "R : RETRY";
-            }
-            else if (run.Phase == RunPhase.Cleared)
-            {
-                status.text = "CLEAR / " + JudgmentPresentation.Text(run.LastGrade);
-                status.color = JudgmentPresentation.Tint(run.LastGrade);
-                cue.text = "R : RETRY";
-            }
-            else if (run.Phase == RunPhase.Moving)
-            {
-                status.text = JudgmentPresentation.Text(run.LastGrade);
-                status.color = JudgmentPresentation.Tint(run.LastGrade);
-                cue.text = "";
-            }
-            else
-            {
-                status.text = showGrade ? JudgmentPresentation.Text(run.LastGrade) : "WASD : MOVE     CLICK : SHOOT     R : RESET";
-                if (showGrade) status.color = JudgmentPresentation.Tint(run.LastGrade);
-                int enemy = run.NextEnemyIndex();
-                MoveNote note = current < chart.moves.Length ? chart.moves[current] : default;
-                bool doorNext = enemy < 0 && note.hasDoor && !run.DoorBroken(current);
-                string key = enemy >= 0 ? "SHOOT ENEMY" : doorNext ? "SHOOT DOOR" : KeyText(note.direction);
-                cue.text = key;
-            }
+            bool retainGrade = run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared || run.Phase == RunPhase.Moving;
+            status.text = run.Phase != RunPhase.Ready && (showGrade || retainGrade)
+                ? JudgmentPresentation.Text(run.LastGrade, run.LastTimingErrorMs) : "";
+            status.color = JudgmentPresentation.Tint(run.LastGrade);
         }
 
         private static float Progress(double time, double start, double end)
             => end > start ? Mathf.Clamp01((float)((time - start) / (end - start))) : 1f;
 
-        private static string KeyText(MoveDirection direction) => direction == MoveDirection.Up ? "W"
-            : direction == MoveDirection.Left ? "A" : direction == MoveDirection.Down ? "S" : "D";
         private void OnDisable() { if (timeline != null) timeline.Stop(); }
     }
 }

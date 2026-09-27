@@ -2,6 +2,25 @@ using System;
 
 namespace Gun.RoomRhythm
 {
+    public static class JudgmentSettings
+    {
+        public const double DefaultAccurateMs = 25;
+        public const double DefaultToleranceMs = 35;
+        public static double AccurateMs { get; private set; } = DefaultAccurateMs;
+        public static double ToleranceMs { get; private set; } = DefaultToleranceMs;
+        public static int Revision { get; private set; }
+        public static void Configure(double accurateMs, double toleranceMs)
+        {
+            if (double.IsNaN(accurateMs) || double.IsInfinity(accurateMs) || accurateMs < 0
+                || double.IsNaN(toleranceMs) || double.IsInfinity(toleranceMs) || toleranceMs <= accurateMs)
+                throw new ArgumentException("Accurate must be >= 0 and tolerance must be greater, in finite milliseconds.");
+            if (AccurateMs == accurateMs && ToleranceMs == toleranceMs) return;
+            AccurateMs = accurateMs; ToleranceMs = toleranceMs; unchecked { Revision++; }
+        }
+        public static TimingWindow Window => new TimingWindow {
+            early = ToleranceMs / 1000, late = ToleranceMs / 1000, accurate = AccurateMs / 1000
+        };
+    }
     // Equal-width strokes touch when their centerlines are one stroke width apart.
     // This maps the SAME timing window used by Judge to the visible overlap.
     public static class ApproachGeometry
@@ -56,7 +75,7 @@ namespace Gun.RoomRhythm
         public TimingGrade Judge(double input, double target)
         {
             if (input < target - early) return TimingGrade.TooEarly;
-            if (input >= target + late) return TimingGrade.TooLate;
+            if (input > target + late) return TimingGrade.TooLate;
             if (input < target - accurate) return TimingGrade.Early;
             return input <= target + accurate ? TimingGrade.Accurate : TimingGrade.Late;
         }

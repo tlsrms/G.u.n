@@ -21,6 +21,19 @@ namespace Gun.RoomRhythm.Editor
             if (match == null) throw new ArgumentException("열린 씬의 Room Session에 이 채보를 연결하세요.");
             return match;
         }
+        private static RoomSession ApplicationSession(RoomChart chart)
+        {
+            var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            var sessions = new List<RoomSession>();
+            if (activeScene.IsValid() && activeScene.isLoaded)
+                foreach (var root in activeScene.GetRootGameObjects())
+                    sessions.AddRange(root.GetComponentsInChildren<RoomSession>(true));
+            if (sessions.Count == 1) return sessions[0];
+            if (sessions.Count == 0) return Session(chart);
+            var matches = sessions.FindAll(session => session.Chart == chart);
+            if (matches.Count == 1) return matches[0];
+            throw new ArgumentException("활성 씬에 Room Session이 여러 개여서 적용 대상을 정할 수 없습니다. 적용할 Session이 하나인 씬을 활성화하세요.");
+        }
         private static T[] References<T>(UnityEngine.Object owner, string name) where T : UnityEngine.Object
         {
             var array = new SerializedObject(owner).FindProperty(name);
@@ -94,11 +107,29 @@ namespace Gun.RoomRhythm.Editor
             return compiled;
         }
 
-        internal static void Save(RoomChart chart)
+        internal static void SaveDraft(RoomChart chart)
+        {
+            if (chart == null) throw new ArgumentException("저장할 채보를 선택하세요.");
+            if (chart.mapDraft != null && chart.mapDraft.NeedsEnemyRoomSynchronization)
+            {
+                Undo.RecordObject(chart, "적 소속 방 갱신");
+                chart.mapDraft.SynchronizeEnemyRooms();
+            }
+            if (chart.mapDraft != null && chart.mapDraft.NeedsRoomStartSynchronization)
+            {
+                Undo.RecordObject(chart, "방과 판정선 시작 박 통일");
+                chart.mapDraft.SynchronizeRoomStarts();
+            }
+            // Persist unfinished authoring independently of gameplay validation or scene bindings.
+            EditorUtility.SetDirty(chart);
+            AssetDatabase.SaveAssetIfDirty(chart);
+        }
+
+        internal static void ApplyToScene(RoomChart chart)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) throw new ArgumentException("Play 종료 후 저장하세요.");
             var compiled = Validate(chart);
-            var session = Session(chart);
+            var session = ApplicationSession(chart);
             var scene = session.gameObject.scene;
             if (string.IsNullOrEmpty(scene.path) || !scene.isLoaded) throw new ArgumentException("먼저 대상 씬을 파일로 저장하세요.");
             var oldRooms = References<RoomBinding>(session, "rooms");
@@ -122,13 +153,19 @@ namespace Gun.RoomRhythm.Editor
                 if (room == null || room.gameObject.scene != scene) throw new ArgumentException("다른 씬 또는 누락된 방 연결이 있습니다.");
             foreach (var enemy in oldEnemies)
                 if (enemy == null || enemy.gameObject.scene != scene) throw new ArgumentException("다른 씬 또는 누락된 적 연결이 있습니다.");
-            Undo.IncrementCurrentGroup(); int undo = Undo.GetCurrentGroup(); Undo.SetCurrentGroupName("시각적 맵과 채보 저장");
+            Undo.IncrementCurrentGroup(); int undo = Undo.GetCurrentGroup(); Undo.SetCurrentGroupName("시각적 맵 씬 적용");
             try
             {
                 Undo.RecordObject(chart, "게임 채보 적용");
+                Undo.RecordObject(session, "Room Session 채보 연결");
+                var sessionFields = new SerializedObject(session);
+                sessionFields.FindProperty("chart").objectReferenceValue = chart;
+                sessionFields.ApplyModifiedProperties();
                 var map = chart.mapDraft;
+                map.SynchronizeRoomStarts();
+                map.SynchronizeEnemyRooms();
                 chart.music = chart.mapDraftMusic; chart.bpm = (float)map.settings.bpm; chart.startingRoomId = map.settings.startingRoomId;
-                chart.moves = compiled.Moves; chart.enemies = compiled.Enemies; chart.timing = compiled.Timing;
+                chart.moves = compiled.Moves; chart.enemies = compiled.Enemies;
                 chart.roomLeadTime = (float)compiled.RoomLeadSeconds; chart.enemyLeadTime = (float)compiled.EnemyLeadSeconds;
                 chart.appliedMap = JsonUtility.FromJson<MapChart>(JsonUtility.ToJson(map));
                 var newRooms = new List<RoomBinding>(); var newEnemies = new List<RoomEnemy>();
@@ -147,6 +184,7 @@ namespace Gun.RoomRhythm.Editor
                     Reference<GameObject>(binding, "visuals").SetActive(true);
                     Transform frame = Reference<Transform>(binding, "judgmentFrame");
                     frame.gameObject.SetActive(false); Square(References<SpriteRenderer>(binding, "frameEdges"), map.roomSize, chart.judgmentLineWidth);
+                    binding.RefreshFrameDirections();
                     MoveNote note = Array.Find(compiled.Moves, n => n.destinationId == room.id);
                     Vector2 toward = Direction(note.direction);
                     var door = binding.Door;
@@ -155,6 +193,7 @@ namespace Gun.RoomRhythm.Editor
                     Transform doorFrame = Reference<Transform>(door, "judgmentFrame");
                     doorFrame.SetPositionAndRotation(binding.Center, Quaternion.identity);
                     Square(References<SpriteRenderer>(door, "frameEdges"), map.roomSize, chart.judgmentLineWidth);
+                    door.RefreshFrameDirections();
                     door.Present(room.door && room.id != map.settings.startingRoomId, false, 1, 0, note.doorTime, 0, double.PositiveInfinity);
                     newRooms.Add(binding);
                 }
@@ -162,7 +201,7 @@ namespace Gun.RoomRhythm.Editor
                 {
                     var parent = newRooms.Find(r => r.Id == enemy.roomId).transform;
                     var clone = UnityEngine.Object.Instantiate(enemyTemplate.gameObject, parent);
-                    Undo.RegisterCreatedObjectUndo(clone, "적 배치"); clone.name = "Enemy - " + enemy.id; clone.SetActive(true);
+                    Undo.RegisterCreatedObjectUndo(clone, "적 배치"); clone.name = "Enemy - " + map.EnemyLabel(enemy); clone.SetActive(true);
                     var binding = clone.GetComponent<RoomEnemy>(); Id(binding, "enemyId", enemy.id);
                     var room = map.Room(enemy.roomId);
                     binding.Configure(new Vector3(map.WorldX(room), map.WorldY(room), 0), enemy.direction, chart);
@@ -221,11 +260,14 @@ namespace Gun.RoomRhythm.Editor
         }
         private static void Square(SpriteRenderer[] edges, float size, float width)
         {
-            foreach (var edge in edges)
+            for (int i = 0; i < edges.Length; i++)
             {
+                var edge = edges[i];
                 var p = edge.transform.localPosition;
-                bool horizontal = Mathf.Abs(p.y) > Mathf.Abs(p.x);
-                edge.transform.localPosition = horizontal ? new Vector3(0, Mathf.Sign(p.y) * size / 2, 0) : new Vector3(Mathf.Sign(p.x) * size / 2, 0, 0);
+                bool collapsed = p.sqrMagnitude <= 0.0001f;
+                bool horizontal = collapsed ? i % 2 == 0 : Mathf.Abs(p.y) > Mathf.Abs(p.x);
+                float side = collapsed ? (i < 2 ? 1 : -1) : horizontal ? Mathf.Sign(p.y) : Mathf.Sign(p.x);
+                edge.transform.localPosition = horizontal ? new Vector3(0, side * size / 2, 0) : new Vector3(side * size / 2, 0, 0);
                 edge.transform.localScale = horizontal ? new Vector3(size + width, width, 1) : new Vector3(width, size + width, 1);
             }
         }

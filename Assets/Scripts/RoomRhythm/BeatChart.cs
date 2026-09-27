@@ -22,16 +22,18 @@ namespace Gun.RoomRhythm
         public double bpm = 120;
         public string startingRoomId = "start";
         public double offsetSeconds;
+        public double musicDelaySeconds;
+        public bool loopMusic;
         public int beatsPerBar = 4;
         public int subdivision = 4;
-        public double toleranceBeats = .3;
-        public double accurateBeats = .1;
+        public double toleranceBeats => JudgmentSettings.Window.early * bpm / 60;
+        public double accurateBeats => JudgmentSettings.Window.accurate * bpm / 60;
         public double roomLeadBeats = 4;
         public double enemyLeadBeats = 3;
         public BeatNote[] notes = Array.Empty<BeatNote>();
 
-        public double Seconds(double beat) => offsetSeconds + beat * 60.0 / bpm;
-        public double Beat(double seconds) => (seconds - offsetSeconds) * bpm / 60.0;
+        public double Seconds(double beat) => musicDelaySeconds + offsetSeconds + beat * 60.0 / bpm;
+        public double Beat(double seconds) => (seconds - musicDelaySeconds - offsetSeconds) * bpm / 60.0;
         public double Snap(double beat) => Math.Round(beat * subdivision, MidpointRounding.AwayFromZero) / subdivision;
     }
 
@@ -51,12 +53,10 @@ namespace Gun.RoomRhythm
         public static CompiledBeatChart Compile(BeatChart chart, string startingRoomId)
         {
             if (chart == null || !Finite(chart.bpm) || chart.bpm <= 0 || chart.bpm > float.MaxValue || (float)chart.bpm == 0 || !Finite(chart.offsetSeconds)
-                || chart.offsetSeconds < 0 || chart.beatsPerBar < 1 || chart.subdivision < 1)
+                || chart.offsetSeconds < 0 || !Finite(chart.musicDelaySeconds) || chart.musicDelaySeconds < 0
+                || chart.beatsPerBar < 1 || chart.subdivision < 1)
                 throw new ArgumentException("BPM, 시작 오프셋, 박자/분할 설정을 확인하세요.");
             if (string.IsNullOrWhiteSpace(startingRoomId)) throw new ArgumentException("시작 방 ID가 필요합니다.");
-            if (!Finite(chart.toleranceBeats) || !Finite(chart.accurateBeats) || chart.toleranceBeats <= 0
-                || chart.accurateBeats < 0 || chart.accurateBeats >= chart.toleranceBeats)
-                throw new ArgumentException("정확 범위는 0 이상이며 성공 허용 범위보다 작아야 합니다.");
             if (!Finite(chart.roomLeadBeats) || !Finite(chart.enemyLeadBeats) || chart.roomLeadBeats <= 0 || chart.enemyLeadBeats <= 0)
                 throw new ArgumentException("방/적 등장 선행 박 수는 양수여야 합니다.");
             var ordered = new List<BeatNote>(chart.notes ?? Array.Empty<BeatNote>());
@@ -68,7 +68,7 @@ namespace Gun.RoomRhythm
             var enemyIds = new HashSet<string>();
             foreach (BeatNote note in ordered)
             {
-                if (!Finite(note.beat) || note.beat < 0 || !Finite(chart.Seconds(note.beat)) || string.IsNullOrWhiteSpace(note.roomId)
+                if (!Finite(note.beat) || chart.Seconds(note.beat) < 0 || !Finite(chart.Seconds(note.beat)) || string.IsNullOrWhiteSpace(note.roomId)
                     || !Enum.IsDefined(typeof(BeatNoteKind), note.kind))
                     throw new ArgumentException("노트의 박 위치, 종류와 방 ID를 확인하세요.");
                 if (note.kind == BeatNoteKind.Move)
@@ -100,8 +100,7 @@ namespace Gun.RoomRhythm
             double secondsPerBeat = 60 / chart.bpm;
             var result = new CompiledBeatChart {
                 Moves = new MoveNote[moves.Count], Enemies = enemies.ToArray(),
-                Timing = new TimingWindow { early = chart.toleranceBeats * secondsPerBeat,
-                    late = chart.toleranceBeats * secondsPerBeat, accurate = chart.accurateBeats * secondsPerBeat },
+                Timing = JudgmentSettings.Window,
                 RoomLeadSeconds = chart.roomLeadBeats * secondsPerBeat, EnemyLeadSeconds = chart.enemyLeadBeats * secondsPerBeat
             };
             if (!result.Timing.IsValid || !Finite(result.RoomLeadSeconds) || !Finite(result.EnemyLeadSeconds)
@@ -125,8 +124,7 @@ namespace Gun.RoomRhythm
             MoveNote[] moves, EnemyNote[] enemies)
         {
             if (!Finite(bpm) || bpm <= 0) throw new ArgumentException("BPM은 양수여야 합니다.");
-            var chart = new BeatChart { bpm = bpm, toleranceBeats = timing.Symmetric.early * bpm / 60,
-                accurateBeats = timing.accurate * bpm / 60, roomLeadBeats = roomLead * bpm / 60, enemyLeadBeats = enemyLead * bpm / 60 };
+            var chart = new BeatChart { bpm = bpm, roomLeadBeats = roomLead * bpm / 60, enemyLeadBeats = enemyLead * bpm / 60 };
             var notes = new List<BeatNote>();
             foreach (MoveNote move in moves ?? Array.Empty<MoveNote>())
             {

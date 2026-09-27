@@ -4,6 +4,12 @@ namespace Gun.RoomRhythm
 {
     public static class JudgmentPresentation
     {
+        public static string Text(TimingGrade grade, double? errorMs)
+        {
+            string label = Text(grade);
+            return !errorMs.HasValue || string.IsNullOrEmpty(label) ? label
+                : label + " (" + errorMs.Value.ToString("+0.0;-0.0;0.0", System.Globalization.CultureInfo.InvariantCulture) + " ms)";
+        }
         public static string Text(TimingGrade grade) => grade switch
         {
             TimingGrade.Early => "EARLY",

@@ -33,7 +33,7 @@ internal static class BeatChartChecks
         Check(Near(compiled.Moves[0].HitTime, 4) && Near(compiled.Moves[1].doorTime, 8)
             && Near(compiled.Moves[1].HitTime, 9), "existing move and door times round trip");
         Check(Near(compiled.Enemies[1].time, 10.5) && Near(compiled.Moves[1].moveDelay, 1), "enemy and door delay round trip");
-        Check(Near(compiled.Timing.early, .15) && Near(compiled.Timing.accurate, .05), "judgment tolerances round trip");
+        Check(Near(compiled.Timing.early, .035) && Near(compiled.Timing.accurate, .025), "legacy judgment tolerances are replaced by global milliseconds");
         Check(Near(compiled.Moves[0].appearTime, 2) && Near(compiled.RoomLeadSeconds, 2)
             && Near(compiled.EnemyLeadSeconds, 1.5), "lead beats derive appearance times");
         var run = new RoomRun(compiled.Moves, compiled.Timing, .18, compiled.Enemies, "start", .25, compiled.EnemyLeadSeconds);
@@ -44,12 +44,18 @@ internal static class BeatChartChecks
         draft.bpm = 60; compiled = BeatChartCompiler.Compile(draft, "start");
         Check(Near(compiled.Moves[0].HitTime, 8) && Near(compiled.Moves[1].doorTime, 16)
             && Near(compiled.Enemies[1].time, 21), "BPM scales every note kind");
-        Check(Near(compiled.Timing.early, .3) && Near(compiled.Timing.accurate, .1)
-            && Near(compiled.RoomLeadSeconds, 4), "BPM scales windows and leads");
+        Check(Near(compiled.Timing.early, .035) && Near(compiled.Timing.accurate, .025)
+            && Near(compiled.RoomLeadSeconds, 4), "BPM scales leads but preserves fixed millisecond windows");
         draft.offsetSeconds = .375; compiled = BeatChartCompiler.Compile(draft, "start");
         Check(Near(compiled.Moves[0].HitTime, 8.375) && Near(compiled.Moves[1].doorTime, 16.375), "audio offset shifts notes");
-        Check(Near(compiled.Moves[1].moveDelay, 2) && Near(compiled.Timing.early, .3), "offset does not change duration or window");
+        Check(Near(compiled.Moves[1].moveDelay, 2) && Near(compiled.Timing.early, .035), "offset does not change duration or window");
         draft.subdivision = 3;
+        draft.musicDelaySeconds = 3;
+        compiled = BeatChartCompiler.Compile(draft, "start");
+        Check(Near(compiled.Moves[0].HitTime, 11.375) && Near(compiled.Moves[1].doorTime, 19.375)
+            && Near(compiled.Enemies[1].time, 24.375), "music delay shifts every note while preserving audio alignment");
+        Check(Near(draft.Seconds(draft.Beat(0)), 0) && Near(draft.Seconds(draft.Beat(3)), 3), "map start and music start round trip with delay and offset");
+        Check(Near(compiled.Timing.early, .035) && Near(compiled.Moves[1].moveDelay, 2), "music delay preserves timing windows and durations");
         Check(Near(draft.Snap(.34), 1.0 / 3) && Near(draft.Snap(.68), 2.0 / 3), "triplet snap");
         draft.subdivision = 16;
         Check(Near(draft.Snap(.061), .0625), "fine subdivision snap");
@@ -62,6 +68,8 @@ internal static class BeatChartChecks
         Reject(c => c.bpm = 0, "zero BPM rejected");
         Reject(c => c.bpm = double.NaN, "NaN BPM rejected");
         Reject(c => c.offsetSeconds = -1, "negative offset rejected");
+        Reject(c => c.musicDelaySeconds = -1, "negative music delay rejected");
+        Reject(c => c.musicDelaySeconds = double.NaN, "NaN music delay rejected");
         Reject(c => c.notes[0].beat = -1, "negative beat rejected");
         Reject(c => c.notes[0].beat = double.PositiveInfinity, "infinite beat rejected");
         Reject(c => c.notes[2].beat = c.notes[1].beat, "door at movement time rejected");
@@ -71,7 +79,7 @@ internal static class BeatChartChecks
         Reject(c => c.notes[4].enemyId = c.notes[3].enemyId, "duplicate enemy ID rejected");
         Reject(c => c.notes[4].roomId = "missing", "orphan enemy rejected");
         Reject(c => c.notes[4].enemyDirection = (EnemyDirection)99, "invalid enemy direction rejected");
-        Reject(c => c.accurateBeats = c.toleranceBeats, "invalid judgment windows rejected");
+        Check(Near(draft.toleranceBeats * 60 / draft.bpm, .035), "beat preview uses the fixed millisecond window");
         Reject(c => c.enemyLeadBeats = double.NaN, "invalid lead rejected");
         Reject(c => c.notes = Array.Empty<BeatNote>(), "empty chart rejected");
         Console.WriteLine($"PASS: {checks} beat editor conversion/validation checks.");

@@ -35,7 +35,7 @@ internal static class AuthoredChartChecks
             enemies.Add(new EnemyNote { id = Field(row, "id"), roomId = Field(row, "roomId"),
                 direction = (EnemyDirection)Number(row, "direction"), time = Number(row, "time") });
         }
-        var window = new TimingWindow { early = Number(text, "early"), accurate = Number(text, "accurate"), late = Number(text, "late") }.Symmetric;
+        var window = JudgmentSettings.Window;
         double roomLeadTime = Number(text, "roomLeadTime");
         for (int i = 0; i < moves.Count; i++) {
             MoveNote note = moves[i]; note.appearTime = Math.Max(0, note.HitTime - roomLeadTime); moves[i] = note;
@@ -94,7 +94,7 @@ internal static class AuthoredChartChecks
                 else if (note.kind == 1) run.ShootDoor(note.index,note.time);
                 else run.ShootEnemy(note.index,note.time);
             }
-            run.Advance(events[omitted].time + window.late);
+            run.Advance(events[omitted].time + window.late + .000001);
             Require(run.Phase == RunPhase.Dead, "Omitted authored note did not kill");
             run.Reset();
             Require(run.Phase == RunPhase.Ready && run.JudgmentVersion == 0 && run.CompletedMoves == 0, "Reset after failure failed");

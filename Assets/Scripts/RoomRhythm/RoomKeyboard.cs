@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace Gun.RoomRhythm
 {
-    public enum RoomCommand { Start, Reset, Up, Left, Down, Right, ShootLeft, ShootRight }
+    public enum RoomCommand { Continue, Up, Left, Down, Right, ShootLeft, ShootRight }
 
     public readonly struct TimedCommand
     {
@@ -29,8 +29,11 @@ namespace Gun.RoomRhythm
         private void Awake()
         {
             map = new InputActionMap("Room play");
-            Bind(RoomCommand.Start, "space");
-            Bind(RoomCommand.Reset, "r");
+            InputAction anyKey = map.AddAction("Continue", InputActionType.PassThrough, "<Keyboard>/*");
+            anyKey.performed += context => {
+                if (context.control is UnityEngine.InputSystem.Controls.KeyControl && context.ReadValue<float>() > .5f)
+                    pending.Add(new TimedCommand(RoomCommand.Continue, context.time, order++, Vector2.zero));
+            };
             Bind(RoomCommand.Up, "w");
             Bind(RoomCommand.Left, "a");
             Bind(RoomCommand.Down, "s");

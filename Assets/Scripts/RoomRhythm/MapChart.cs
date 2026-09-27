@@ -56,7 +56,40 @@ namespace Gun.RoomRhythm
         public MapCameraKey[] cameras = Array.Empty<MapCameraKey>();
         public MapShake[] shakes = Array.Empty<MapShake>();
 
+        public static MapChart CreateEmpty(BeatChart settings)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (string.IsNullOrWhiteSpace(settings.startingRoomId)) settings.startingRoomId = "start";
+            double startBeat = settings.Beat(0);
+            return new MapChart {
+                settings = settings,
+                rooms = new[] { new MapRoom {
+                    id = settings.startingRoomId, individualAppearance = true,
+                    appearBeat = startBeat, hitBeat = startBeat, frameBeat = startBeat,
+                    doorBeat = startBeat, doorFrameBeat = startBeat
+                } }
+            };
+        }
+
         public MapRoom Room(string id) => Array.Find(rooms, r => r.id == id);
+        public string EnemyRoomAt(double judgmentBeat)
+        {
+            string result = settings.startingRoomId;
+            double latest = double.NegativeInfinity;
+            foreach (var room in rooms)
+            {
+                if (room.id == settings.startingRoomId || room.hitBeat > judgmentBeat || room.hitBeat <= latest) continue;
+                latest = room.hitBeat; result = room.id;
+            }
+            return result;
+        }
+        public bool NeedsEnemyRoomSynchronization => Array.Exists(enemies,
+            enemy => enemy != null && (enemy.roomId != EnemyRoomAt(enemy.hitBeat) || enemy.frameBeat != enemy.appearBeat));
+        public void SynchronizeEnemyRooms()
+        {
+            foreach (var enemy in enemies)
+                if (enemy != null) { enemy.roomId = EnemyRoomAt(enemy.hitBeat); enemy.frameBeat = enemy.appearBeat; }
+        }
         public double AppearanceBeat(MapRoom room)
         {
             if (room.individualAppearance) return room.appearBeat;
@@ -64,12 +97,23 @@ namespace Gun.RoomRhythm
             return group != null ? group.appearBeat : room.frameBeat;
         }
         public bool NeedsAppearanceMigration => Array.Exists(rooms, r => !r.individualAppearance);
+        public bool NeedsRoomStartSynchronization => Array.Exists(rooms,
+            room => room.frameBeat != AppearanceBeat(room) || room.doorFrameBeat != AppearanceBeat(room));
+        public void SetRoomStart(MapRoom room, double beat)
+        {
+            room.individualAppearance = true;
+            room.appearBeat = room.frameBeat = room.doorFrameBeat = beat;
+        }
+        public void SynchronizeRoomStarts()
+        {
+            foreach (var room in rooms) SetRoomStart(room, AppearanceBeat(room));
+        }
         public void MigrateAppearance()
         {
             foreach (var room in rooms)
             {
-                if (!room.individualAppearance) room.appearBeat = AppearanceBeat(room);
-                room.individualAppearance = true; room.groupId = null;
+                SetRoomStart(room, AppearanceBeat(room));
+                room.groupId = null;
             }
             groups = Array.Empty<MapGroup>();
         }
@@ -82,19 +126,25 @@ namespace Gun.RoomRhythm
                 : b.id == settings.startingRoomId ? 1 : a.hitBeat.CompareTo(b.hitBeat));
             return ordered;
         }
-        public string RoomLabel(MapRoom room)
+        public string RoomLabel(MapRoom room, double? judgmentBeat = null)
         {
             int order = Array.IndexOf(OrderedRooms(), room) + 1;
-            double beat = room.id == settings.startingRoomId ? settings.Beat(0) : room.hitBeat;
+            double beat = judgmentBeat ?? (room.id == settings.startingRoomId ? settings.Beat(0) : room.hitBeat);
             return order + "th/" + beat.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + "beat";
         }
+        public string EnemyLabel(MapEnemy enemy)
+        {
+            var room = Room(EnemyRoomAt(enemy.hitBeat));
+            return (room != null ? RoomLabel(room, enemy.hitBeat) : "?/" + enemy.hitBeat.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + "beat")
+                + " · " + enemy.direction;
+        }
         // A distinct room occurrence can reuse a tile after its previous occupant has disappeared.
-        // Include the latest successful input and movement animation in the occupied interval.
+        // Authoring and preview use on-beat movement. Runtime defers reuse until actual departure.
         public double DepartureBeat(MapRoom room, double movementSeconds)
         {
             var ordered = OrderedRooms(); int index = Array.IndexOf(ordered, room);
             return index >= 0 && index + 1 < ordered.Length
-                ? ordered[index + 1].hitBeat + settings.toleranceBeats + movementSeconds * settings.bpm / 60
+                ? ordered[index + 1].hitBeat + movementSeconds * settings.bpm / 60
                 : double.PositiveInfinity;
         }
         public void ValidateRoomReuse(double movementSeconds)
@@ -104,10 +154,28 @@ namespace Gun.RoomRhythm
                 for (int j = 0; j < i; j++)
                 {
                     if (ordered[i].x != ordered[j].x || ordered[i].y != ordered[j].y) continue;
-                    double free = DepartureBeat(ordered[j], movementSeconds);
-                    if (AppearanceBeat(ordered[i]) < free)
-                        throw new ArgumentException(RoomLabel(ordered[i]) + ": 같은 위치의 이전 방이 사라지는 " + free.ToString("0.###") + "박 이후에 방이 등장해야 합니다.");
+                    // An early visual start is legal: the occupied tile postpones its rendering.
+                    // Reject only when even the earliest departure misses the next judgment window.
+                    double earliestFree = DepartureBeat(ordered[j], movementSeconds) - settings.toleranceBeats;
+                    double deadline = (ordered[i].door ? ordered[i].doorBeat : ordered[i].hitBeat) + settings.toleranceBeats;
+                    if (earliestFree > deadline + 1e-9)
+                        throw new ArgumentException(RoomLabel(ordered[i]) + ": 좌표 (" + ordered[i].x + ", " + ordered[i].y
+                            + ")의 이전 방에서 가장 빨리 나와도 " + earliestFree.ToString("0.######")
+                            + "박입니다. 새 방의 " + (ordered[i].door ? "문 사격" : "이동") + " 허용 시각 "
+                            + deadline.ToString("0.######") + "박보다 늦습니다. 정확 판정 박을 뒤로 옮기세요.");
                 }
+        }
+
+        public double VisibleAppearanceBeat(MapRoom room, double movementSeconds)
+        {
+            double start = AppearanceBeat(room);
+            foreach (var previous in OrderedRooms())
+            {
+                if (previous == room) break;
+                if (previous.x == room.x && previous.y == room.y)
+                    start = Math.Max(start, DepartureBeat(previous, movementSeconds));
+            }
+            return start;
         }
 
         public MapCameraPose CameraAt(double beat, float fallbackX, float fallbackY)
@@ -148,7 +216,7 @@ namespace Gun.RoomRhythm
         private static bool Finite(double n) => !double.IsNaN(n) && !double.IsInfinity(n);
         private static void Require(bool condition, string message) { if (!condition) throw new ArgumentException(message); }
         private static void Time(BeatChart s, double beat, string label)
-            => Require(Finite(beat) && Finite(s.Seconds(beat)) && s.Seconds(beat) >= 0, label + ": 음악 시작 이후의 유효한 시각이 필요합니다.");
+            => Require(Finite(beat) && Finite(s.Seconds(beat)) && s.Seconds(beat) >= 0, label + ": 맵 시작 이후의 유효한 시각이 필요합니다.");
         private static void Frame(BeatChart s, double appearance, double start, double hit, string label)
         {
             Time(s, appearance, label); Time(s, start, label); Time(s, hit, label);
@@ -158,6 +226,8 @@ namespace Gun.RoomRhythm
         {
             Require(map != null && map.settings != null && map.rooms != null && map.enemies != null && map.cameras != null && map.shakes != null, "맵 데이터가 없습니다.");
             var s = map.settings;
+            musicLength += s.musicDelaySeconds;
+            if (s.loopMusic) musicLength = double.PositiveInfinity;
             Require(Finite(map.roomSize) && map.roomSize > 0 && Finite(map.originX) && Finite(map.originY), "방 크기/원점이 잘못되었습니다.");
             var rooms = new Dictionary<string, MapRoom>();
             foreach (var room in map.rooms)
@@ -176,40 +246,53 @@ namespace Gun.RoomRhythm
                 long dx = (long)room.x - previous.x, dy = (long)room.y - previous.y;
                 Require(Math.Abs(dx) + Math.Abs(dy) == 1, "시간순 다음 방은 바로 옆 칸이어야 합니다: " + room.id);
                 var direction = dx == 1 ? MoveDirection.Right : dx == -1 ? MoveDirection.Left : dy == 1 ? MoveDirection.Up : MoveDirection.Down;
-                Frame(s, map.AppearanceBeat(room), room.frameBeat, room.hitBeat, "방 " + map.RoomLabel(room));
+                Frame(s, map.AppearanceBeat(room), map.AppearanceBeat(room), room.hitBeat, "방 " + map.RoomLabel(room));
                 notes.Add(new BeatNote { kind = BeatNoteKind.Move, roomId = room.id, beat = room.hitBeat, moveDirection = direction });
                 if (room.door)
                 {
-                    Frame(s, map.AppearanceBeat(room), room.doorFrameBeat, room.doorBeat, "문 " + map.RoomLabel(room));
+                    Frame(s, map.AppearanceBeat(room), map.AppearanceBeat(room), room.doorBeat, "문 " + map.RoomLabel(room));
                     notes.Add(new BeatNote { kind = BeatNoteKind.Door, roomId = room.id, beat = room.doorBeat });
                 }
                 previous = room;
             }
+            var enemyIds = new HashSet<string>();
             foreach (var enemy in map.enemies)
             {
                 Require(enemy != null, "빈 적 데이터입니다.");
-                Frame(s, enemy.appearBeat, enemy.frameBeat, enemy.hitBeat, "적 " + enemy.id);
-                notes.Add(new BeatNote { kind = BeatNoteKind.Enemy, roomId = enemy.roomId, enemyId = enemy.id, enemyDirection = enemy.direction, beat = enemy.hitBeat });
+                string label = "적 " + map.EnemyLabel(enemy);
+                Require(!string.IsNullOrWhiteSpace(enemy.id) && enemyIds.Add(enemy.id), label + ": 적 ID가 없거나 중복되었습니다.");
+                Require(Enum.IsDefined(typeof(EnemyDirection), enemy.direction), label + ": 잘못된 적 방향입니다.");
+                Frame(s, enemy.appearBeat, enemy.appearBeat, enemy.hitBeat, label);
+                notes.Add(new BeatNote { kind = BeatNoteKind.Enemy, roomId = map.EnemyRoomAt(enemy.hitBeat), enemyId = enemy.id, enemyDirection = enemy.direction, beat = enemy.hitBeat });
             }
-            var beat = new BeatChart { bpm = s.bpm, offsetSeconds = s.offsetSeconds, beatsPerBar = s.beatsPerBar, subdivision = s.subdivision,
-                toleranceBeats = s.toleranceBeats, accurateBeats = s.accurateBeats, roomLeadBeats = s.roomLeadBeats, enemyLeadBeats = s.enemyLeadBeats, notes = notes.ToArray() };
+            var beat = new BeatChart { bpm = s.bpm, offsetSeconds = s.offsetSeconds, musicDelaySeconds = s.musicDelaySeconds, loopMusic = s.loopMusic, beatsPerBar = s.beatsPerBar, subdivision = s.subdivision,
+                roomLeadBeats = s.roomLeadBeats, enemyLeadBeats = s.enemyLeadBeats, notes = notes.ToArray() };
             var result = BeatChartCompiler.Compile(beat, s.startingRoomId);
             for (int i = 0; i < result.Moves.Length; i++)
             {
                 var room = rooms[result.Moves[i].destinationId];
                 result.Moves[i].customAppearance = true;
                 result.Moves[i].appearanceTime = result.Moves[i].appearTime = s.Seconds(map.AppearanceBeat(room));
-                result.Moves[i].frameStartTime = s.Seconds(room.frameBeat);
-                result.Moves[i].doorFrameStartTime = s.Seconds(room.doorFrameBeat);
-                Require(result.Moves[i].HitTime + result.Timing.late + moveDuration <= musicLength, "음원 종료 이후의 방 이동: " + room.id);
+                result.Moves[i].frameStartTime = result.Moves[i].appearanceTime;
+                result.Moves[i].doorFrameStartTime = result.Moves[i].appearanceTime;
+                Require(result.Moves[i].HitTime <= musicLength, "음원 종료 이후의 방 이동: " + room.id);
             }
             for (int i = 0; i < result.Enemies.Length; i++)
             {
                 var enemy = Array.Find(map.enemies, e => e.id == result.Enemies[i].id);
                 result.Enemies[i].customAppearance = true;
                 result.Enemies[i].appearanceTime = s.Seconds(enemy.appearBeat);
-                result.Enemies[i].frameStartTime = s.Seconds(enemy.frameBeat);
-                Require(result.Enemies[i].time + result.Timing.late <= musicLength, "음원 종료 이후의 적: " + enemy.id);
+                result.Enemies[i].frameStartTime = result.Enemies[i].appearanceTime;
+                Require(result.Enemies[i].time <= musicLength, "음원 종료 이후의 적: " + map.EnemyLabel(enemy));
+                string owner = map.EnemyRoomAt(enemy.hitBeat);
+                int nextIndex = owner == s.startingRoomId ? 0 : moves.FindIndex(room => room.id == owner) + 1;
+                if (nextIndex < moves.Count)
+                {
+                    var next = moves[nextIndex];
+                    double nextBeat = next.door ? next.doorBeat : next.hitBeat;
+                    Require(enemy.hitBeat < nextBeat, "적 " + map.EnemyLabel(enemy) + ": 사격 정확 박은 다음 "
+                        + (next.door ? "문 " : "방 ") + map.RoomLabel(next, nextBeat) + "보다 앞서야 합니다.");
+                }
             }
             ValidateCamera(map, musicLength);
             new RoomRun(result.Moves, result.Timing, moveDuration, result.Enemies, s.startingRoomId, readTime, result.EnemyLeadSeconds);

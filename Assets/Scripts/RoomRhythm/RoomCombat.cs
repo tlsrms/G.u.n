@@ -16,11 +16,13 @@ namespace Gun.RoomRhythm
         private EnemyNote[] enemyNotes;
         private RoomChart chart;
         private RoomBinding[] path;
+        private int[] previousRoomOccurrences;
         private RoomRun run;
         private RoomAim aim;
         private RoomFeedback feedback;
         private double displayedTime;
         private bool configured;
+        private bool[] deathVisible, deathFrames;
 
         public void Suspend()
         {
@@ -45,7 +47,7 @@ namespace Gun.RoomRhythm
             {
                 if (!lookup.TryGetValue(notes[i].id, out RoomEnemy enemy))
                     throw new InvalidOperationException("Missing enemy binding: " + notes[i].id);
-                if (notes[i].time + chart.Timing.late > chart.music.length)
+                if (!chart.LoopMusic && notes[i].time > chart.music.length + chart.MusicDelaySeconds)
                     throw new InvalidOperationException("Enemy window extends past the music.");
                 float angle = (90 - 45 * (int)notes[i].direction) * Mathf.Deg2Rad;
                 Vector3 expected = path[run.EnemyRoom(i)].Center + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * chart.aimRadius;
@@ -54,11 +56,13 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public void Configure(RoomChart chart, RoomBinding[] path, RoomRun run, RoomAim aim, RoomFeedback feedback)
+        public void Configure(RoomChart chart, RoomBinding[] path, RoomRun run, RoomAim aim, RoomFeedback feedback, int[] previousRoomOccurrences)
         {
             configured = false;
             this.chart = chart; this.path = path; this.run = run; this.aim = aim;
             this.feedback = feedback;
+            this.previousRoomOccurrences = previousRoomOccurrences;
+            deathVisible = deathFrames = null;
             if (selectedEnemyDot == null || player == null || enemies == null)
                 throw new InvalidOperationException("Missing combat scene references.");
             enemyNotes = chart.enemies ?? Array.Empty<EnemyNote>();
@@ -74,7 +78,7 @@ namespace Gun.RoomRhythm
             for (int i = 0; i < enemyNotes.Length; i++)
             {
                 EnemyNote note = enemyNotes[i];
-                if (note.time + chart.Timing.late > chart.music.length)
+                if (!chart.LoopMusic && note.time > chart.music.length + chart.MusicDelaySeconds)
                     throw new InvalidOperationException("Enemy window extends past the music.");
                 orderedEnemies[i] = lookup[note.id];
                 orderedEnemies[i].Configure(path[run.EnemyRoom(i)].Center, note.direction, chart);
@@ -87,17 +91,17 @@ namespace Gun.RoomRhythm
         {
             candidates.Clear();
             for (int i = 0; i < orderedEnemies.Length; i++)
-                if (run.EnemyAvailable(i)) AddCandidate(i, orderedEnemies[i].Target - origin);
+                if (run.EnemyAvailable(i)) AddCandidate(i, orderedEnemies[i].Target - origin, enemyNotes[i].time);
             for (int i = run.CompletedMoves; i < chart.moves.Length; i++)
             {
                 MoveNote note = chart.moves[i];
-                if (note.hasDoor && !run.DoorBroken(i) && time >= chart.RoomAppearsAt(note))
-                    AddCandidate(orderedEnemies.Length + i, path[i + 1].Door.Target - origin);
+                if (note.hasDoor && !run.DoorBroken(i) && run.RoomVisible(i + 1, time, previousRoomOccurrences[i + 1]))
+                    AddCandidate(orderedEnemies.Length + i, path[i + 1].Door.Target - origin, note.doorTime);
             }
             return TargetSelection.Select(candidates, direction.x, direction.y, chart.aimHalfAngle);
         }
 
-        private void AddCandidate(int id, Vector3 offset) => candidates.Add(new AimCandidate(id, offset.x, offset.y));
+        private void AddCandidate(int id, Vector3 offset, double hitTime) => candidates.Add(new AimCandidate(id, offset.x, offset.y, hitTime));
         private Vector3 TargetPosition(int id) => id < orderedEnemies.Length ? orderedEnemies[id].Target
             : path[id - orderedEnemies.Length + 1].Door.Target;
 
@@ -106,10 +110,16 @@ namespace Gun.RoomRhythm
             Vector2 direction = aim.DirectionAt(pointer, origin);
             int target = Select(direction, origin, time);
             aim.Fire(origin, direction, target >= 0 ? TargetPosition(target) : (Vector3?)null);
-            if (target < 0) return;
+            if (target < 0) { run.MissShot(time); return; }
             bool hit = target < orderedEnemies.Length ? run.ShootEnemy(target, time)
                 : run.ShootDoor(target - orderedEnemies.Length, time);
-            if (hit) feedback.Hit(TargetPosition(target), run.LastGrade, target < orderedEnemies.Length);
+            if (hit && target < orderedEnemies.Length)
+                feedback.EnemyDeath(TargetPosition(target), TargetPosition(target) - origin);
+            else if (hit)
+            {
+                RoomDoor door = path[target - orderedEnemies.Length + 1].Door;
+                feedback.DoorBreak(door.Target, door.Target - origin, door.FragmentColor);
+            }
         }
 
         public void Present(double time)
@@ -117,14 +127,15 @@ namespace Gun.RoomRhythm
             displayedTime = time;
             for (int i = 0; i < orderedEnemies.Length; i++)
             {
-                bool visible = run.Phase != RunPhase.Ready && run.Phase != RunPhase.Moving
-                    && run.EnemyRoom(i) == run.CompletedMoves && !run.EnemyDefeated(i) && time >= run.EnemyAppearsAt(i);
-                double appearedAt = run.EnemyAppearsAt(i);
+                bool visible = deathVisible != null ? deathVisible[i] : EnemyVisible(i, time);
+                double appearedAt = run.EnemyVisualAppearsAt(i);
                 double duration = enemyNotes[i].time - appearedAt;
                 float progress = duration > 0 ? Mathf.Clamp01((float)((time - appearedAt) / duration)) : 1f;
                 double frameStart = enemyNotes[i].customAppearance ? enemyNotes[i].frameStartTime : appearedAt;
                 float frameProgress = enemyNotes[i].time > frameStart ? Mathf.Clamp01((float)((time - frameStart) / (enemyNotes[i].time - frameStart))) : 1;
-                orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time, time >= frameStart, frameProgress);
+                float brightness = run.EnemyRoomEntered(i) ? 1 : RoomChart.UpcomingEnemyBrightness;
+                orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time,
+                    deathFrames != null ? deathFrames[i] : time >= frameStart, frameProgress, brightness);
             }
             if (!run.IsActive) selectedEnemyDot.gameObject.SetActive(false);
         }
@@ -141,5 +152,31 @@ namespace Gun.RoomRhythm
             selectedEnemyDot.gameObject.SetActive(show);
             if (show) selectedEnemyDot.position = orderedEnemies[target].Target;
         }
+
+        public bool HasLivingEnemies(int room)
+        {
+            for (int i = 0; i < orderedEnemies.Length; i++)
+                if (run.EnemyRoom(i) == room && !run.EnemyDefeated(i)) return true;
+            return false;
+        }
+
+        public SpriteRenderer FailureEnemy()
+        {
+            int index = run.FailedEnemy;
+            return index >= 0 && index < orderedEnemies.Length ? orderedEnemies[index].Body : null;
+        }
+
+        public void FreezeAtDeath(double time)
+        {
+            deathVisible = new bool[orderedEnemies.Length]; deathFrames = new bool[orderedEnemies.Length];
+            for (int i = 0; i < orderedEnemies.Length; i++)
+            {
+                deathVisible[i] = EnemyVisible(i, time)
+                    && (run.Death != DeathPresentation.Departure || run.EnemyRoom(i) == run.CompletedMoves);
+            }
+        }
+
+        private bool EnemyVisible(int index, double time)
+            => run.EnemyVisible(index, time) && previousRoomOccurrences[run.EnemyRoom(index)] < run.CompletedMoves;
     }
 }

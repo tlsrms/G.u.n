@@ -17,11 +17,14 @@ $authoredTest = Join-Path $PSScriptRoot 'AuthoredChartChecks.cs'
 $beatSource = Join-Path $root 'Assets/Scripts/RoomRhythm/BeatChart.cs'
 $beatTest = Join-Path $PSScriptRoot 'BeatChartChecks.cs'
 $mapSource = Join-Path $root 'Assets/Scripts/RoomRhythm/MapChart.cs'
+$timelineEditingSource = Join-Path $root 'Assets/Scripts/RoomRhythm/MapTimelineEditing.cs'
 $mapTest = Join-Path $PSScriptRoot 'MapChartChecks.cs'
+$offsetSource = Join-Path $root 'Assets/Scripts/RoomRhythm/OffsetCalibration.cs'
+$offsetTest = Join-Path $PSScriptRoot 'OffsetCalibrationChecks.cs'
 $testDll = Join-Path $output 'RoomRunChecks.dll'
 $response = Join-Path $output 'checks.rsp'
 @('/nologo','/target:exe','/nostdlib+','/langversion:9',("/out:`"$testDll`""),
-    ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$authoredTest`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$mapTest`"")) |
+    ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$authoredTest`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$timelineEditingSource`""),("`"$mapTest`""),("`"$offsetSource`""),("`"$offsetTest`"")) |
     Set-Content -LiteralPath $response
 & $runtime $compiler "@$response"
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks did not compile.' }
@@ -30,8 +33,16 @@ if ($LASTEXITCODE -ne 0) { throw 'Rule checks did not compile.' }
 & dotnet $testDll (Join-Path $root 'Assets/RoomRhythm/FirstMovement.asset')
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks failed.' }
 
+$offsetDll = Join-Path $output 'SongOffsetChecks.dll'
+& $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 "/out:$offsetDll" "/reference:$standard" `
+    (Join-Path $root 'Assets/Scripts/RoomRhythm/InputOffsetSettings.cs') (Join-Path $PSScriptRoot 'SongOffsetChecks.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Song offset checks did not compile.' }
+Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'SongOffsetChecks.runtimeconfig.json')
+& dotnet $offsetDll
+if ($LASTEXITCODE -ne 0) { throw 'Song offset checks failed.' }
+
 # Compile against the project's configured references; never launch the Unity editor.
-$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','Unity.InputSystem')
+$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','Unity.InputSystem')
 $lines = @('/nologo','/target:library','/nostdlib+','/langversion:9','/nowarn:0649',
     ('/out:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
 foreach ($reference in $references | Where-Object { $_.Include -in $wanted }) {
@@ -50,7 +61,7 @@ Write-Output 'PASS: gameplay compilation against Unity and Input System referenc
 $editorLines = @('/nologo','/target:library','/nostdlib+','/langversion:9',
     ('/out:"' + (Join-Path $output 'RoomRhythm.Editor.dll') + '"'),
     ('/reference:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
-$editorWanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.IMGUIModule','UnityEngine.JSONSerializeModule','UnityEditor','UnityEditor.CoreModule')
+$editorWanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.IMGUIModule','UnityEngine.JSONSerializeModule','UnityEngine.UIElementsModule','UnityEditor','UnityEditor.CoreModule')
 foreach ($reference in $references | Where-Object { $_.Include -in $editorWanted }) {
     $editorLines += '/reference:"' + [string]$reference.HintPath + '"'
 }

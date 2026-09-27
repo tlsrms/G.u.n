@@ -42,19 +42,63 @@ internal static class RoomRunChecks
             (x: -radius, y: 0.0, w: width, h: radius * 2 + width)
         };
         foreach (var wall in walls) foreach (var line in lines)
-            if (Math.Abs(wall.x - line.x) < (wall.w + line.w) * .5 - 1e-10
-                && Math.Abs(wall.y - line.y) < (wall.h + line.h) * .5 - 1e-10) return true;
+            if (Math.Abs(wall.x - line.x) <= (wall.w + line.w) * .5 + 1e-10
+                && Math.Abs(wall.y - line.y) <= (wall.h + line.h) * .5 + 1e-10) return true;
         return false;
     }
 
     public static void Main(string[] args)
     {
+        var global = JudgmentSettings.Window;
+        int settingsRevision = JudgmentSettings.Revision;
+        JudgmentSettings.Configure(20, 40);
+        Check(JudgmentSettings.Window.accurate == .02 && JudgmentSettings.Window.late == .04,
+            "project settings convert milliseconds to seconds");
+        Check(JudgmentSettings.Revision != settingsRevision, "changed settings invalidate configured sessions");
+        foreach (double invalid in new[] { -1.0, 40, double.NaN, double.PositiveInfinity })
+        {
+            bool invalidRejected = false;
+            try { JudgmentSettings.Configure(invalid, 40); } catch (ArgumentException) { invalidRejected = true; }
+            Check(invalidRejected && JudgmentSettings.AccurateMs == 20, "invalid settings preserve previous valid values");
+        }
+        JudgmentSettings.Configure(JudgmentSettings.DefaultAccurateMs, JudgmentSettings.DefaultToleranceMs);
+        foreach (double target in new[] { 0.0, 2.0, 123.456 })
+        {
+            Check(global.Judge(target - .025, target) == TimingGrade.Accurate, "global -25ms inclusive");
+            Check(global.Judge(target + .025, target) == TimingGrade.Accurate, "global +25ms inclusive");
+            Check(global.Judge(target - .035, target) == TimingGrade.Early, "global -35ms inclusive");
+            Check(global.Judge(target + .035, target) == TimingGrade.Late, "global +35ms inclusive");
+            Check(global.Judge(target - .035001, target) == TimingGrade.TooEarly, "global early outside window");
+            Check(global.Judge(target + .035001, target) == TimingGrade.TooLate, "global late outside window");
+        }
+        var emptyShot = NewRun(); emptyShot.MissShot(1);
+        Check(emptyShot.IsActive && emptyShot.Failure == FailureReason.None && emptyShot.JudgmentVersion == 0,
+            "shot without a target has no penalty or judgment");
+        emptyShot.MissShot(2.126);
+        Check(emptyShot.Failure == FailureReason.TooLate, "empty shots do not prevent a pending note from expiring");
+        foreach (double offset in new[] { -.035001, -.035, -.025, 0, .025, .035, .035001 })
+        {
+            bool accepted = Math.Abs(offset) <= .035;
+            var movement = new RoomRun(new[] { new MoveNote { destinationId = "next", time = 1 } }, global, .18);
+            movement.Begin(); movement.Press(MoveDirection.Up, 1 + offset);
+            Check((movement.Phase == RunPhase.Moving) == accepted, "global movement window " + offset);
+            var door = new RoomRun(new[] { new MoveNote { destinationId = "next", hasDoor = true,
+                doorTime = 1, moveDelay = 1, appearTime = 0 } }, global, .18);
+            door.Begin();
+            Check(door.ShootDoor(0, 1 + offset) == accepted, "global door window " + offset);
+            Check((door.Phase == RunPhase.Dead) == (offset > .035), "only expired door window kills " + offset);
+            var enemy = new RoomRun(new[] { new MoveNote { destinationId = "next", time = 3 } }, global, .18,
+                new[] { new EnemyNote { id = "enemy", roomId = "start", time = 1 } });
+            enemy.Begin();
+            Check(enemy.ShootEnemy(0, 1 + offset) == accepted, "global enemy window " + offset);
+            Check((enemy.Phase == RunPhase.Dead) == !accepted, "outside global enemy window kills " + offset);
+        }
         // An event can arrive in the next input batch with a timestamp before the previous
         // MonoBehaviour.Update clock read. Advancing beyond the input watermark loses it.
         var prematurelyAdvanced = NewRun();
         prematurelyAdvanced.Advance(2.11);
         prematurelyAdvanced.Press(MoveDirection.Up, 2.10);
-        prematurelyAdvanced.Advance(2.125);
+        prematurelyAdvanced.Advance(2.126);
         Check(prematurelyAdvanced.Failure == FailureReason.TooLate,
             "reproduces valid event discarded after advancing past input batch");
         var batched = NewRun();
@@ -63,7 +107,7 @@ internal static class RoomRunChecks
         batched.Advance(2.14);
         Check(batched.Phase == RunPhase.Moving && batched.LastGrade == TimingGrade.Late,
             "valid event survives next-frame delivery when clock respects input watermark");
-        batched = NewRun(); batched.Advance(2.08); batched.Press(MoveDirection.Up, 2.125);
+        batched = NewRun(); batched.Advance(2.08); batched.Press(MoveDirection.Up, 2.126);
         Check(batched.Failure == FailureReason.TooLate, "batch ordering does not extend the success deadline");
         batched = NewRun(); batched.Advance(2.08); batched.Advance(2.14);
         Check(batched.Failure == FailureReason.TooLate, "missing input expires when input batch reaches deadline");
@@ -79,7 +123,7 @@ internal static class RoomRunChecks
             Check(R(2 + timing.late * .5) < radius && radius - R(2 + timing.late * .5) < width,
                 "late approach keeps shrinking inside white outline");
             Check(Math.Abs(radius - R(2 + timing.late) - width) < 1e-10
-                && timing.Judge(2 + timing.late, 2) == TimingGrade.TooLate, "inner separation and death have identical deadline");
+                && timing.Judge(2 + timing.late, 2) == TimingGrade.Late, "last contact is an inclusive late success");
             Check(R(2 + timing.late + .01) < R(2 + timing.late), "failure frame moves past contact instead of clamping to white outline");
             double step = .01;
             double distance = ApproachGeometry.Speed(width, timing) * step;
@@ -118,13 +162,13 @@ internal static class RoomRunChecks
         try { new RoomRun(new[] { new MoveNote { destinationId = "north", direction = MoveDirection.Up, time = 2 } },
             Window, .125, new[] { new EnemyNote { id = "bad", roomId = "north", direction = EnemyDirection.Up, time = 4 } },
             enemyLeadTime: .2); } catch (ArgumentException) { shortLeadRejected = true; }
-        Check(shortLeadRejected, "enemy lead shorter than required reading time is rejected");
+        Check(!shortLeadRejected, "Short enemy lead is allowed without a mandatory reading delay");
         Check(Window.Judge(0, 2) == TimingGrade.TooEarly, "arbitrarily early input is fatal");
         Check(Window.Judge(1.875, 2) == TimingGrade.Early, "early success inclusive boundary");
         Check(Window.Judge(1.96875, 2) == TimingGrade.Accurate, "accurate starts inclusively");
         Check(Window.Judge(2.03125, 2) == TimingGrade.Accurate, "accurate ends inclusively");
         Check(Window.Judge(2.0625, 2) == TimingGrade.Late, "late success");
-        Check(Window.Judge(2.125, 2) == TimingGrade.TooLate, "late expiry boundary");
+        Check(Window.Judge(2.125, 2) == TimingGrade.Late, "late success inclusive boundary");
 
         var run = NewRun();
         run.Press(MoveDirection.Up, -0.1);
@@ -133,12 +177,13 @@ internal static class RoomRunChecks
         run.Press(MoveDirection.Left, 2);
         Check(run.Failure == FailureReason.WrongDirection, "wrong direction");
         run = NewRun();
-        run.Advance(2.125);
+        run.Advance(2.126);
         Check(run.Phase == RunPhase.Dead, "no input expires automatically");
 
         run = NewRun();
         run.Press(MoveDirection.Up, 2.0625);
         Check(run.LastGrade == TimingGrade.Late && run.Phase == RunPhase.Moving, "late input accepted");
+        Check(run.LastTimingErrorMs == 62.5, "movement records signed millisecond error");
         // A frame ends after the note's deadline, but the input occurred before it.
         run.Advance(2.25);
         Check(run.Phase == RunPhase.Waiting && run.CompletedMoves == 1, "valid timestamped input survives a long frame");
@@ -156,12 +201,13 @@ internal static class RoomRunChecks
         Check(run.Phase == RunPhase.Moving && run.Failure == FailureReason.None, "all movement inputs ignored during animation");
         run.Advance(2.125);
         Check(run.Phase == RunPhase.Waiting && run.CompletedMoves == 1, "ignored input not buffered");
-        run.Advance(4.125);
+        run.Advance(4.126);
         Check(run.Phase == RunPhase.Dead, "second note still requires a fresh press");
 
         run.Reset();
         Check(run.Phase == RunPhase.Ready && run.CompletedMoves == 0
             && run.LastGrade == TimingGrade.None && run.Failure == FailureReason.None, "reset clears all result state");
+        Check(!run.LastTimingErrorMs.HasValue, "reset clears timing error");
         run.Press(MoveDirection.Up, 2);
         Check(run.Phase == RunPhase.Ready, "ready state does not process movement");
         run.Begin();
@@ -183,7 +229,7 @@ internal static class RoomRunChecks
         bool rejected = false;
         try
         {
-            new RoomRun(new[] { Notes[0], new MoveNote { destinationId = "east", direction = MoveDirection.Right, time = 2.2 } }, Window, .125);
+            new RoomRun(new[] { Notes[0], new MoveNote { destinationId = "east", direction = MoveDirection.Right, time = 2.2 } }, Window, .5);
         }
         catch (ArgumentException) { rejected = true; }
         Check(rejected, "impossible consecutive movement rejected");
@@ -201,7 +247,9 @@ internal static class RoomRunChecks
         };
         var doorRun = new RoomRun(doorNotes, Window, .125);
         doorRun.Begin();
-        Check(!doorRun.ShootDoor(0, .5) && doorRun.IsActive, "early shot is harmless");
+        Check(!doorRun.ShootDoor(0, .5) && doorRun.IsActive, "early door shot permits retry");
+        Check(!doorRun.ShootDoor(0, .6) && doorRun.IsActive, "repeated early door shots permit retry");
+        doorRun.Begin();
         Check(!doorRun.ShootDoor(-1, 1) && doorRun.IsActive, "empty shot is harmless");
         Check(doorRun.ShootDoor(0, 1.5) && doorRun.LastGrade == TimingGrade.Accurate, "door on-time shot");
         Check(!doorRun.ShootDoor(0, 1.51) && doorRun.JudgmentVersion == 1, "one shot resolves door once");
@@ -210,12 +258,12 @@ internal static class RoomRunChecks
         Check(doorRun.Phase == RunPhase.Cleared, "door followed by computed movement time");
         doorRun.Begin();
         Check(!doorRun.DoorBroken(0) && doorRun.JudgmentVersion == 0, "door state resets");
-        doorRun.Advance(1.625);
+        doorRun.Advance(1.626);
         Check(doorRun.Failure == FailureReason.MissedDoor, "door expiry without clicking");
         Check(!doorRun.ShootDoor(0, 1.625), "cannot shoot at expired boundary");
         doorRun.Begin();
         doorRun.Press(MoveDirection.Up, 2);
-        Check(doorRun.Phase == RunPhase.Dead && doorRun.Failure == FailureReason.MissedDoor,
+        Check(doorRun.Phase == RunPhase.Dead && doorRun.Failure == FailureReason.DoorCollision,
             "cannot enter room through missed door");
         doorRun.Begin();
         Check(doorRun.ShootDoor(0, 1.5625) && doorRun.LastGrade == TimingGrade.Late, "door late success");
@@ -223,10 +271,16 @@ internal static class RoomRunChecks
         Check(doorRun.IsActive, "late door input preserved when frame ends after deadline");
         doorRun.Begin();
         Check(doorRun.ShootDoor(0, 1.375) && doorRun.LastGrade == TimingGrade.Early, "door early success boundary");
+        Check(doorRun.LastTimingErrorMs == -125, "early door shot has negative timing error");
 
-        // The selector must not know whether the closest-to-centre target is currently hittable.
-        var targets = new[] { new AimCandidate(1, 3, 0), new AimCandidate(0, 1, .5) };
-        Check(TargetSelection.Select(targets, 1, 0, 45) == 1, "angle beats distance and note order");
+        var targets = new[] { new AimCandidate(1, 3, 0, 2), new AimCandidate(0, 1, .5, 1) };
+        Check(TargetSelection.Select(targets, 1, 0, 45) == 0, "earliest note beats central aim");
+        Check(TargetSelection.Select(new[] { new AimCandidate(9, 3, 1, 1), new AimCandidate(0, 1, 0, 2) }, 1, 0, 45) == 9,
+            "time priority is independent of ID, distance and enemy/door ordering");
+        Check(TargetSelection.Select(new[] { new AimCandidate(9, -1, 0, 1), new AimCandidate(0, 1, 0, 2) }, 1, 0, 45) == 0,
+            "earliest note outside the cone is excluded");
+        Array.Reverse(targets);
+        Check(TargetSelection.Select(targets, 1, 0, 45) == 0, "candidate order does not change selection");
         Check(TargetSelection.Select(targets, -1, 0, 45) == -1, "outside aiming sector");
         Check(TargetSelection.Select(targets, 0, 0, 45) == -1, "zero aiming direction");
         Check(TargetSelection.Select(new[] { new AimCandidate(5, 1, 0), new AimCandidate(2, 3, 0) }, 1, 0, 45) == 2,
@@ -243,7 +297,24 @@ internal static class RoomRunChecks
                 doorTime = 1, moveDelay = .1, direction = MoveDirection.Up } }, Window, .125);
         }
         catch (ArgumentException) { rejected = true; }
-        Check(rejected, "overlapping door and movement windows rejected");
+        Check(!rejected, "Overlapping door and movement windows are allowed in judgment order");
+        var nearDoor = new RoomRun(new[] { new MoveNote { destinationId = "near", hasDoor = true,
+            doorTime = 1, moveDelay = .1, direction = MoveDirection.Up } }, Window, .125);
+        nearDoor.Begin();
+        Check(nearDoor.ShootDoor(0, 1), "Door can be shot with a nearby movement judgment");
+        nearDoor.Press(MoveDirection.Up, 1.1); nearDoor.Advance(1.226);
+        Check(nearDoor.Phase == RunPhase.Cleared, "Overlapping door-movement chart clears");
+        nearDoor.Begin(); nearDoor.Press(MoveDirection.Up, 1.1);
+        Check(nearDoor.Failure == FailureReason.DoorCollision, "A movement cannot bypass an unopened door");
+        nearDoor.Begin(); nearDoor.Press(MoveDirection.Up, .1);
+        Check(nearDoor.Death == DeathPresentation.Collision, "closed door collision takes precedence over early movement");
+        nearDoor.Begin(); nearDoor.Press(MoveDirection.Right, .1);
+        Check(nearDoor.Death == DeathPresentation.Departure && nearDoor.DeathDirection == MoveDirection.Right,
+            "wrong direction seals the previous room");
+        nearDoor.Begin(); nearDoor.Advance(1.126);
+        Check(nearDoor.Death == DeathPresentation.Execution, "unshot door expires into execution");
+        nearDoor.Reset();
+        Check(nearDoor.Death == DeathPresentation.None && nearDoor.FailedEnemy == -1, "reset clears cinematic state");
 
         var demo = new RoomRun(new[] {
             new MoveNote { destinationId = "north", direction = MoveDirection.Up, time = 2, appearTime = 0 },
@@ -274,16 +345,22 @@ internal static class RoomRunChecks
         Check(combat.EnemyAvailable(0) && combat.EnemyAvailable(1), "all room enemies appear at arrival");
         Check(combat.RoomArrivedAt == 2.125, "arrival uses event time rather than frame time");
         Check(combat.Phase == RunPhase.Waiting, "last room waits for enemies before clearing");
-        Check(!combat.ShootEnemy(0, 2.5) && combat.IsActive, "early enemy shot has no penalty");
+        Check(!combat.ShootEnemy(0, 2.5) && combat.Phase == RunPhase.Dead, "early enemy shot is fatal");
+        Check(combat.Death == DeathPresentation.Execution && combat.FailedEnemy == 0 && combat.DeathTime == 2.5,
+            "early enemy shot records the retaliating enemy and time");
+        combat.Begin(); combat.Press(MoveDirection.Up, 2); combat.Advance(2.125);
 
-        var enemyCandidates = new[] { new AimCandidate(0, 2.2, 0), new AimCandidate(1, 1.55, 1.55) };
+        var enemyCandidates = new[] { new AimCandidate(0, 2.2, 0, 3), new AimCandidate(1, 1.55, 1.55, 3.5) };
         int selected = TargetSelection.Select(enemyCandidates, 1, 1, 45);
-        Check(selected == 1 && !combat.ShootEnemy(selected, 3) && !combat.EnemyDefeated(0),
-            "central future enemy does not redirect hit to valid adjacent enemy");
+        Check(selected == 0 && combat.ShootEnemy(selected, 3) && combat.EnemyDefeated(0),
+            "earlier enemy at cone edge is shot before central future enemy");
+        Check(combat.IsActive && !combat.EnemyDefeated(1), "auto aim resolves only the earliest enemy");
+        combat.Begin(); combat.Press(MoveDirection.Up, 2); combat.Advance(2.125);
         Check(combat.ShootEnemy(0, 3) && combat.LastGrade == TimingGrade.Accurate, "enemy accurate hit");
         Check(!combat.ShootEnemy(0, 3.01), "defeated enemy cannot be hit again");
         Check(combat.NextEnemyIndex() == 1, "pending enemy query skips defeated enemy");
         Check(combat.ShootEnemy(1, 3.5625) && combat.LastGrade == TimingGrade.Late, "enemy late hit");
+        Check(combat.LastTimingErrorMs == 62.5, "enemy shot uses its own target time");
         Check(combat.Phase == RunPhase.Cleared, "last enemy clears final room");
         combat.Begin();
         Check(!combat.EnemyDefeated(0) && !combat.EnemyDefeated(1) && combat.RoomArrivedAt == 0,
@@ -292,8 +369,13 @@ internal static class RoomRunChecks
         Check(combat.RoomArrivedAt == 2.1875, "late movement keeps actual animation duration");
         Check(combat.ShootEnemy(0, 3) && combat.LastGrade == TimingGrade.Accurate,
             "late arrival does not shift enemy judgment time");
-        combat.Advance(3.625);
+        combat.Advance(3.626);
         Check(combat.Failure == FailureReason.MissedEnemy, "missed enemy expires without clicking");
+        Check(combat.Death == DeathPresentation.Execution && combat.FailedEnemy == 1 && combat.DeathTime == 3.625,
+            "missed enemy execution records the exact deadline");
+        Check(!combat.LastTimingErrorMs.HasValue, "timeout does not show a stale successful input error");
+        Check(combat.NextEnemyIndex() == 1 && !combat.EnemyDefeated(1),
+            "retaliation after death selects the missed enemy, skipping defeated enemies");
         Check(!combat.ShootEnemy(1, 3.625), "enemy cannot be shot at expiry");
         combat.Begin(); combat.Press(MoveDirection.Up, 2); combat.Advance(2.2);
         Check(combat.ShootEnemy(0, 2.875) && combat.LastGrade == TimingGrade.Early, "enemy early boundary");
@@ -310,7 +392,7 @@ internal static class RoomRunChecks
             eightWay.Begin(); eightWay.Press(MoveDirection.Up, 2); eightWay.Advance(2.2);
             Check(eightWay.ShootEnemy(0, 3) && eightWay.Phase == RunPhase.Cleared, "enemy direction " + direction);
         }
-        foreach (double invalidTime in new[] { 2.3, double.NaN, double.PositiveInfinity })
+        foreach (double invalidTime in new[] { -1.0, double.NaN, double.PositiveInfinity })
         {
             rejected = false;
             try { new RoomRun(oneMove, Window, .125, new[] {
@@ -322,7 +404,39 @@ internal static class RoomRunChecks
         try { new RoomRun(Notes, Window, .125, new[] {
             new EnemyNote { id = "late", roomId = "north", direction = EnemyDirection.Up, time = 4 }
         }); } catch (ArgumentException) { rejected = true; }
-        Check(rejected, "enemy overlapping next movement rejected");
+        Check(rejected, "enemy judgment at next movement rejected");
+        var overlappingEnemy = new[] {
+            new EnemyNote { id = "close", roomId = "north", direction = EnemyDirection.Up, time = 3.9 }
+        };
+        var closeMovement = new RoomRun(Notes, Window, .125, overlappingEnemy);
+        closeMovement.Begin(); closeMovement.Press(MoveDirection.Up, 2); closeMovement.Advance(2.126);
+        Check(closeMovement.ShootEnemy(0, 3.9), "Overlapping windows allow an enemy hit at its exact judgment");
+        closeMovement.Press(MoveDirection.Right, 4); closeMovement.Advance(4.126);
+        Check(closeMovement.Phase == RunPhase.Cleared, "Enemy then movement with overlapping windows clears");
+        var skipEnemy = new RoomRun(Notes, Window, .125, overlappingEnemy);
+        skipEnemy.Begin(); skipEnemy.Press(MoveDirection.Up, 2); skipEnemy.Advance(2.126);
+        skipEnemy.Press(MoveDirection.Right, 3.9);
+        Check(skipEnemy.Phase == RunPhase.Dead && skipEnemy.Failure == FailureReason.MissedEnemy,
+            "An early move cannot bypass an undefeated enemy in an overlapping window");
+        var closeDoorMoves = new[] { Notes[0], new MoveNote { destinationId = "east", direction = MoveDirection.Right,
+            hasDoor = true, doorTime = 4, moveDelay = .5, appearTime = 1 } };
+        var closeDoor = new RoomRun(closeDoorMoves, Window, .125, overlappingEnemy);
+        closeDoor.Begin(); closeDoor.Press(MoveDirection.Up, 2); closeDoor.Advance(2.126);
+        Check(closeDoor.ShootEnemy(0, 3.9) && closeDoor.ShootDoor(1, 4), "Enemy then door with overlapping windows is playable");
+        closeDoor.Press(MoveDirection.Right, 4.5); closeDoor.Advance(4.626);
+        Check(closeDoor.Phase == RunPhase.Cleared, "Enemy-door-movement sequence clears after relaxed validation");
+        var fastEnemy = new RoomRun(oneMove, Window, .125, new[] {
+            new EnemyNote { id = "fast", roomId = "north", direction = EnemyDirection.Up, time = 2.3,
+                customAppearance = true, appearanceTime = 0 }
+        });
+        fastEnemy.Begin(); fastEnemy.Press(MoveDirection.Up, 2); fastEnemy.Advance(2.126);
+        Check(fastEnemy.ShootEnemy(0, 2.3), "An enemy previewed before entry needs no post-arrival reading delay");
+        var repeatedDirection = new RoomRun(oneMove, Window, .125, new[] {
+            new EnemyNote { id = "repeat-a", roomId = "north", direction = EnemyDirection.Up, time = 3 },
+            new EnemyNote { id = "repeat-b", roomId = "north", direction = EnemyDirection.Up, time = 4 }
+        });
+        repeatedDirection.Begin(); repeatedDirection.Press(MoveDirection.Up, 2); repeatedDirection.Advance(2.126);
+        Check(repeatedDirection.ShootEnemy(0, 3) && repeatedDirection.ShootEnemy(1, 4), "Separate enemies may reuse a direction");
 
         var sceneMoves = new[] {
             new MoveNote { destinationId = "north", direction = MoveDirection.Up, time = 2 },
@@ -350,5 +464,6 @@ internal static class RoomRunChecks
         AuthoredChartChecks.Run(args[0]);
         BeatChartChecks.Run();
         MapChartChecks.Run();
+        OffsetCalibrationChecks.Run();
     }
 }

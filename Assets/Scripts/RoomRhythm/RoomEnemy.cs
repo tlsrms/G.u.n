@@ -15,6 +15,7 @@ namespace Gun.RoomRhythm
         private const int Segments = 128;
         public string Id => enemyId;
         public Vector3 Target => transform.position;
+        public SpriteRenderer Body => body;
         public void ValidateReferences()
         {
             if (visuals == null || body == null || outline == null || judgmentFrame == null || timingRing == null)
@@ -47,17 +48,21 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public void Present(bool visible, float progress, double time = 0, double target = 0, bool showFrame = true, float frameProgress = -1)
+        public void Present(bool visible, float progress, double time = 0, double target = 0, bool showFrame = true, float frameProgress = -1, float brightness = 1)
         {
             visuals.SetActive(visible);
             if (!visible) return;
             judgmentFrame.gameObject.SetActive(showFrame);
             float alpha = chart.AppearanceAlpha(progress);
-            body.color = new Color(0.3f, 0.12f, 0.2f, alpha);
-            outline.startColor = outline.endColor = new Color(1f, 1f, 1f, alpha);
+            float reveal = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.65f, 1f, progress));
+            body.color = Dim(Color.Lerp(new Color(.12f, .12f, .12f, Mathf.Max(.25f, chart.appearanceStartAlpha)),
+                new Color(1f, .015f, .025f, 1), reveal), brightness);
+            outline.startColor = outline.endColor = new Color(brightness, brightness, brightness, alpha);
             SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target,
                 OutlineRadius, chart.enemyLineWidth, chart.Timing));
-            timingRing.startColor = timingRing.endColor = new Color(1f, 0.3f, 0.6f, frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress));
+            timingRing.startColor = timingRing.endColor = RoomPalette.Tint(new Color(brightness, 0.3f * brightness, 0.6f * brightness, frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress)));
         }
+        private static Color Dim(Color color, float brightness)
+            => RoomPalette.Tint(new Color(color.r * brightness, color.g * brightness, color.b * brightness, color.a));
     }
 }

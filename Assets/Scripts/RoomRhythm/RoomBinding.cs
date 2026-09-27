@@ -13,6 +13,9 @@ namespace Gun.RoomRhythm
         [SerializeField] private RoomDoor door;
         private Color[] baseColors;
         private RoomChart chart;
+        private Vector3[] frameDirections;
+        private bool completed;
+        private double flashAt = -10;
         public string Id => roomId;
         public Vector3 Center => transform.position;
         public RoomDoor Door => door;
@@ -20,6 +23,7 @@ namespace Gun.RoomRhythm
         public void Configure(RoomChart settings)
         {
             chart = settings;
+            completed = false; flashAt = -10;
             float half = sideLength * 0.5f;
             float length = half - chart.passageWidth * 0.5f + chart.judgmentLineWidth * 0.5f;
             float center = (half + chart.passageWidth * 0.5f + chart.judgmentLineWidth * 0.5f) * 0.5f;
@@ -34,6 +38,7 @@ namespace Gun.RoomRhythm
                     : new Vector3(chart.judgmentLineWidth, length, 1);
             }
             if (door != null) door.Configure(chart, sideLength);
+            RefreshFrameDirections();
         }
         public void ValidateReferences(bool needsFrame)
         {
@@ -59,32 +64,68 @@ namespace Gun.RoomRhythm
         public void Present(bool visible, bool current, bool future, float progress, bool showFrame,
             double time, double target, float frameProgress = -1)
         {
-            visuals.SetActive(visible);
-            if (judgmentFrame != null) judgmentFrame.gameObject.SetActive(visible && showFrame);
-            if (!visible) return;
-            float alpha = current ? 1f : chart.AppearanceAlpha(progress);
+            // Keep the hierarchy alive: room surfaces and timing frames have separate lifetimes.
+            visuals.SetActive(true);
+            foreach (SpriteRenderer surface in surfaces) surface.enabled = visible;
+            if (judgmentFrame != null) judgmentFrame.gameObject.SetActive(showFrame);
+            if (!visible && !showFrame) return;
+            if (progress >= 1 && !completed)
+            { completed = true; if (Application.isPlaying && time > 0) flashAt = time; }
+            float flash = Mathf.Clamp01((float)(1 - (time - flashAt) / .12));
+            float reveal = current ? 1f : Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.65f, 1f, progress));
+            float alpha = current ? 1f : Mathf.Lerp(chart.appearanceStartAlpha, 1f, reveal);
             for (int i = 0; i < surfaces.Length; i++)
             {
                 Color color = baseColors[i];
                 if (future) color = new Color(color.grayscale * 0.65f, color.grayscale * 0.65f, color.grayscale * 0.65f, color.a);
+                float brightness = Mathf.Lerp(.95f, 1f, reveal);
+                color.r *= brightness; color.g *= brightness; color.b *= brightness;
                 color.a *= alpha;
-                surfaces[i].color = color;
+                surfaces[i].color = RoomPalette.Tint(Color.Lerp(color, Color.white, flash * (i == 0 ? .18f : 1)), 0);
             }
             if (judgmentFrame == null) return;
             judgmentFrame.localScale = Vector3.one;
             float radius = (float)ApproachGeometry.Radius(time, target, sideLength * 0.5f,
                 chart.judgmentLineWidth, chart.Timing);
-            foreach (SpriteRenderer edge in frameEdges)
+            if (frameDirections == null || frameDirections.Length != frameEdges.Length) RefreshFrameDirections();
+            for (int i = 0; i < frameEdges.Length; i++)
             {
+                SpriteRenderer edge = frameEdges[i];
                 Transform line = edge.transform;
-                Vector3 p = line.localPosition;
-                bool horizontal = line.localScale.x > line.localScale.y;
-                line.localPosition = horizontal ? new Vector3(0, Mathf.Sign(p.y) * radius, 0)
-                    : new Vector3(Mathf.Sign(p.x) * radius, 0, 0);
+                bool horizontal = Mathf.Abs(frameDirections[i].y) > 0.5f;
+                line.localPosition = frameDirections[i] * radius;
                 line.localScale = horizontal ? new Vector3(radius * 2 + chart.judgmentLineWidth, chart.judgmentLineWidth, 1)
                     : new Vector3(chart.judgmentLineWidth, radius * 2 + chart.judgmentLineWidth, 1);
                 float frameAlpha = frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress);
                 edge.color = future ? new Color(0.6f, 0.6f, 0.6f, frameAlpha) : new Color(0.3f, 1f, 0.8f, frameAlpha);
+                edge.color = RoomPalette.Tint(Color.Lerp(edge.color, Color.white, flash));
+            }
+        }
+
+        public void RefreshFrameDirections()
+        {
+            if (frameEdges == null) return;
+            frameDirections = new Vector3[frameEdges.Length];
+            for (int i = 0; i < frameEdges.Length; i++)
+                frameDirections[i] = FrameDirection(frameEdges[i], i);
+        }
+
+        private static Vector3 FrameDirection(SpriteRenderer edge, int index)
+        {
+            if (edge != null)
+            {
+                Vector3 direction = edge.transform.localPosition;
+                if (direction.sqrMagnitude > 0.0001f)
+                    return Mathf.Abs(direction.x) > Mathf.Abs(direction.y)
+                        ? new Vector3(Mathf.Sign(direction.x), 0, 0)
+                        : new Vector3(0, Mathf.Sign(direction.y), 0);
+            }
+            switch (index % 4)
+            {
+                case 0: return Vector3.up;
+                case 1: return Vector3.right;
+                case 2: return Vector3.down;
+                default: return Vector3.left;
             }
         }
     }

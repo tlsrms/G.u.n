@@ -1,0 +1,772 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
+  m_Name: Tutorial_3
+  m_EditorClassIdentifier: 
+  music: {fileID: 8300000, guid: 687e232579caecd4d988a68f70847881, type: 3}
+  inputOffsetMs: 130
+  startingRoomId: start
+  bpm: 70
+  moveDuration: 0.18
+  aimRadius: 2.2
+  aimHalfAngle: 38
+  judgmentLineWidth: 0.1
+  enemyLineWidth: 0.05
+  passageWidth: 2.8
+  roomLeadTime: 2.5714285
+  enemyLeadTime: 2.5714285
+  doorCloseDuration: 0.2
+  appearanceStartAlpha: 0.05
+  moves:
+  - destinationId: room_bdc4acc6
+    direction: 3
+    time: 3.8571428571428568
+    customAppearance: 1
+    appearanceTime: 1.5
+    frameStartTime: 1.5
+    doorFrameStartTime: 1.5
+    hasDoor: 1
+    doorTime: 3.4285714285714284
+    moveDelay: 0.42857142857142855
+  - destinationId: room_1db3b92281e441d2b7fbb97844c51e91
+    direction: 2
+    time: 5.571428571428571
+    customAppearance: 1
+    appearanceTime: 2.7857142857142856
+    frameStartTime: 2.7857142857142856
+    doorFrameStartTime: 2.7857142857142856
+    hasDoor: 1
+    doorTime: 5.142857142857142
+    moveDelay: 0.42857142857142855
+  - destinationId: room_6aa37b019d494fb29246c2d3470afe14
+    direction: 3
+    time: 7.285714285714286
+    customAppearance: 1
+    appearanceTime: 4.5
+    frameStartTime: 4.5
+    doorFrameStartTime: 4.5
+    hasDoor: 1
+    doorTime: 6.857142857142857
+    moveDelay: 0.42857142857142855
+  - destinationId: room_813becb352784529b6f9a9f0f5aec592
+    direction: 0
+    time: 9
+    customAppearance: 1
+    appearanceTime: 6.2142857142857135
+    frameStartTime: 6.2142857142857135
+    doorFrameStartTime: 6.2142857142857135
+    hasDoor: 1
+    doorTime: 8.571428571428571
+    moveDelay: 0.42857142857142855
+  - destinationId: room_e5543ad2
+    direction: 3
+    time: 10.285714285714285
+    customAppearance: 1
+    appearanceTime: 7.7142857142857135
+    frameStartTime: 7.7142857142857135
+    doorFrameStartTime: 7.7142857142857135
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  enemyReadTime: 0.25
+  enemies:
+  - id: enemy_d89dd6b7ee0141959732d78e4ea86974
+    roomId: room_bdc4acc6
+    direction: 3
+    time: 4.071428571428571
+    customAppearance: 1
+    appearanceTime: 1.5
+    frameStartTime: 1.5
+  - id: enemy_a74a4089ba074750999bd4dcceb69201
+    roomId: room_bdc4acc6
+    direction: 4
+    time: 4.285714285714285
+    customAppearance: 1
+    appearanceTime: 1.7142857142857135
+    frameStartTime: 1.7142857142857135
+  - id: enemy_7db3c1f8377740139a0e6f7966304e1e
+    roomId: room_bdc4acc6
+    direction: 5
+    time: 4.7142857142857135
+    customAppearance: 1
+    appearanceTime: 2.3571428571428568
+    frameStartTime: 2.3571428571428568
+  - id: enemy_2bf473f0a4e244458e9dec14fc809f77
+    roomId: room_1db3b92281e441d2b7fbb97844c51e91
+    direction: 3
+    time: 5.785714285714286
+    customAppearance: 1
+    appearanceTime: 3.214285714285714
+    frameStartTime: 3.214285714285714
+  - id: enemy_a3551d2a43af46d2b07628792d3ad4b7
+    roomId: room_1db3b92281e441d2b7fbb97844c51e91
+    direction: 2
+    time: 6
+    customAppearance: 1
+    appearanceTime: 3.4285714285714284
+    frameStartTime: 3.4285714285714284
+  - id: enemy_66e12c3437bf41918a5ebf165a6522a0
+    roomId: room_1db3b92281e441d2b7fbb97844c51e91
+    direction: 1
+    time: 6.428571428571428
+    customAppearance: 1
+    appearanceTime: 3.8571428571428568
+    frameStartTime: 3.8571428571428568
+  - id: enemy_6b916f6e9c224236a4ccb42b569dc0cc
+    roomId: room_6aa37b019d494fb29246c2d3470afe14
+    direction: 1
+    time: 7.5
+    customAppearance: 1
+    appearanceTime: 4.928571428571428
+    frameStartTime: 4.928571428571428
+  - id: enemy_4b98261d12fe47728c2ae2b14bec728e
+    roomId: room_6aa37b019d494fb29246c2d3470afe14
+    direction: 0
+    time: 7.7142857142857135
+    customAppearance: 1
+    appearanceTime: 5.357142857142857
+    frameStartTime: 5.357142857142857
+  - id: enemy_ab9e62cee288491c8886cc5d664728da
+    roomId: room_6aa37b019d494fb29246c2d3470afe14
+    direction: 7
+    time: 8.142857142857142
+    customAppearance: 1
+    appearanceTime: 5.571428571428571
+    frameStartTime: 5.571428571428571
+  - id: enemy_7d3c9774cce44f02ab04ae2feeee6ec9
+    roomId: room_813becb352784529b6f9a9f0f5aec592
+    direction: 1
+    time: 9.214285714285714
+    customAppearance: 1
+    appearanceTime: 6.642857142857142
+    frameStartTime: 6.642857142857142
+  - id: enemy_41fbbe35e9064f0a8e52e29c914568fd
+    roomId: room_813becb352784529b6f9a9f0f5aec592
+    direction: 2
+    time: 9.428571428571429
+    customAppearance: 1
+    appearanceTime: 7.071428571428571
+    frameStartTime: 7.071428571428571
+  - id: enemy_46589299aba1422c88853637be1b124f
+    roomId: room_813becb352784529b6f9a9f0f5aec592
+    direction: 3
+    time: 9.857142857142858
+    customAppearance: 1
+    appearanceTime: 7.285714285714286
+    frameStartTime: 7.285714285714286
+  beatChart:
+    bpm: 120
+    startingRoomId: start
+    offsetSeconds: 0
+    musicDelaySeconds: 0
+    loopMusic: 0
+    beatsPerBar: 4
+    subdivision: 4
+    roomLeadBeats: 4
+    enemyLeadBeats: 3
+    notes:
+    - kind: 0
+      beat: 8
+      roomId: north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 18
+      roomId: east
+      enemyId: 
+      moveDirection: 3
+      enemyDirection: 0
+    - kind: 1
+      beat: 16
+      roomId: east
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 24
+      roomId: south
+      enemyId: 
+      moveDirection: 2
+      enemyDirection: 0
+    - kind: 0
+      beat: 28
+      roomId: far-east
+      enemyId: 
+      moveDirection: 3
+      enemyDirection: 0
+    - kind: 1
+      beat: 27
+      roomId: far-east
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 0
+      beat: 36
+      roomId: far-north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 1
+      beat: 35
+      roomId: far-north
+      enemyId: 
+      moveDirection: 0
+      enemyDirection: 0
+    - kind: 2
+      beat: 12
+      roomId: north
+      enemyId: north-upper-left
+      moveDirection: 0
+      enemyDirection: 7
+    - kind: 2
+      beat: 21
+      roomId: east
+      enemyId: east-upper-right
+      moveDirection: 0
+      enemyDirection: 1
+    - kind: 2
+      beat: 31
+      roomId: far-east
+      enemyId: far-east-lower-left
+      moveDirection: 0
+      enemyDirection: 5
+    - kind: 2
+      beat: 32
+      roomId: far-east
+      enemyId: far-east-upper-left
+      moveDirection: 0
+      enemyDirection: 7
+    - kind: 2
+      beat: 38
+      roomId: far-north
+      enemyId: far-north-right
+      moveDirection: 0
+      enemyDirection: 2
+    - kind: 2
+      beat: 39
+      roomId: far-north
+      enemyId: far-north-upper-right
+      moveDirection: 0
+      enemyDirection: 1
+    - kind: 2
+      beat: 40
+      roomId: far-north
+      enemyId: far-north-lower-left
+      moveDirection: 0
+      enemyDirection: 5
+  beatChartMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
+  mapDraft:
+    settings:
+      bpm: 70
+      startingRoomId: start
+      offsetSeconds: 6.857142857142857
+      musicDelaySeconds: 0
+      loopMusic: 1
+      beatsPerBar: 8
+      subdivision: 8
+      roomLeadBeats: 3
+      enemyLeadBeats: 3
+      notes:
+      - kind: 0
+        beat: 8
+        roomId: north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 18
+        roomId: east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 16
+        roomId: east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 24
+        roomId: south
+        enemyId: 
+        moveDirection: 2
+        enemyDirection: 0
+      - kind: 0
+        beat: 28
+        roomId: far-east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 27
+        roomId: far-east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 36
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 1
+        beat: 35
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 2
+        beat: 12
+        roomId: north
+        enemyId: north-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 21
+        roomId: east
+        enemyId: east-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 31
+        roomId: far-east
+        enemyId: far-east-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+      - kind: 2
+        beat: 32
+        roomId: far-east
+        enemyId: far-east-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 38
+        roomId: far-north
+        enemyId: far-north-right
+        moveDirection: 0
+        enemyDirection: 2
+      - kind: 2
+        beat: 39
+        roomId: far-north
+        enemyId: far-north-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 40
+        roomId: far-north
+        enemyId: far-north-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+    roomSize: 6
+    originX: 0
+    originY: 0
+    cameraX: 0
+    cameraY: 0
+    cameraSize: 9.5
+    cameraTrack: 0
+    rooms:
+    - id: start
+      x: 0
+      y: 0
+      hitBeat: 0
+      frameBeat: 0
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 0
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 0
+    - id: room_bdc4acc6
+      x: 1
+      y: 0
+      hitBeat: -3.5
+      frameBeat: -6.25
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -6.25
+      door: 1
+      doorBeat: -4
+      doorFrameBeat: -6.25
+    - id: room_1db3b92281e441d2b7fbb97844c51e91
+      x: 1
+      y: -1
+      hitBeat: -1.5
+      frameBeat: -4.75
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -4.75
+      door: 1
+      doorBeat: -2
+      doorFrameBeat: -4.75
+    - id: room_6aa37b019d494fb29246c2d3470afe14
+      x: 2
+      y: -1
+      hitBeat: 0.5
+      frameBeat: -2.75
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -2.75
+      door: 1
+      doorBeat: 0
+      doorFrameBeat: -2.75
+    - id: room_813becb352784529b6f9a9f0f5aec592
+      x: 2
+      y: 0
+      hitBeat: 2.5
+      frameBeat: -0.75
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -0.75
+      door: 1
+      doorBeat: 2
+      doorFrameBeat: -0.75
+    - id: room_e5543ad2
+      x: 3
+      y: 0
+      hitBeat: 4
+      frameBeat: 1
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 1
+      door: 0
+      doorBeat: 3
+      doorFrameBeat: 1
+    enemies:
+    - id: enemy_a74a4089ba074750999bd4dcceb69201
+      roomId: room_bdc4acc6
+      direction: 4
+      hitBeat: -3
+      appearBeat: -6
+      frameBeat: -6
+    - id: enemy_d89dd6b7ee0141959732d78e4ea86974
+      roomId: room_bdc4acc6
+      direction: 3
+      hitBeat: -3.25
+      appearBeat: -6.25
+      frameBeat: -6.25
+    - id: enemy_7db3c1f8377740139a0e6f7966304e1e
+      roomId: room_bdc4acc6
+      direction: 5
+      hitBeat: -2.5
+      appearBeat: -5.25
+      frameBeat: -5.25
+    - id: enemy_2bf473f0a4e244458e9dec14fc809f77
+      roomId: room_1db3b92281e441d2b7fbb97844c51e91
+      direction: 3
+      hitBeat: -1.25
+      appearBeat: -4.25
+      frameBeat: -4.25
+    - id: enemy_a3551d2a43af46d2b07628792d3ad4b7
+      roomId: room_1db3b92281e441d2b7fbb97844c51e91
+      direction: 2
+      hitBeat: -1
+      appearBeat: -4
+      frameBeat: -4
+    - id: enemy_66e12c3437bf41918a5ebf165a6522a0
+      roomId: room_1db3b92281e441d2b7fbb97844c51e91
+      direction: 1
+      hitBeat: -0.5
+      appearBeat: -3.5
+      frameBeat: -3.5
+    - id: enemy_6b916f6e9c224236a4ccb42b569dc0cc
+      roomId: room_6aa37b019d494fb29246c2d3470afe14
+      direction: 1
+      hitBeat: 0.75
+      appearBeat: -2.25
+      frameBeat: -2.25
+    - id: enemy_4b98261d12fe47728c2ae2b14bec728e
+      roomId: room_6aa37b019d494fb29246c2d3470afe14
+      direction: 0
+      hitBeat: 1
+      appearBeat: -1.75
+      frameBeat: -1.75
+    - id: enemy_ab9e62cee288491c8886cc5d664728da
+      roomId: room_6aa37b019d494fb29246c2d3470afe14
+      direction: 7
+      hitBeat: 1.5
+      appearBeat: -1.5
+      frameBeat: -1.5
+    - id: enemy_7d3c9774cce44f02ab04ae2feeee6ec9
+      roomId: room_813becb352784529b6f9a9f0f5aec592
+      direction: 1
+      hitBeat: 2.75
+      appearBeat: -0.25
+      frameBeat: -0.25
+    - id: enemy_41fbbe35e9064f0a8e52e29c914568fd
+      roomId: room_813becb352784529b6f9a9f0f5aec592
+      direction: 2
+      hitBeat: 3
+      appearBeat: 0.25
+      frameBeat: 0.25
+    - id: enemy_46589299aba1422c88853637be1b124f
+      roomId: room_813becb352784529b6f9a9f0f5aec592
+      direction: 3
+      hitBeat: 3.5
+      appearBeat: 0.5
+      frameBeat: 0.5
+    groups: []
+    cameras: []
+    shakes: []
+  mapDraftMusic: {fileID: 8300000, guid: 687e232579caecd4d988a68f70847881, type: 3}
+  appliedMap:
+    settings:
+      bpm: 70
+      startingRoomId: start
+      offsetSeconds: 6.857142857142857
+      musicDelaySeconds: 0
+      loopMusic: 1
+      beatsPerBar: 8
+      subdivision: 8
+      roomLeadBeats: 3
+      enemyLeadBeats: 3
+      notes:
+      - kind: 0
+        beat: 8
+        roomId: north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 18
+        roomId: east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 16
+        roomId: east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 24
+        roomId: south
+        enemyId: 
+        moveDirection: 2
+        enemyDirection: 0
+      - kind: 0
+        beat: 28
+        roomId: far-east
+        enemyId: 
+        moveDirection: 3
+        enemyDirection: 0
+      - kind: 1
+        beat: 27
+        roomId: far-east
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 0
+        beat: 36
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 1
+        beat: 35
+        roomId: far-north
+        enemyId: 
+        moveDirection: 0
+        enemyDirection: 0
+      - kind: 2
+        beat: 12
+        roomId: north
+        enemyId: north-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 21
+        roomId: east
+        enemyId: east-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 31
+        roomId: far-east
+        enemyId: far-east-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+      - kind: 2
+        beat: 32
+        roomId: far-east
+        enemyId: far-east-upper-left
+        moveDirection: 0
+        enemyDirection: 7
+      - kind: 2
+        beat: 38
+        roomId: far-north
+        enemyId: far-north-right
+        moveDirection: 0
+        enemyDirection: 2
+      - kind: 2
+        beat: 39
+        roomId: far-north
+        enemyId: far-north-upper-right
+        moveDirection: 0
+        enemyDirection: 1
+      - kind: 2
+        beat: 40
+        roomId: far-north
+        enemyId: far-north-lower-left
+        moveDirection: 0
+        enemyDirection: 5
+    roomSize: 6
+    originX: 0
+    originY: 0
+    cameraX: 0
+    cameraY: 0
+    cameraSize: 9.5
+    cameraTrack: 0
+    rooms:
+    - id: start
+      x: 0
+      y: 0
+      hitBeat: 0
+      frameBeat: 0
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 0
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 0
+    - id: room_bdc4acc6
+      x: 1
+      y: 0
+      hitBeat: -3.5
+      frameBeat: -6.25
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -6.25
+      door: 1
+      doorBeat: -4
+      doorFrameBeat: -6.25
+    - id: room_1db3b92281e441d2b7fbb97844c51e91
+      x: 1
+      y: -1
+      hitBeat: -1.5
+      frameBeat: -4.75
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -4.75
+      door: 1
+      doorBeat: -2
+      doorFrameBeat: -4.75
+    - id: room_6aa37b019d494fb29246c2d3470afe14
+      x: 2
+      y: -1
+      hitBeat: 0.5
+      frameBeat: -2.75
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -2.75
+      door: 1
+      doorBeat: 0
+      doorFrameBeat: -2.75
+    - id: room_813becb352784529b6f9a9f0f5aec592
+      x: 2
+      y: 0
+      hitBeat: 2.5
+      frameBeat: -0.75
+      groupId: 
+      individualAppearance: 1
+      appearBeat: -0.75
+      door: 1
+      doorBeat: 2
+      doorFrameBeat: -0.75
+    - id: room_e5543ad2
+      x: 3
+      y: 0
+      hitBeat: 4
+      frameBeat: 1
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 1
+      door: 0
+      doorBeat: 3
+      doorFrameBeat: 1
+    enemies:
+    - id: enemy_a74a4089ba074750999bd4dcceb69201
+      roomId: room_bdc4acc6
+      direction: 4
+      hitBeat: -3
+      appearBeat: -6
+      frameBeat: -6
+    - id: enemy_d89dd6b7ee0141959732d78e4ea86974
+      roomId: room_bdc4acc6
+      direction: 3
+      hitBeat: -3.25
+      appearBeat: -6.25
+      frameBeat: -6.25
+    - id: enemy_7db3c1f8377740139a0e6f7966304e1e
+      roomId: room_bdc4acc6
+      direction: 5
+      hitBeat: -2.5
+      appearBeat: -5.25
+      frameBeat: -5.25
+    - id: enemy_2bf473f0a4e244458e9dec14fc809f77
+      roomId: room_1db3b92281e441d2b7fbb97844c51e91
+      direction: 3
+      hitBeat: -1.25
+      appearBeat: -4.25
+      frameBeat: -4.25
+    - id: enemy_a3551d2a43af46d2b07628792d3ad4b7
+      roomId: room_1db3b92281e441d2b7fbb97844c51e91
+      direction: 2
+      hitBeat: -1
+      appearBeat: -4
+      frameBeat: -4
+    - id: enemy_66e12c3437bf41918a5ebf165a6522a0
+      roomId: room_1db3b92281e441d2b7fbb97844c51e91
+      direction: 1
+      hitBeat: -0.5
+      appearBeat: -3.5
+      frameBeat: -3.5
+    - id: enemy_6b916f6e9c224236a4ccb42b569dc0cc
+      roomId: room_6aa37b019d494fb29246c2d3470afe14
+      direction: 1
+      hitBeat: 0.75
+      appearBeat: -2.25
+      frameBeat: -2.25
+    - id: enemy_4b98261d12fe47728c2ae2b14bec728e
+      roomId: room_6aa37b019d494fb29246c2d3470afe14
+      direction: 0
+      hitBeat: 1
+      appearBeat: -1.75
+      frameBeat: -1.75
+    - id: enemy_ab9e62cee288491c8886cc5d664728da
+      roomId: room_6aa37b019d494fb29246c2d3470afe14
+      direction: 7
+      hitBeat: 1.5
+      appearBeat: -1.5
+      frameBeat: -1.5
+    - id: enemy_7d3c9774cce44f02ab04ae2feeee6ec9
+      roomId: room_813becb352784529b6f9a9f0f5aec592
+      direction: 1
+      hitBeat: 2.75
+      appearBeat: -0.25
+      frameBeat: -0.25
+    - id: enemy_41fbbe35e9064f0a8e52e29c914568fd
+      roomId: room_813becb352784529b6f9a9f0f5aec592
+      direction: 2
+      hitBeat: 3
+      appearBeat: 0.25
+      frameBeat: 0.25
+    - id: enemy_46589299aba1422c88853637be1b124f
+      roomId: room_813becb352784529b6f9a9f0f5aec592
+      direction: 3
+      hitBeat: 3.5
+      appearBeat: 0.5
+      frameBeat: 0.5
+    groups: []
+    cameras: []
+    shakes: []
