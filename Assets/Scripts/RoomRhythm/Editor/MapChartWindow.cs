@@ -222,6 +222,9 @@ namespace Gun.RoomRhythm.Editor
             serialized.Update(); var map = serialized.FindProperty("mapDraft"); var settings = map.FindPropertyRelative("settings");
             propertiesScroll = EditorGUILayout.BeginScrollView(propertiesScroll);
             EditorGUILayout.LabelField("곡 설정", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serialized.FindProperty("roomFrameStartSize"), new GUIContent("방 판정선 시작 크기"));
+            if (serialized.FindProperty("roomFrameStartSize").floatValue <= map.FindPropertyRelative("roomSize").floatValue)
+                EditorGUILayout.HelpBox("방 판정선 시작 크기를 방 한 변보다 크게 설정하세요.", MessageType.Error);
             EditorGUILayout.PropertyField(serialized.FindProperty("roomStartBrightness"), new GUIContent("방 초기 밝기"));
             EditorGUILayout.PropertyField(serialized.FindProperty("roomRevealStart"), new GUIContent("방 급등장 시작 비율"));
             EditorGUILayout.PropertyField(serialized.FindProperty("appearanceStartAlpha"), new GUIContent("등장 초기 불투명도"));

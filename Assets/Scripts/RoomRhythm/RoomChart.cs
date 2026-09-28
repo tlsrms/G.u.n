@@ -25,6 +25,8 @@ namespace Gun.RoomRhythm
         [Tooltip("적 판정 몇 초 전에 표시할지 설정합니다. 방 도착 전에는 표시하지 않습니다.")]
         [Min(0.01f)] public float enemyLeadTime = 1.5f;
         [Header("등장 연출")]
+        [Tooltip("방 판정선이 생성될 때의 한 변 길이(월드 유닛)입니다. 방보다 크게 설정하세요. 각 방의 등장부터 정확 판정까지 남은 시간에 맞춰 축소 속도가 자동 결정됩니다.")]
+        [Min(.1f)] public float roomFrameStartSize = 12f;
         [Range(0f, 1f)] public float roomStartBrightness = .15f;
         [Range(0f, .99f)] public float roomRevealStart = .88f;
         [Tooltip("문 등장 직후 닫히는 시간입니다.")]
@@ -54,6 +56,8 @@ namespace Gun.RoomRhythm
 
         public MoveNote[] BuildMovementNotes()
         {
+            if (!(roomFrameStartSize > 0) || float.IsInfinity(roomFrameStartSize))
+                throw new System.ArgumentException("방 판정선 시작 크기는 유한한 양수여야 합니다.");
             if (!(doorCloseDuration > 0) || float.IsInfinity(doorCloseDuration)
                 || !(appearanceStartAlpha >= 0 && appearanceStartAlpha <= 1))
                 throw new System.ArgumentException("문 닫힘 시간과 등장 불투명도 설정을 확인하세요.");

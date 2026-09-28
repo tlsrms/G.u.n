@@ -288,7 +288,7 @@ namespace Gun.RoomRhythm
                 float progress = isCurrent || movingInto ? 1f : Progress(time, note.appearTime, note.HitTime);
                 double frameStart = note.customAppearance ? note.frameStartTime : note.appearTime;
                 path[i].Present(visible, isCurrent, future, progress, deathFrames != null ? deathFrames[i] : run.RoomFrameVisible(i, time),
-                    time, note.HitTime, Progress(time, frameStart, note.HitTime), isCurrent && run.Death == DeathPresentation.Collision);
+                    time, note.HitTime, Progress(time, frameStart, note.HitTime), isCurrent && run.Death == DeathPresentation.Collision, frameStart);
                 if (path[i].Door != null)
                     path[i].Door.Present(i > current && note.hasDoor && !run.DoorBroken(i - 1)
                         && run.Phase != RunPhase.Ready && time >= note.DoorAppearsAt && previousRoomOccurrences[i] < current,

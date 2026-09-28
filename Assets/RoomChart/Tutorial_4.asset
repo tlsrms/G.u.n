@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
-  m_Name: FirstMovement
+  m_Name: Tutorial_4
   m_EditorClassIdentifier: 
   music: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
   inputOffsetMs: 0
@@ -24,6 +24,9 @@ MonoBehaviour:
   passageWidth: 2.8
   roomLeadTime: 2
   enemyLeadTime: 1.5
+  roomFrameStartSize: 12
+  roomStartBrightness: 0.15
+  roomRevealStart: 0.88
   doorCloseDuration: 0.2
   appearanceStartAlpha: 0.05
   moves:

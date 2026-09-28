@@ -12,157 +12,195 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
   m_Name: Tutorial_3
   m_EditorClassIdentifier: 
-  music: {fileID: 8300000, guid: 687e232579caecd4d988a68f70847881, type: 3}
-  inputOffsetMs: 130
+  music: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
+  inputOffsetMs: 0
   startingRoomId: start
-  bpm: 70
+  bpm: 120
   moveDuration: 0.18
   aimRadius: 2.2
   aimHalfAngle: 38
   judgmentLineWidth: 0.1
   enemyLineWidth: 0.05
   passageWidth: 2.8
-  roomLeadTime: 2.5714285
-  enemyLeadTime: 2.5714285
+  roomLeadTime: 2
+  enemyLeadTime: 1.5
+  roomFrameStartSize: 12
+  roomStartBrightness: 0.15
+  roomRevealStart: 0.88
   doorCloseDuration: 0.2
   appearanceStartAlpha: 0.05
   moves:
-  - destinationId: room_bdc4acc6
-    direction: 3
-    time: 3.8571428571428568
-    customAppearance: 1
-    appearanceTime: 1.5
-    frameStartTime: 1.5
-    doorFrameStartTime: 1.5
-    hasDoor: 1
-    doorTime: 3.4285714285714284
-    moveDelay: 0.42857142857142855
-  - destinationId: room_1db3b92281e441d2b7fbb97844c51e91
-    direction: 2
-    time: 5.571428571428571
-    customAppearance: 1
-    appearanceTime: 2.7857142857142856
-    frameStartTime: 2.7857142857142856
-    doorFrameStartTime: 2.7857142857142856
-    hasDoor: 1
-    doorTime: 5.142857142857142
-    moveDelay: 0.42857142857142855
-  - destinationId: room_6aa37b019d494fb29246c2d3470afe14
-    direction: 3
-    time: 7.285714285714286
-    customAppearance: 1
-    appearanceTime: 4.5
-    frameStartTime: 4.5
-    doorFrameStartTime: 4.5
-    hasDoor: 1
-    doorTime: 6.857142857142857
-    moveDelay: 0.42857142857142855
-  - destinationId: room_813becb352784529b6f9a9f0f5aec592
+  - destinationId: north
     direction: 0
+    time: 4
+    customAppearance: 1
+    appearanceTime: 2
+    frameStartTime: 2
+    doorFrameStartTime: 2
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: east
+    direction: 3
     time: 9
     customAppearance: 1
-    appearanceTime: 6.2142857142857135
-    frameStartTime: 6.2142857142857135
-    doorFrameStartTime: 6.2142857142857135
+    appearanceTime: 7
+    frameStartTime: 7
+    doorFrameStartTime: 7
     hasDoor: 1
-    doorTime: 8.571428571428571
-    moveDelay: 0.42857142857142855
-  - destinationId: room_e5543ad2
-    direction: 3
-    time: 10.285714285714285
+    doorTime: 8
+    moveDelay: 1
+  - destinationId: south
+    direction: 2
+    time: 12
     customAppearance: 1
-    appearanceTime: 7.7142857142857135
-    frameStartTime: 7.7142857142857135
-    doorFrameStartTime: 7.7142857142857135
+    appearanceTime: 10
+    frameStartTime: 10
+    doorFrameStartTime: 10
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: far-east
+    direction: 3
+    time: 14
+    customAppearance: 1
+    appearanceTime: 12
+    frameStartTime: 12
+    doorFrameStartTime: 12
+    hasDoor: 1
+    doorTime: 13.5
+    moveDelay: 0.5
+  - destinationId: far-north
+    direction: 0
+    time: 18
+    customAppearance: 1
+    appearanceTime: 16
+    frameStartTime: 16
+    doorFrameStartTime: 16
+    hasDoor: 1
+    doorTime: 17.5
+    moveDelay: 0.5
+  - destinationId: room_7793a5
+    direction: 3
+    time: 20.5
+    customAppearance: 1
+    appearanceTime: 18.5
+    frameStartTime: 18.5
+    doorFrameStartTime: 18.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_2255f4
+    direction: 3
+    time: 21
+    customAppearance: 1
+    appearanceTime: 19
+    frameStartTime: 19
+    doorFrameStartTime: 19
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_08ad9c
+    direction: 3
+    time: 21.5
+    customAppearance: 1
+    appearanceTime: 19.5
+    frameStartTime: 19.5
+    doorFrameStartTime: 19.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_b18ec926
+    direction: 3
+    time: 22
+    customAppearance: 1
+    appearanceTime: 20
+    frameStartTime: 20
+    doorFrameStartTime: 20
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_8a911a1b
+    direction: 3
+    time: 22.5
+    customAppearance: 1
+    appearanceTime: 20.5
+    frameStartTime: 20.5
+    doorFrameStartTime: 20.5
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_9a6efa05
+    direction: 3
+    time: 23
+    customAppearance: 1
+    appearanceTime: 21
+    frameStartTime: 21
+    doorFrameStartTime: 21
+    hasDoor: 0
+    doorTime: 0
+    moveDelay: 0
+  - destinationId: room_5640575c
+    direction: 3
+    time: 23.5
+    customAppearance: 1
+    appearanceTime: 21.5
+    frameStartTime: 21.5
+    doorFrameStartTime: 21.5
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
   enemyReadTime: 0.25
   enemies:
-  - id: enemy_d89dd6b7ee0141959732d78e4ea86974
-    roomId: room_bdc4acc6
-    direction: 3
-    time: 4.071428571428571
-    customAppearance: 1
-    appearanceTime: 1.5
-    frameStartTime: 1.5
-  - id: enemy_a74a4089ba074750999bd4dcceb69201
-    roomId: room_bdc4acc6
-    direction: 4
-    time: 4.285714285714285
-    customAppearance: 1
-    appearanceTime: 1.7142857142857135
-    frameStartTime: 1.7142857142857135
-  - id: enemy_7db3c1f8377740139a0e6f7966304e1e
-    roomId: room_bdc4acc6
-    direction: 5
-    time: 4.7142857142857135
-    customAppearance: 1
-    appearanceTime: 2.3571428571428568
-    frameStartTime: 2.3571428571428568
-  - id: enemy_2bf473f0a4e244458e9dec14fc809f77
-    roomId: room_1db3b92281e441d2b7fbb97844c51e91
-    direction: 3
-    time: 5.785714285714286
-    customAppearance: 1
-    appearanceTime: 3.214285714285714
-    frameStartTime: 3.214285714285714
-  - id: enemy_a3551d2a43af46d2b07628792d3ad4b7
-    roomId: room_1db3b92281e441d2b7fbb97844c51e91
-    direction: 2
+  - id: north-upper-left
+    roomId: north
+    direction: 7
     time: 6
     customAppearance: 1
-    appearanceTime: 3.4285714285714284
-    frameStartTime: 3.4285714285714284
-  - id: enemy_66e12c3437bf41918a5ebf165a6522a0
-    roomId: room_1db3b92281e441d2b7fbb97844c51e91
+    appearanceTime: 4.5
+    frameStartTime: 4.5
+  - id: east-upper-right
+    roomId: east
     direction: 1
-    time: 6.428571428571428
+    time: 10.5
     customAppearance: 1
-    appearanceTime: 3.8571428571428568
-    frameStartTime: 3.8571428571428568
-  - id: enemy_6b916f6e9c224236a4ccb42b569dc0cc
-    roomId: room_6aa37b019d494fb29246c2d3470afe14
-    direction: 1
-    time: 7.5
+    appearanceTime: 9
+    frameStartTime: 9
+  - id: far-east-lower-left
+    roomId: far-east
+    direction: 5
+    time: 15.5
     customAppearance: 1
-    appearanceTime: 4.928571428571428
-    frameStartTime: 4.928571428571428
-  - id: enemy_4b98261d12fe47728c2ae2b14bec728e
-    roomId: room_6aa37b019d494fb29246c2d3470afe14
-    direction: 0
-    time: 7.7142857142857135
-    customAppearance: 1
-    appearanceTime: 5.357142857142857
-    frameStartTime: 5.357142857142857
-  - id: enemy_ab9e62cee288491c8886cc5d664728da
-    roomId: room_6aa37b019d494fb29246c2d3470afe14
+    appearanceTime: 14
+    frameStartTime: 14
+  - id: far-east-upper-left
+    roomId: far-east
     direction: 7
-    time: 8.142857142857142
+    time: 16
     customAppearance: 1
-    appearanceTime: 5.571428571428571
-    frameStartTime: 5.571428571428571
-  - id: enemy_7d3c9774cce44f02ab04ae2feeee6ec9
-    roomId: room_813becb352784529b6f9a9f0f5aec592
-    direction: 1
-    time: 9.214285714285714
-    customAppearance: 1
-    appearanceTime: 6.642857142857142
-    frameStartTime: 6.642857142857142
-  - id: enemy_41fbbe35e9064f0a8e52e29c914568fd
-    roomId: room_813becb352784529b6f9a9f0f5aec592
+    appearanceTime: 14.5
+    frameStartTime: 14.5
+  - id: far-north-right
+    roomId: far-north
     direction: 2
-    time: 9.428571428571429
+    time: 19
     customAppearance: 1
-    appearanceTime: 7.071428571428571
-    frameStartTime: 7.071428571428571
-  - id: enemy_46589299aba1422c88853637be1b124f
-    roomId: room_813becb352784529b6f9a9f0f5aec592
-    direction: 3
-    time: 9.857142857142858
+    appearanceTime: 17.5
+    frameStartTime: 17.5
+  - id: far-north-upper-right
+    roomId: far-north
+    direction: 1
+    time: 19.5
     customAppearance: 1
-    appearanceTime: 7.285714285714286
-    frameStartTime: 7.285714285714286
+    appearanceTime: 18
+    frameStartTime: 18
+  - id: far-north-lower-left
+    roomId: far-north
+    direction: 5
+    time: 20
+    customAppearance: 1
+    appearanceTime: 18.5
+    frameStartTime: 18.5
   beatChart:
     bpm: 120
     startingRoomId: start
@@ -267,14 +305,14 @@ MonoBehaviour:
   beatChartMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
   mapDraft:
     settings:
-      bpm: 70
+      bpm: 120
       startingRoomId: start
-      offsetSeconds: 6.857142857142857
+      offsetSeconds: 0
       musicDelaySeconds: 0
-      loopMusic: 1
-      beatsPerBar: 8
-      subdivision: 8
-      roomLeadBeats: 3
+      loopMusic: 0
+      beatsPerBar: 4
+      subdivision: 4
+      roomLeadBeats: 4
       enemyLeadBeats: 3
       notes:
       - kind: 0
@@ -386,148 +424,195 @@ MonoBehaviour:
       door: 0
       doorBeat: 0
       doorFrameBeat: 0
-    - id: room_bdc4acc6
-      x: 1
-      y: 0
-      hitBeat: -3.5
-      frameBeat: -6.25
+    - id: north
+      x: 0
+      y: 1
+      hitBeat: 8
+      frameBeat: 4
       groupId: 
       individualAppearance: 1
-      appearBeat: -6.25
-      door: 1
-      doorBeat: -4
-      doorFrameBeat: -6.25
-    - id: room_1db3b92281e441d2b7fbb97844c51e91
-      x: 1
-      y: -1
-      hitBeat: -1.5
-      frameBeat: -4.75
-      groupId: 
-      individualAppearance: 1
-      appearBeat: -4.75
-      door: 1
-      doorBeat: -2
-      doorFrameBeat: -4.75
-    - id: room_6aa37b019d494fb29246c2d3470afe14
-      x: 2
-      y: -1
-      hitBeat: 0.5
-      frameBeat: -2.75
-      groupId: 
-      individualAppearance: 1
-      appearBeat: -2.75
-      door: 1
-      doorBeat: 0
-      doorFrameBeat: -2.75
-    - id: room_813becb352784529b6f9a9f0f5aec592
-      x: 2
-      y: 0
-      hitBeat: 2.5
-      frameBeat: -0.75
-      groupId: 
-      individualAppearance: 1
-      appearBeat: -0.75
-      door: 1
-      doorBeat: 2
-      doorFrameBeat: -0.75
-    - id: room_e5543ad2
-      x: 3
-      y: 0
-      hitBeat: 4
-      frameBeat: 1
-      groupId: 
-      individualAppearance: 1
-      appearBeat: 1
+      appearBeat: 4
       door: 0
-      doorBeat: 3
-      doorFrameBeat: 1
+      doorBeat: 0
+      doorFrameBeat: 4
+    - id: east
+      x: 1
+      y: 1
+      hitBeat: 18
+      frameBeat: 14
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 14
+      door: 1
+      doorBeat: 16
+      doorFrameBeat: 14
+    - id: south
+      x: 1
+      y: 0
+      hitBeat: 24
+      frameBeat: 20
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 20
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 20
+    - id: far-east
+      x: 2
+      y: 0
+      hitBeat: 28
+      frameBeat: 24
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 24
+      door: 1
+      doorBeat: 27
+      doorFrameBeat: 24
+    - id: far-north
+      x: 2
+      y: 1
+      hitBeat: 36
+      frameBeat: 32
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 32
+      door: 1
+      doorBeat: 35
+      doorFrameBeat: 32
+    - id: room_7793a5
+      x: 3
+      y: 1
+      hitBeat: 41
+      frameBeat: 37
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 37
+      door: 0
+      doorBeat: 40
+      doorFrameBeat: 37
+    - id: room_2255f4
+      x: 4
+      y: 1
+      hitBeat: 42
+      frameBeat: 38
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 38
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 38
+    - id: room_08ad9c
+      x: 5
+      y: 1
+      hitBeat: 43
+      frameBeat: 39
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 39
+      door: 0
+      doorBeat: 48
+      doorFrameBeat: 39
+    - id: room_b18ec926
+      x: 6
+      y: 1
+      hitBeat: 44
+      frameBeat: 40
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 40
+      door: 0
+      doorBeat: 43
+      doorFrameBeat: 40
+    - id: room_8a911a1b
+      x: 7
+      y: 1
+      hitBeat: 45
+      frameBeat: 41
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 41
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 41
+    - id: room_9a6efa05
+      x: 8
+      y: 1
+      hitBeat: 46
+      frameBeat: 42
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 42
+      door: 0
+      doorBeat: 45
+      doorFrameBeat: 42
+    - id: room_5640575c
+      x: 9
+      y: 1
+      hitBeat: 47
+      frameBeat: 43
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 43
+      door: 0
+      doorBeat: 46
+      doorFrameBeat: 43
     enemies:
-    - id: enemy_a74a4089ba074750999bd4dcceb69201
-      roomId: room_bdc4acc6
-      direction: 4
-      hitBeat: -3
-      appearBeat: -6
-      frameBeat: -6
-    - id: enemy_d89dd6b7ee0141959732d78e4ea86974
-      roomId: room_bdc4acc6
-      direction: 3
-      hitBeat: -3.25
-      appearBeat: -6.25
-      frameBeat: -6.25
-    - id: enemy_7db3c1f8377740139a0e6f7966304e1e
-      roomId: room_bdc4acc6
-      direction: 5
-      hitBeat: -2.5
-      appearBeat: -5.25
-      frameBeat: -5.25
-    - id: enemy_2bf473f0a4e244458e9dec14fc809f77
-      roomId: room_1db3b92281e441d2b7fbb97844c51e91
-      direction: 3
-      hitBeat: -1.25
-      appearBeat: -4.25
-      frameBeat: -4.25
-    - id: enemy_a3551d2a43af46d2b07628792d3ad4b7
-      roomId: room_1db3b92281e441d2b7fbb97844c51e91
-      direction: 2
-      hitBeat: -1
-      appearBeat: -4
-      frameBeat: -4
-    - id: enemy_66e12c3437bf41918a5ebf165a6522a0
-      roomId: room_1db3b92281e441d2b7fbb97844c51e91
-      direction: 1
-      hitBeat: -0.5
-      appearBeat: -3.5
-      frameBeat: -3.5
-    - id: enemy_6b916f6e9c224236a4ccb42b569dc0cc
-      roomId: room_6aa37b019d494fb29246c2d3470afe14
-      direction: 1
-      hitBeat: 0.75
-      appearBeat: -2.25
-      frameBeat: -2.25
-    - id: enemy_4b98261d12fe47728c2ae2b14bec728e
-      roomId: room_6aa37b019d494fb29246c2d3470afe14
-      direction: 0
-      hitBeat: 1
-      appearBeat: -1.75
-      frameBeat: -1.75
-    - id: enemy_ab9e62cee288491c8886cc5d664728da
-      roomId: room_6aa37b019d494fb29246c2d3470afe14
+    - id: north-upper-left
+      roomId: north
       direction: 7
-      hitBeat: 1.5
-      appearBeat: -1.5
-      frameBeat: -1.5
-    - id: enemy_7d3c9774cce44f02ab04ae2feeee6ec9
-      roomId: room_813becb352784529b6f9a9f0f5aec592
+      hitBeat: 12
+      appearBeat: 9
+      frameBeat: 9
+    - id: east-upper-right
+      roomId: east
       direction: 1
-      hitBeat: 2.75
-      appearBeat: -0.25
-      frameBeat: -0.25
-    - id: enemy_41fbbe35e9064f0a8e52e29c914568fd
-      roomId: room_813becb352784529b6f9a9f0f5aec592
+      hitBeat: 21
+      appearBeat: 18
+      frameBeat: 18
+    - id: far-east-lower-left
+      roomId: far-east
+      direction: 5
+      hitBeat: 31
+      appearBeat: 28
+      frameBeat: 28
+    - id: far-east-upper-left
+      roomId: far-east
+      direction: 7
+      hitBeat: 32
+      appearBeat: 29
+      frameBeat: 29
+    - id: far-north-right
+      roomId: far-north
       direction: 2
-      hitBeat: 3
-      appearBeat: 0.25
-      frameBeat: 0.25
-    - id: enemy_46589299aba1422c88853637be1b124f
-      roomId: room_813becb352784529b6f9a9f0f5aec592
-      direction: 3
-      hitBeat: 3.5
-      appearBeat: 0.5
-      frameBeat: 0.5
+      hitBeat: 38
+      appearBeat: 35
+      frameBeat: 35
+    - id: far-north-upper-right
+      roomId: far-north
+      direction: 1
+      hitBeat: 39
+      appearBeat: 36
+      frameBeat: 36
+    - id: far-north-lower-left
+      roomId: far-north
+      direction: 5
+      hitBeat: 40
+      appearBeat: 37
+      frameBeat: 37
     groups: []
     cameras: []
     shakes: []
-  mapDraftMusic: {fileID: 8300000, guid: 687e232579caecd4d988a68f70847881, type: 3}
+  mapDraftMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
   appliedMap:
     settings:
-      bpm: 70
+      bpm: 120
       startingRoomId: start
-      offsetSeconds: 6.857142857142857
+      offsetSeconds: 0
       musicDelaySeconds: 0
-      loopMusic: 1
-      beatsPerBar: 8
-      subdivision: 8
-      roomLeadBeats: 3
+      loopMusic: 0
+      beatsPerBar: 4
+      subdivision: 4
+      roomLeadBeats: 4
       enemyLeadBeats: 3
       notes:
       - kind: 0
@@ -639,134 +724,181 @@ MonoBehaviour:
       door: 0
       doorBeat: 0
       doorFrameBeat: 0
-    - id: room_bdc4acc6
-      x: 1
-      y: 0
-      hitBeat: -3.5
-      frameBeat: -6.25
+    - id: north
+      x: 0
+      y: 1
+      hitBeat: 8
+      frameBeat: 4
       groupId: 
       individualAppearance: 1
-      appearBeat: -6.25
-      door: 1
-      doorBeat: -4
-      doorFrameBeat: -6.25
-    - id: room_1db3b92281e441d2b7fbb97844c51e91
-      x: 1
-      y: -1
-      hitBeat: -1.5
-      frameBeat: -4.75
-      groupId: 
-      individualAppearance: 1
-      appearBeat: -4.75
-      door: 1
-      doorBeat: -2
-      doorFrameBeat: -4.75
-    - id: room_6aa37b019d494fb29246c2d3470afe14
-      x: 2
-      y: -1
-      hitBeat: 0.5
-      frameBeat: -2.75
-      groupId: 
-      individualAppearance: 1
-      appearBeat: -2.75
-      door: 1
-      doorBeat: 0
-      doorFrameBeat: -2.75
-    - id: room_813becb352784529b6f9a9f0f5aec592
-      x: 2
-      y: 0
-      hitBeat: 2.5
-      frameBeat: -0.75
-      groupId: 
-      individualAppearance: 1
-      appearBeat: -0.75
-      door: 1
-      doorBeat: 2
-      doorFrameBeat: -0.75
-    - id: room_e5543ad2
-      x: 3
-      y: 0
-      hitBeat: 4
-      frameBeat: 1
-      groupId: 
-      individualAppearance: 1
-      appearBeat: 1
+      appearBeat: 4
       door: 0
-      doorBeat: 3
-      doorFrameBeat: 1
+      doorBeat: 0
+      doorFrameBeat: 4
+    - id: east
+      x: 1
+      y: 1
+      hitBeat: 18
+      frameBeat: 14
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 14
+      door: 1
+      doorBeat: 16
+      doorFrameBeat: 14
+    - id: south
+      x: 1
+      y: 0
+      hitBeat: 24
+      frameBeat: 20
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 20
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 20
+    - id: far-east
+      x: 2
+      y: 0
+      hitBeat: 28
+      frameBeat: 24
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 24
+      door: 1
+      doorBeat: 27
+      doorFrameBeat: 24
+    - id: far-north
+      x: 2
+      y: 1
+      hitBeat: 36
+      frameBeat: 32
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 32
+      door: 1
+      doorBeat: 35
+      doorFrameBeat: 32
+    - id: room_7793a5
+      x: 3
+      y: 1
+      hitBeat: 41
+      frameBeat: 37
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 37
+      door: 0
+      doorBeat: 40
+      doorFrameBeat: 37
+    - id: room_2255f4
+      x: 4
+      y: 1
+      hitBeat: 42
+      frameBeat: 38
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 38
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 38
+    - id: room_08ad9c
+      x: 5
+      y: 1
+      hitBeat: 43
+      frameBeat: 39
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 39
+      door: 0
+      doorBeat: 48
+      doorFrameBeat: 39
+    - id: room_b18ec926
+      x: 6
+      y: 1
+      hitBeat: 44
+      frameBeat: 40
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 40
+      door: 0
+      doorBeat: 43
+      doorFrameBeat: 40
+    - id: room_8a911a1b
+      x: 7
+      y: 1
+      hitBeat: 45
+      frameBeat: 41
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 41
+      door: 0
+      doorBeat: 44
+      doorFrameBeat: 41
+    - id: room_9a6efa05
+      x: 8
+      y: 1
+      hitBeat: 46
+      frameBeat: 42
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 42
+      door: 0
+      doorBeat: 45
+      doorFrameBeat: 42
+    - id: room_5640575c
+      x: 9
+      y: 1
+      hitBeat: 47
+      frameBeat: 43
+      groupId: 
+      individualAppearance: 1
+      appearBeat: 43
+      door: 0
+      doorBeat: 46
+      doorFrameBeat: 43
     enemies:
-    - id: enemy_a74a4089ba074750999bd4dcceb69201
-      roomId: room_bdc4acc6
-      direction: 4
-      hitBeat: -3
-      appearBeat: -6
-      frameBeat: -6
-    - id: enemy_d89dd6b7ee0141959732d78e4ea86974
-      roomId: room_bdc4acc6
-      direction: 3
-      hitBeat: -3.25
-      appearBeat: -6.25
-      frameBeat: -6.25
-    - id: enemy_7db3c1f8377740139a0e6f7966304e1e
-      roomId: room_bdc4acc6
-      direction: 5
-      hitBeat: -2.5
-      appearBeat: -5.25
-      frameBeat: -5.25
-    - id: enemy_2bf473f0a4e244458e9dec14fc809f77
-      roomId: room_1db3b92281e441d2b7fbb97844c51e91
-      direction: 3
-      hitBeat: -1.25
-      appearBeat: -4.25
-      frameBeat: -4.25
-    - id: enemy_a3551d2a43af46d2b07628792d3ad4b7
-      roomId: room_1db3b92281e441d2b7fbb97844c51e91
-      direction: 2
-      hitBeat: -1
-      appearBeat: -4
-      frameBeat: -4
-    - id: enemy_66e12c3437bf41918a5ebf165a6522a0
-      roomId: room_1db3b92281e441d2b7fbb97844c51e91
-      direction: 1
-      hitBeat: -0.5
-      appearBeat: -3.5
-      frameBeat: -3.5
-    - id: enemy_6b916f6e9c224236a4ccb42b569dc0cc
-      roomId: room_6aa37b019d494fb29246c2d3470afe14
-      direction: 1
-      hitBeat: 0.75
-      appearBeat: -2.25
-      frameBeat: -2.25
-    - id: enemy_4b98261d12fe47728c2ae2b14bec728e
-      roomId: room_6aa37b019d494fb29246c2d3470afe14
-      direction: 0
-      hitBeat: 1
-      appearBeat: -1.75
-      frameBeat: -1.75
-    - id: enemy_ab9e62cee288491c8886cc5d664728da
-      roomId: room_6aa37b019d494fb29246c2d3470afe14
+    - id: north-upper-left
+      roomId: north
       direction: 7
-      hitBeat: 1.5
-      appearBeat: -1.5
-      frameBeat: -1.5
-    - id: enemy_7d3c9774cce44f02ab04ae2feeee6ec9
-      roomId: room_813becb352784529b6f9a9f0f5aec592
+      hitBeat: 12
+      appearBeat: 9
+      frameBeat: 9
+    - id: east-upper-right
+      roomId: east
       direction: 1
-      hitBeat: 2.75
-      appearBeat: -0.25
-      frameBeat: -0.25
-    - id: enemy_41fbbe35e9064f0a8e52e29c914568fd
-      roomId: room_813becb352784529b6f9a9f0f5aec592
+      hitBeat: 21
+      appearBeat: 18
+      frameBeat: 18
+    - id: far-east-lower-left
+      roomId: far-east
+      direction: 5
+      hitBeat: 31
+      appearBeat: 28
+      frameBeat: 28
+    - id: far-east-upper-left
+      roomId: far-east
+      direction: 7
+      hitBeat: 32
+      appearBeat: 29
+      frameBeat: 29
+    - id: far-north-right
+      roomId: far-north
       direction: 2
-      hitBeat: 3
-      appearBeat: 0.25
-      frameBeat: 0.25
-    - id: enemy_46589299aba1422c88853637be1b124f
-      roomId: room_813becb352784529b6f9a9f0f5aec592
-      direction: 3
-      hitBeat: 3.5
-      appearBeat: 0.5
-      frameBeat: 0.5
+      hitBeat: 38
+      appearBeat: 35
+      frameBeat: 35
+    - id: far-north-upper-right
+      roomId: far-north
+      direction: 1
+      hitBeat: 39
+      appearBeat: 36
+      frameBeat: 36
+    - id: far-north-lower-left
+      roomId: far-north
+      direction: 5
+      hitBeat: 40
+      appearBeat: 37
+      frameBeat: 37
     groups: []
     cameras: []
     shakes: []

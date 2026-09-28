@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Tutorial_1
   m_EditorClassIdentifier: 
   music: {fileID: 8300000, guid: 53aadebb092541743af66547c7bba98e, type: 3}
-  inputOffsetMs: 0
+  inputOffsetMs: 35
   startingRoomId: start
   bpm: 65
   moveDuration: 0.18
@@ -24,6 +24,9 @@ MonoBehaviour:
   passageWidth: 2.8
   roomLeadTime: 2.3076923
   enemyLeadTime: 2.3076923
+  roomFrameStartSize: 12
+  roomStartBrightness: 0.15
+  roomRevealStart: 0.88
   doorCloseDuration: 0.2
   appearanceStartAlpha: 0.05
   moves:

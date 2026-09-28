@@ -23,6 +23,8 @@ namespace Gun.RoomRhythm
         public float SideLength => sideLength;
         public void Configure(RoomChart settings, MoveDirection? exit = null, MoveDirection? entrance = null)
         {
+            if (!(settings.roomFrameStartSize > sideLength))
+                throw new System.ArgumentException("방 판정선 시작 크기는 방 한 변보다 커야 합니다.");
             chart = settings;
             exitDirection = exit; entranceDirection = entrance;
             if (baseColors == null || baseColors.Length != surfaces.Length) Awake();
@@ -65,7 +67,7 @@ namespace Gun.RoomRhythm
         }
 
         public void Present(bool visible, bool current, bool future, float progress, bool showFrame,
-            double time, double target, float frameProgress = -1, bool sealExit = false)
+            double time, double target, float frameProgress = -1, bool sealExit = false, double frameStart = 0)
         {
             // Keep the hierarchy alive: room surfaces and timing frames have separate lifetimes.
             visuals.SetActive(true);
@@ -105,8 +107,8 @@ namespace Gun.RoomRhythm
             }
             if (judgmentFrame == null) return;
             judgmentFrame.localScale = Vector3.one;
-            float radius = (float)ApproachGeometry.Radius(time, target, sideLength * 0.5f,
-                chart.judgmentLineWidth, chart.Timing);
+            float radius = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
+                chart.roomFrameStartSize * .5f, sideLength * .5f);
             if (frameDirections == null || frameDirections.Length != frameEdges.Length) RefreshFrameDirections();
             for (int i = 0; i < frameEdges.Length; i++)
             {

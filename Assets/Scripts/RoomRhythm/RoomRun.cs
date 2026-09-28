@@ -91,7 +91,8 @@ namespace Gun.RoomRhythm
                 enemyRooms[i] = room;
                 if (enemy.customAppearance && (double.IsNaN(enemy.appearanceTime) || double.IsInfinity(enemy.appearanceTime) || enemy.appearanceTime < 0 || enemy.appearanceTime > enemy.time))
                     throw new ArgumentException("Invalid enemy appearance time.");
-                double earliestShot = Math.Max(earliestArrivals[room], enemy.customAppearance ? enemy.appearanceTime : enemy.time - enemyLeadTime);
+                double earliestEntry = room == 0 ? 0 : earliestArrivals[room] - moveDuration;
+                double earliestShot = Math.Max(earliestEntry, enemy.customAppearance ? enemy.appearanceTime : enemy.time - enemyLeadTime);
                 if (earliestShot >= enemy.time + window.late)
                     throw new ArgumentException("입장 및 적 등장 이후 사격할 수 있는 시간이 없습니다.");
                 if (room < notes.Length)
@@ -137,14 +138,14 @@ namespace Gun.RoomRhythm
                 CompletedMoves++;
                 Phase = RunPhase.Waiting;
             }
+            int enemy = NextEnemyIndex();
+            if (enemy >= 0 && time > enemies[enemy].time + window.late)
+            {
+                Die(FailureReason.MissedEnemy, TimingGrade.TooLate, fatalAt: enemies[enemy].time + window.late);
+                return;
+            }
             if (Phase == RunPhase.Waiting)
             {
-                int enemy = NextEnemyIndex();
-                if (enemy >= 0 && time > enemies[enemy].time + window.late)
-                {
-                    Die(FailureReason.MissedEnemy, TimingGrade.TooLate, fatalAt: enemies[enemy].time + window.late);
-                    return;
-                }
                 if (CompletedMoves == notes.Length)
                 {
                     if (enemy < 0) Phase = RunPhase.Cleared;
@@ -240,15 +241,26 @@ namespace Gun.RoomRhythm
         public bool EnemyVisible(int index, double time) => Phase != RunPhase.Ready
             && enemyRooms[index] >= CompletedMoves && !defeatedEnemies[index] && time >= EnemyVisualAppearsAt(index);
         public bool EnemyRoomEntered(int index) => enemyRooms[index] == CompletedMoves;
-        public double EnemyAppearsAt(int index) => Math.Max(RoomArrivedAt, enemies[index].customAppearance ? enemies[index].appearanceTime : enemies[index].time - enemyLeadTime);
-        public bool EnemyAvailable(int index) => Phase == RunPhase.Waiting
-            && enemyRooms[index] == CompletedMoves && !defeatedEnemies[index] && lastTime >= EnemyAppearsAt(index);
+        // Movement commits the destination for combat immediately; only the visual arrival is delayed.
+        private int CombatRoom => CompletedMoves + (Phase == RunPhase.Moving ? 1 : 0);
+        public double EnemyAppearsAt(int index) => Math.Max(Phase == RunPhase.Moving ? MoveStartedAt : RoomArrivedAt, EnemyVisualAppearsAt(index));
+        public bool EnemyAvailable(int index) => IsActive
+            && enemyRooms[index] == CombatRoom && !defeatedEnemies[index] && lastTime >= EnemyAppearsAt(index);
 
         public int NextEnemyIndex()
         {
             int next = -1;
             for (int i = 0; i < enemies.Length; i++)
-                if (enemyRooms[i] == CompletedMoves && !defeatedEnemies[i]
+                if (enemyRooms[i] == CombatRoom && !defeatedEnemies[i]
+                    && (next < 0 || enemies[i].time < enemies[next].time)) next = i;
+            return next;
+        }
+
+        public int NextPendingEnemyIndex()
+        {
+            int next = -1;
+            for (int i = 0; i < enemies.Length; i++)
+                if (enemyRooms[i] >= CompletedMoves && !defeatedEnemies[i]
                     && (next < 0 || enemies[i].time < enemies[next].time)) next = i;
             return next;
         }

@@ -111,6 +111,19 @@ internal static class RoomRunChecks
         Check(batched.Failure == FailureReason.TooLate, "batch ordering does not extend the success deadline");
         batched = NewRun(); batched.Advance(2.08); batched.Advance(2.14);
         Check(batched.Failure == FailureReason.TooLate, "missing input expires when input batch reaches deadline");
+        foreach (double lead in new[] { .05, .25, 1.0, 8.0 })
+        {
+            double start = 10 - lead;
+            double R(double time) => ApproachGeometry.FixedStartRadius(time, start, 10, 6, 3);
+            Check(Math.Abs(R(start) - 6) < 1e-9, "Every room starts at the same size regardless of lead time");
+            Check(Math.Abs(R(start + lead * .5) - 4.5) < 1e-9, "Each room scales using its own remaining duration");
+            Check(Math.Abs(R(10) - 3) < 1e-9, "Room frame reaches the wall on the exact beat");
+            Check(R(10 + lead * .1) < 3, "Room frame keeps shrinking past a missed beat");
+            Check(R(start - 1) == 6, "Seeking before appearance does not inflate the fixed starting size");
+        }
+        Check(ApproachGeometry.FixedStartRadius(2, 2, 2, 6, 3) == 3, "Zero lead time resolves immediately without division by zero");
+        Check(ApproachGeometry.FixedStartRadius(.1, 0, .25, 6, 3)
+            < ApproachGeometry.FixedStartRadius(.1, 0, 2, 6, 3), "Short lead time shrinks faster than long lead time");
         foreach (double radius in new[] { .38, 3.0 })
         foreach (double width in new[] { .1, .2, .3 })
         foreach (var timing in new[] { Window, new TimingWindow { early = .25, accurate = .05, late = .375 }.Symmetric })
@@ -348,7 +361,8 @@ internal static class RoomRunChecks
         combat.Begin();
         Check(!combat.EnemyAvailable(0) && !combat.ShootEnemy(0, 1), "enemy hidden before entering its room");
         combat.Press(MoveDirection.Up, 2);
-        Check(!combat.ShootEnemy(0, 2.0625), "cannot shoot enemy during arrival animation");
+        combat.Advance(2.0625);
+        Check(combat.EnemyAvailable(0), "destination enemies are targetable during arrival animation");
         combat.Advance(2.125);
         Check(combat.EnemyAvailable(0) && combat.EnemyAvailable(1), "all room enemies appear at arrival");
         Check(combat.RoomArrivedAt == 2.125, "arrival uses event time rather than frame time");
@@ -433,6 +447,28 @@ internal static class RoomRunChecks
         Check(closeDoor.ShootEnemy(0, 3.9) && closeDoor.ShootDoor(1, 4), "Enemy then door with overlapping windows is playable");
         closeDoor.Press(MoveDirection.Right, 4.5); closeDoor.Advance(4.626);
         Check(closeDoor.Phase == RunPhase.Cleared, "Enemy-door-movement sequence clears after relaxed validation");
+        var movingShot = new RoomRun(new[] {
+            new MoveNote { destinationId = "next", direction = MoveDirection.Up, time = 1 }
+        }, new TimingWindow { early = .2, late = .2, accurate = .035 }, .6, new[] {
+            new EnemyNote { id = "arrival", roomId = "next", direction = EnemyDirection.Up, time = 1.1,
+                customAppearance = true, appearanceTime = 0 }
+        });
+        movingShot.Begin();
+        Check(!movingShot.ShootEnemy(0, .99), "previewed destination enemy cannot be shot before movement starts");
+        movingShot.Press(MoveDirection.Up, 1);
+        Check(movingShot.EnemyAvailable(0) && movingShot.NextEnemyIndex() == 0, "movement immediately activates destination combat");
+        Check(movingShot.ShootEnemy(0, 1.1) && movingShot.LastGrade == TimingGrade.Accurate
+            && movingShot.LastTimingErrorMs == 0, "exact-beat arrival shot is accepted with a 200ms window");
+        Check(movingShot.Phase == RunPhase.Moving && !movingShot.ShootEnemy(0, 1.11), "successful shot neither ends movement nor allows duplicate hits");
+        movingShot.Advance(1.31);
+        Check(movingShot.Phase == RunPhase.Moving, "accepted arrival shot does not later become a missed enemy");
+        movingShot.Advance(1.6);
+        Check(movingShot.Phase == RunPhase.Cleared, "arrival completes normally after an in-transit kill");
+        movingShot.Begin(); movingShot.Press(MoveDirection.Up, 1);
+        Check(movingShot.ShootEnemy(0, 1.1 + .2), "late boundary remains inclusive during movement");
+        movingShot.Begin(); movingShot.Press(MoveDirection.Up, 1); movingShot.Advance(1.301);
+        Check(movingShot.Failure == FailureReason.MissedEnemy && movingShot.FailedEnemy == 0,
+            "unshot destination enemy expires during movement without extending the deadline");
         var fastEnemy = new RoomRun(oneMove, Window, .125, new[] {
             new EnemyNote { id = "fast", roomId = "north", direction = EnemyDirection.Up, time = 2.3,
                 customAppearance = true, appearanceTime = 0 }

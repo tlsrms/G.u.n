@@ -25,6 +25,15 @@ namespace Gun.RoomRhythm
     // This maps the SAME timing window used by Judge to the visible overlap.
     public static class ApproachGeometry
     {
+        // Each room travels the same distance over its own authored lead time.
+        // Continue past the target so a missed note does not look like a held success.
+        public static double FixedStartRadius(double time, double start, double target, double startRadius, double targetRadius)
+        {
+            if (target <= start) return time < target ? startRadius : targetRadius;
+            double progress = Math.Max(0, (time - start) / (target - start));
+            return Math.Max(0, startRadius + (targetRadius - startRadius) * progress);
+        }
+
         public static double ExpandingRadius(double time, double target, double radius, double width, TimingWindow window)
             => Math.Max(0, radius + (time - target) * Speed(width, window));
 

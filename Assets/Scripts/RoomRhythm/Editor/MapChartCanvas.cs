@@ -236,7 +236,8 @@ namespace Gun.RoomRhythm.Editor
             double start = Map.AppearanceBeat(room);
             if (cursor >= start && cursor < room.hitBeat)
             {
-                float radius = (float)ApproachGeometry.Radius(Map.settings.Seconds(cursor), Map.settings.Seconds(room.hitBeat), Map.roomSize / 2, chart.judgmentLineWidth, PreviewTiming) * zoom / Map.roomSize;
+                float radius = (float)ApproachGeometry.FixedStartRadius(Map.settings.Seconds(cursor), Map.settings.Seconds(start),
+                    Map.settings.Seconds(room.hitBeat), chart.roomFrameStartSize * .5, Map.roomSize * .5) * zoom / Map.roomSize;
                 Color color = Mint; color.a = Fade(start, room.hitBeat); Square(center, radius, color, width);
             }
         }
@@ -244,14 +245,15 @@ namespace Gun.RoomRhythm.Editor
         {
             if (preview && (cursor < enemy.appearBeat || cursor >= enemy.hitBeat)) return;
             Vector2 p = EnemyPoint(enemy, canvas); float radius = .38f * zoom / Map.roomSize, width = chart.enemyLineWidth * zoom / Map.roomSize;
-            float brightness = preview && enemy.roomId != current ? RoomChart.UpcomingEnemyBrightness : 1;
-            Color white = new Color(brightness, brightness, brightness, preview ? Fade(enemy.appearBeat, enemy.hitBeat) : 1);
-            Circle(p, radius, white, width);
+            Circle(p, radius, Color.white, width);
             if (selectedEnemy >= 0 && selectedEnemy < Map.enemies.Length && Map.enemies[selectedEnemy] == enemy && !preview) Circle(p, radius + 4, Pink, 2);
             if (preview && cursor >= enemy.frameBeat)
             {
                 float r = (float)ApproachGeometry.Radius(Map.settings.Seconds(cursor), Map.settings.Seconds(enemy.hitBeat), .38, chart.enemyLineWidth, PreviewTiming) * zoom / Map.roomSize;
-                Color c = new Color(Pink.r * brightness, Pink.g * brightness, Pink.b * brightness, Fade(enemy.frameBeat, enemy.hitBeat)); Circle(p, r, c, width);
+                MapEnemy next = null;
+                foreach (var candidate in Map.enemies)
+                    if (candidate.hitBeat > cursor && (next == null || candidate.hitBeat < next.hitBeat)) next = candidate;
+                Circle(p, r, RoomEnemy.TimingColor(enemy == next), width);
             }
         }
         private bool RoomVisible(MapRoom room, string current)

@@ -101,6 +101,8 @@ namespace Gun.RoomRhythm.Editor
             if (chart.mapDraftMusic == null) throw new ArgumentException("곡 설정 탭에서 음악을 지정하세요.");
             var map = chart.mapDraft;
             var compiled = MapChartCompiler.Compile(map, chart.moveDuration, chart.enemyReadTime, chart.mapDraftMusic.length, chart.judgmentLineWidth);
+            if (!(chart.roomFrameStartSize > map.roomSize) || float.IsInfinity(chart.roomFrameStartSize))
+                throw new ArgumentException("방 판정선 시작 크기는 방 한 변보다 큰 유한한 값이어야 합니다.");
             if (!(chart.passageWidth > 0 && chart.passageWidth < map.roomSize - chart.judgmentLineWidth)
                 || !(chart.aimRadius + .38f + chart.enemyLineWidth / 2 < map.roomSize / 2))
                 throw new ArgumentException("방 크기는 통로와 적 배치 반경보다 충분히 커야 합니다.");

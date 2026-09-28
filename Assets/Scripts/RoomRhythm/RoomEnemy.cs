@@ -48,19 +48,21 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public void Present(bool visible, float progress, double time = 0, double target = 0, bool showFrame = true, float frameProgress = -1, float brightness = 1)
+        public static Color TimingColor(bool next) => next ? Color.red : RoomPalette.Tint(new Color(1f, .3f, .6f, 1f));
+
+        public void Present(bool visible, float progress, double time = 0, double target = 0, bool showFrame = true, float brightness = 1, bool next = false)
         {
             visuals.SetActive(visible);
             if (!visible) return;
             judgmentFrame.gameObject.SetActive(showFrame);
-            float alpha = chart.AppearanceAlpha(progress);
             float reveal = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.65f, 1f, progress));
             body.color = Dim(Color.Lerp(new Color(.12f, .12f, .12f, Mathf.Max(.25f, chart.appearanceStartAlpha)),
                 new Color(1f, .015f, .025f, 1), reveal), brightness);
-            outline.startColor = outline.endColor = new Color(brightness, brightness, brightness, alpha);
+            // Timing guides stay readable while the upcoming enemy body is still dimmed or revealing.
+            outline.startColor = outline.endColor = Color.white;
             SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target,
                 OutlineRadius, chart.enemyLineWidth, chart.Timing));
-            timingRing.startColor = timingRing.endColor = RoomPalette.Tint(new Color(brightness, 0.3f * brightness, 0.6f * brightness, frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress)));
+            timingRing.startColor = timingRing.endColor = TimingColor(next);
         }
         private static Color Dim(Color color, float brightness)
             => RoomPalette.Tint(new Color(color.r * brightness, color.g * brightness, color.b * brightness, color.a));

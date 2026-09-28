@@ -126,6 +126,7 @@ namespace Gun.RoomRhythm
         public void Present(double time)
         {
             displayedTime = time;
+            int nextEnemy = run.NextPendingEnemyIndex();
             for (int i = 0; i < orderedEnemies.Length; i++)
             {
                 bool visible = deathVisible != null ? deathVisible[i] : EnemyVisible(i, time);
@@ -133,10 +134,9 @@ namespace Gun.RoomRhythm
                 double duration = enemyNotes[i].time - appearedAt;
                 float progress = duration > 0 ? Mathf.Clamp01((float)((time - appearedAt) / duration)) : 1f;
                 double frameStart = enemyNotes[i].customAppearance ? enemyNotes[i].frameStartTime : appearedAt;
-                float frameProgress = enemyNotes[i].time > frameStart ? Mathf.Clamp01((float)((time - frameStart) / (enemyNotes[i].time - frameStart))) : 1;
                 float brightness = run.EnemyRoomEntered(i) ? 1 : RoomChart.UpcomingEnemyBrightness;
                 orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time,
-                    deathFrames != null ? deathFrames[i] : time >= frameStart, frameProgress, brightness);
+                    deathFrames != null ? deathFrames[i] : time >= frameStart, brightness, i == nextEnemy);
             }
             if (!run.IsActive) selectedEnemyDot.gameObject.SetActive(false);
         }

@@ -9,26 +9,12 @@ namespace Gun.RoomRhythm
         [SerializeField] private RoomSession session;
         private Camera view;
         private float baseSize;
-        [Header("Analog Video")]
-        [SerializeField, Range(0, 1)] private float videoStrength = .7f;
-        private Material videoMaterial;
         private void Awake()
         {
             view = GetComponent<Camera>();
             if (view != null) { baseSize = view.orthographicSize; view.backgroundColor = RoomPalette.Tint(view.backgroundColor, 0); }
             if (session == null) session = FindFirstObjectByType<RoomSession>();
-            Shader shader = Resources.Load<Shader>("RetroVideo");
-            if (shader != null && shader.isSupported)
-                videoMaterial = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
         }
-        private void OnRenderImage(RenderTexture source, RenderTexture destination)
-        {
-            if (videoMaterial == null || videoStrength <= 0) { Graphics.Blit(source, destination); return; }
-            videoMaterial.SetFloat("_Strength", videoStrength);
-            videoMaterial.SetFloat("_VideoTime", Time.unscaledTime);
-            Graphics.Blit(source, destination, videoMaterial);
-        }
-        private void OnDestroy() { if (videoMaterial != null) Destroy(videoMaterial); }
         private void LateUpdate()
         {
             Vector3 position = player.position;

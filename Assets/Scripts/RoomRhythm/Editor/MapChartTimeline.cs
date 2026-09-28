@@ -108,31 +108,42 @@ namespace Gun.RoomRhythm.Editor
                 if (comparison == 0) comparison = a.lane == 2 ? a.end().CompareTo(b.end()) : a.start().CompareTo(b.start());
                 return comparison != 0 ? comparison : a.item.Index.CompareTo(b.item.Index);
             });
-            var laneY = new float[Lanes.Length];
-            float height = 0;
-            for (int lane = 0; lane < Lanes.Length; lane++)
-            {
-                laneY[lane] = height;
-                var rowEnds = new List<double>();
-                foreach (var span in spans)
-                {
-                    if (span.lane != lane) continue;
-                    // Only enemies have a fixed room/shot order. Other lanes retain compact interval packing.
-                    int row = lane == 2 ? -1 : rowEnds.FindIndex(end => end + .1 < span.start());
-                    if (row < 0) { row = rowEnds.Count; rowEnds.Add(span.end()); }
-                    else rowEnds[row] = span.end();
-                    span.y = height + row * 27;
-                }
-                height += Math.Max(1, rowEnds.Count) * 27 + 7;
-            }
             Rect ruler = GUILayoutUtility.GetRect(500, 42, GUILayout.ExpandWidth(true));
             // Consume the remaining window height; a fixed estimate leaves a blank strip below.
             // GUILayout also reserves the actual height of any validation message drawn afterward.
             Rect viewport = GUILayoutUtility.GetRect(500, 100000, 120, 100000,
                 GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             float left = 90, width = Math.Max(1, viewport.width - left - 20);
-            RevealRoomOnTimeline(spans, viewport.height);
+            string revealedRoom = roomToReveal;
+            RevealRoomOnTimeline(spans);
             PanTimeline(ruler, viewport, width);
+            var laneY = new float[Lanes.Length];
+            float height = 0;
+            for (int lane = 0; lane < Lanes.Length; lane++)
+            {
+                laneY[lane] = -1;
+                var rowEnds = new List<double>();
+                foreach (var span in spans)
+                {
+                    if (span.lane != lane || !InTimelineView(span)) continue;
+                    // Only enemies have a fixed room/shot order. Other lanes retain compact interval packing.
+                    int row = lane == 2 ? -1 : rowEnds.FindIndex(end => end + .1 < span.start());
+                    if (row < 0) { row = rowEnds.Count; rowEnds.Add(span.end()); }
+                    else rowEnds[row] = span.end();
+                    span.y = height + row * 27;
+                }
+                if (rowEnds.Count == 0) continue;
+                laneY[lane] = height;
+                height += rowEnds.Count * 27 + 7;
+            }
+            var revealed = revealedRoom == null ? null : spans.Find(span => span.roomId == revealedRoom && span.lane == 1 && InTimelineView(span));
+            if (revealed != null)
+            {
+                if (revealed.y < timelineScroll.y) timelineScroll.y = revealed.y;
+                else if (revealed.y + 27 > timelineScroll.y + viewport.height)
+                    timelineScroll.y = Math.Max(0, revealed.y + 27 - viewport.height);
+            }
+            timelineScroll.y = Mathf.Clamp(timelineScroll.y, 0, Mathf.Max(0, height - viewport.height));
             Func<double, float> px = b => left + (float)((b - firstBeat) / visibleBeats) * width;
             Func<float, double> beatAt = x => firstBeat + (x - viewport.x - left) / width * visibleBeats;
             int control = GUIUtility.GetControlID("MapTimelineDrag".GetHashCode(), FocusType.Passive);
@@ -168,7 +179,7 @@ namespace Gun.RoomRhythm.Editor
                 EditorGUI.DrawRect(new Rect(px(beat), 0, 1, height), whole ? new Color(.23f, .26f, .29f) : new Color(.12f, .14f, .16f));
             }
             for (int lane = 0; lane < Lanes.Length; lane++)
-                GUI.Label(new Rect(3, laneY[lane] + 5, left - 6, 24), Lanes[lane], EditorStyles.miniLabel);
+                if (laneY[lane] >= 0) GUI.Label(new Rect(3, laneY[lane] + 5, left - 6, 24), Lanes[lane], EditorStyles.miniLabel);
             foreach (var span in spans)
             {
                 double start = span.start(), end = span.end();
@@ -267,7 +278,10 @@ namespace Gun.RoomRhythm.Editor
             EditorGUI.DrawRect(new Rect(rect.x, rect.y + thickness, thickness, rect.height - thickness * 2), color);
             EditorGUI.DrawRect(new Rect(rect.xMax - thickness, rect.y + thickness, thickness, rect.height - thickness * 2), color);
         }
-        private void RevealRoomOnTimeline(List<TimelineSpan> spans, float viewportHeight)
+        private bool InTimelineView(TimelineSpan span)
+            => Math.Max(span.start(), span.end()) >= firstBeat && Math.Min(span.start(), span.end()) <= firstBeat + visibleBeats;
+
+        private void RevealRoomOnTimeline(List<TimelineSpan> spans)
         {
             if (roomToReveal == null || Event.current.type == EventType.Layout) return;
             var room = Map.Room(roomToReveal);
@@ -284,13 +298,6 @@ namespace Gun.RoomRhythm.Editor
             {
                 double center = end - start <= visibleBeats - padding * 2 ? (start + end) * .5 : end;
                 firstBeat = Math.Max(Map.settings.Beat(0), center - visibleBeats * .5);
-            }
-            if (target != null)
-            {
-                float y = target.y;
-                if (y < timelineScroll.y) timelineScroll.y = y;
-                else if (y + 27 > timelineScroll.y + viewportHeight)
-                    timelineScroll.y = Math.Max(0, y + 27 - viewportHeight);
             }
             Repaint();
         }
@@ -322,4 +329,5 @@ namespace Gun.RoomRhythm.Editor
             : Math.Max(Map.settings.Beat(0), Math.Min(EndBeat(), beat));
     }
 }
+
 

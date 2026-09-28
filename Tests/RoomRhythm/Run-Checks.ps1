@@ -44,7 +44,7 @@ Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -D
 if ($LASTEXITCODE -ne 0) { throw 'Song offset checks failed.' }
 
 # Compile against the project's configured references; never launch the Unity editor.
-$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','Unity.InputSystem')
+$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','UnityEngine.UIModule','UnityEngine.UI','Unity.InputSystem','Unity.RenderPipelines.Universal.Runtime','Unity.RenderPipelines.Core.Runtime')
 $lines = @('/nologo','/target:library','/nostdlib+','/langversion:9','/nowarn:0649',
     ('/out:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
 foreach ($reference in $references | Where-Object { $_.Include -in $wanted }) {
