@@ -18,6 +18,7 @@ namespace Gun.RoomRhythm
         private SpriteRenderer trailCore, trailGlow;
         [SerializeField, Min(0f)] private float recoilAngle = 12f;
         [SerializeField] private Transform gun;
+        [SerializeField] private GeometricPlayerRig characterRig;
         [SerializeField] private SpriteRenderer gunBody, gunBarrel;
         [SerializeField] private SpriteRenderer muzzle, bullet, bulletGlow;
         private SpriteRenderer playerBody;
@@ -31,7 +32,8 @@ namespace Gun.RoomRhythm
             if (viewCamera == null || !viewCamera.orthographic || player == null || arc == null
                 || shotTrace == null || arcSegments == null || arcSegments.Length == 0
                 || gun == null || gunBody == null || gunBarrel == null || muzzle == null || bullet == null || bulletGlow == null
-                || player.GetComponent<SpriteRenderer>() == null)
+                || (characterRig == null && player.GetComponent<SpriteRenderer>() == null)
+                || (characterRig != null && (characterRig.Grip == null || characterRig.Muzzle == null)))
                 throw new System.InvalidOperationException("Aim needs an orthographic camera and authored geometry.");
             foreach (Transform segment in arcSegments)
                 if (segment == null) throw new System.InvalidOperationException("Missing aim segment.");
@@ -106,6 +108,8 @@ namespace Gun.RoomRhythm
             bullet.gameObject.SetActive(show); bulletGlow.gameObject.SetActive(show);
             shotTrace.gameObject.SetActive(show);
             if (!show) return;
+            // Keep the line attached while the player moves or turns after firing.
+            bulletStart = BarrelTip();
             float t = Mathf.Clamp01(elapsed / FlightDuration);
             float alpha = 1 - Mathf.Clamp01((elapsed - FlightDuration) / .065f);
             Vector3 delta = bulletEnd - bulletStart;
@@ -113,16 +117,17 @@ namespace Gun.RoomRhythm
             Quaternion rotation = Quaternion.Euler(0, 0, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
             bullet.transform.SetPositionAndRotation(point, rotation);
             bulletGlow.transform.SetPositionAndRotation(point, rotation);
-            RoomFeedback.Size(bullet, new Vector2(.55f, .16f));
-            RoomFeedback.Size(bulletGlow, new Vector2(.95f, .4f));
+            RoomFeedback.Size(bullet, new Vector2(.12f, .035f));
+            RoomFeedback.Size(bulletGlow, new Vector2(.22f, .07f));
+            if (t >= 1) { bullet.gameObject.SetActive(false); bulletGlow.gameObject.SetActive(false); }
             bullet.color = new Color(1, 1, .95f, alpha);
             bulletGlow.color = new Color(1, .8f, .3f, alpha);
-            Vector3 midpoint = (bulletStart + point) * .5f;
+            Vector3 midpoint = (bulletStart + bulletEnd) * .5f;
             trailCore.transform.SetPositionAndRotation(midpoint, rotation);
             trailGlow.transform.SetPositionAndRotation(midpoint, rotation);
-            float length = Vector3.Distance(bulletStart, point);
-            RoomFeedback.Size(trailCore, new Vector2(length, .065f));
-            RoomFeedback.Size(trailGlow, new Vector2(length, .24f));
+            float length = Vector3.Distance(bulletStart, bulletEnd);
+            RoomFeedback.Size(trailCore, new Vector2(length, .018f));
+            RoomFeedback.Size(trailGlow, new Vector2(length, .05f));
             trailCore.color = new Color(1, 1, .95f, alpha * .9f);
             trailGlow.color = new Color(1, .75f, .25f, alpha * .8f);
         }
@@ -133,8 +138,8 @@ namespace Gun.RoomRhythm
             Vector2 arcDirection = Mouse.current != null ? DirectionAt(Mouse.current.position.ReadValue(), player.position) : direction;
             arc.position = player.position;
             arc.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(arcDirection.y, arcDirection.x) * Mathf.Rad2Deg);
-            if (Mouse.current != null && Time.unscaledTime >= traceUntil)
-                direction = DirectionAt(Mouse.current.position.ReadValue(), GripPosition(player.position));
+            if (Mouse.current != null)
+                direction = DirectionAt(Mouse.current.position.ReadValue(), characterRig != null ? player.position : GripPosition(player.position));
             if (Time.unscaledTime >= traceUntil) shotTrace.gameObject.SetActive(false);
             RenderWeapon();
         }
@@ -171,6 +176,7 @@ namespace Gun.RoomRhythm
 
         private Vector3 GripPosition(Vector3 origin)
         {
+            if (characterRig != null) return origin + characterRig.Grip.position - player.position;
             if (playerBody == null) playerBody = player.GetComponent<SpriteRenderer>();
             Bounds bounds = playerBody.bounds;
             return origin + new Vector3(bounds.max.x, bounds.center.y, bounds.center.z) - player.position;
@@ -184,12 +190,19 @@ namespace Gun.RoomRhythm
 
         private Vector3 BarrelTip()
         {
+            if (characterRig != null) return characterRig.Muzzle.position;
             Bounds bounds = gunBarrel.sprite.bounds;
             return gunBarrel.transform.TransformPoint(new Vector3(bounds.max.x, bounds.center.y, bounds.center.z));
         }
 
         private void PoseWeapon(Vector3 origin)
         {
+            if (characterRig != null)
+            {
+                player.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90);
+                muzzle.transform.position = BarrelTip();
+                return;
+            }
             float recoil = Mathf.Exp(-Mathf.Max(0, Time.unscaledTime - firedAt) * 28);
             gun.rotation = Quaternion.identity;
             Vector3 forward = BarrelTip() - RearPoint();

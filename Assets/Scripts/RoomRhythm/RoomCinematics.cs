@@ -17,7 +17,7 @@ namespace Gun.RoomRhythm
         private SpriteRenderer player, roomFlash;
         private readonly SpriteRenderer[] shutters = new SpriteRenderer[8];
         private Vector3 origin, center, direction;
-        private float side, passage, thickness, started, lastTrail;
+        private float side, passage, thickness, started;
         private bool combatFocus;
         private float focusChangedAt = -10, zoomFrom = 1;
         private bool impact;
@@ -63,7 +63,7 @@ namespace Gun.RoomRhythm
 
         public void ResetPresentation()
         {
-            Death = DeathPresentation.None; impact = false; lastTrail = -10;
+            Death = DeathPresentation.None; impact = false;
             combatFocus = false; focusChangedAt = -10; zoomFrom = 1;
             if (roomFlash == null) return;
             roomFlash.gameObject.SetActive(false);
@@ -81,12 +81,6 @@ namespace Gun.RoomRhythm
                 combatFocus = active;
             }
         }
-        public void Trail()
-        {
-            if (Time.unscaledTime - lastTrail < .025f) return;
-            lastTrail = Time.unscaledTime; feedback.Afterimage(player);
-        }
-
         public void BeginDeath(RoomRun run, RoomBinding room, RoomChart chart, Vector3 position, SpriteRenderer enemy)
         {
             Death = run.Death; started = Time.unscaledTime; impact = false;

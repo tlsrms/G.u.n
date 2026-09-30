@@ -35,6 +35,15 @@ namespace Gun.RoomRhythm
                 size = pose.size;
             }
             if (view != null) view.orthographicSize = size * (effects != null ? effects.ZoomMultiplier : 1);
+            if (view != null)
+            {
+                // Match the safe-room rig's 60 UI units against its 1600x1000,
+                // 50/50 width-height CanvasScaler, including other aspect ratios.
+                float scale = 60f * (2f * view.orthographicSize / 1000f)
+                    * Mathf.Sqrt(view.aspect / 1.6f);
+                Vector3 parentScale = player.parent != null ? player.parent.lossyScale : Vector3.one;
+                player.localScale = new Vector3(scale / parentScale.x, scale / parentScale.y, 1);
+            }
             position.z = transform.position.z;
             transform.position = position;
         }

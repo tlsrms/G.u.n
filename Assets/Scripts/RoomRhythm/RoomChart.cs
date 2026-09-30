@@ -7,6 +7,10 @@ namespace Gun.RoomRhythm
     {
         public const float UpcomingEnemyBrightness = .4f;
         public AudioClip music;
+        [Tooltip("선택 화면에 표시할 곡명입니다. 비워두면 음원 이름을 사용합니다.")]
+        public string songTitle;
+        public string SongTitle => !string.IsNullOrWhiteSpace(songTitle) ? songTitle
+            : (music != null ? music.name : name).Replace('_', ' ');
         [Tooltip("이 곡의 입력 보정값입니다. 양수는 입력 시각에서 해당 시간을 빼서 보정합니다.")]
         [Range(-1000, 1000)] public double inputOffsetMs;
         public string startingRoomId = "start";

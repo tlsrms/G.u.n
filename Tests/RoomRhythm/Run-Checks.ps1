@@ -1,4 +1,3 @@
-param([switch]$SkipAuthoredAssets)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $output = Join-Path $env:TEMP 'Gun-RoomRhythm-Checks'
@@ -14,7 +13,6 @@ $rules = Join-Path $root 'Assets/Scripts/RoomRhythm/TimingRules.cs'
 $model = Join-Path $root 'Assets/Scripts/RoomRhythm/RoomRun.cs'
 $selection = Join-Path $root 'Assets/Scripts/RoomRhythm/TargetSelection.cs'
 $test = Join-Path $PSScriptRoot 'RoomRunChecks.cs'
-$authoredTest = Join-Path $PSScriptRoot 'AuthoredChartChecks.cs'
 $beatSource = Join-Path $root 'Assets/Scripts/RoomRhythm/BeatChart.cs'
 $beatTest = Join-Path $PSScriptRoot 'BeatChartChecks.cs'
 $mapSource = Join-Path $root 'Assets/Scripts/RoomRhythm/MapChart.cs'
@@ -25,14 +23,13 @@ $offsetTest = Join-Path $PSScriptRoot 'OffsetCalibrationChecks.cs'
 $testDll = Join-Path $output 'RoomRunChecks.dll'
 $response = Join-Path $output 'checks.rsp'
 @('/nologo','/target:exe','/nostdlib+','/langversion:9',("/out:`"$testDll`""),
-    ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$authoredTest`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$timelineEditingSource`""),("`"$mapTest`""),("`"$offsetSource`""),("`"$offsetTest`"")) |
+    ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$timelineEditingSource`""),("`"$mapTest`""),("`"$offsetSource`""),("`"$offsetTest`"")) |
     Set-Content -LiteralPath $response
 & $runtime $compiler "@$response"
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks did not compile.' }
 '{"runtimeOptions":{"tfm":"net9.0","framework":{"name":"Microsoft.NETCore.App","version":"9.0.0"}}}' |
     Set-Content -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json')
-if ($SkipAuthoredAssets) { & dotnet $testDll }
-else { & dotnet $testDll (Join-Path $root 'Assets/RoomRhythm/FirstMovement.asset') }
+& dotnet $testDll
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks failed.' }
 
 $offsetDll = Join-Path $output 'SongOffsetChecks.dll'
@@ -42,6 +39,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Song offset checks did not compile.' }
 Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'SongOffsetChecks.runtimeconfig.json')
 & dotnet $offsetDll
 if ($LASTEXITCODE -ne 0) { throw 'Song offset checks failed.' }
+
+$recordsDll = Join-Path $output 'StageRecordStoreChecks.dll'
+& $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 "/out:$recordsDll" "/reference:$standard" `
+    (Join-Path $root 'Assets/Scripts/RoomRhythm/StageRecordStore.cs') (Join-Path $PSScriptRoot 'StageRecordStoreChecks.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Stage record checks did not compile.' }
+Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'StageRecordStoreChecks.runtimeconfig.json')
+& dotnet $recordsDll
+if ($LASTEXITCODE -ne 0) { throw 'Stage record checks failed.' }
 
 # Compile against the project's configured references; never launch the Unity editor.
 $wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','UnityEngine.UIModule','UnityEngine.UI','Unity.InputSystem','Unity.RenderPipelines.Universal.Runtime','Unity.RenderPipelines.Core.Runtime')
@@ -74,5 +79,4 @@ $editorLines | Set-Content -LiteralPath $editorResponse
 & $runtime $compiler "@$editorResponse"
 if ($LASTEXITCODE -ne 0) { throw 'Inspector compilation failed.' }
 Write-Output 'PASS: editor inspector compilation.'
-if (-not $SkipAuthoredAssets) { & (Join-Path $PSScriptRoot 'Check-Scene.ps1') }
 

@@ -31,6 +31,8 @@ namespace Gun.RoomRhythm
         public int CompletedMoves { get; private set; }
         public double MoveStartedAt { get; private set; }
         public int JudgmentVersion { get; private set; }
+        public int AccurateJudgments { get; private set; }
+        public double AccuracyPercent => JudgmentVersion == 0 ? 0 : AccurateJudgments * 100.0 / JudgmentVersion;
         public double LastJudgedAt { get; private set; }
         public double? LastTimingErrorMs { get; private set; }
         public double RoomArrivedAt { get; private set; }
@@ -114,6 +116,7 @@ namespace Gun.RoomRhythm
             CompletedMoves = 0;
             MoveStartedAt = 0;
             JudgmentVersion = 0;
+            AccurateJudgments = 0;
             LastJudgedAt = 0;
             LastTimingErrorMs = null;
             RoomArrivedAt = 0;
@@ -212,6 +215,7 @@ namespace Gun.RoomRhythm
                 LastJudgedAt = time;
                 LastTimingErrorMs = (time - note.HitTime) * 1000;
                 JudgmentVersion++;
+                if (LastGrade == TimingGrade.Accurate) AccurateJudgments++;
             }
         }
 
@@ -278,6 +282,7 @@ namespace Gun.RoomRhythm
             LastJudgedAt = time;
             LastTimingErrorMs = (time - enemies[index].time) * 1000;
             JudgmentVersion++;
+            if (LastGrade == TimingGrade.Accurate) AccurateJudgments++;
             Advance(time);
             return true;
         }
@@ -297,6 +302,7 @@ namespace Gun.RoomRhythm
             LastJudgedAt = time;
             LastTimingErrorMs = (time - note.doorTime) * 1000;
             JudgmentVersion++;
+            if (LastGrade == TimingGrade.Accurate) AccurateJudgments++;
             return true;
         }
 

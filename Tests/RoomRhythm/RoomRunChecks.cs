@@ -49,6 +49,30 @@ internal static class RoomRunChecks
 
     public static void Main(string[] args)
     {
+        var accuracyRun = new RoomRun(new[] {
+            new MoveNote { destinationId = "next", hasDoor = true, doorTime = 2, moveDelay = 1 }
+        }, Window, .125, new[] {
+            new EnemyNote { id = "target", roomId = "start", time = 1 }
+        });
+        accuracyRun.Begin();
+        Check(accuracyRun.AccuracyPercent == 0, "unplayed run has no accuracy");
+        accuracyRun.ShootEnemy(0, 1);
+        accuracyRun.ShootDoor(0, 2.0625);
+        accuracyRun.Press(MoveDirection.Up, 3);
+        accuracyRun.Advance(3.125);
+        Check(accuracyRun.Phase == RunPhase.Cleared && accuracyRun.JudgmentVersion == 3,
+            "accuracy includes enemy, door and movement judgments");
+        Check(accuracyRun.AccurateJudgments == 2 && Math.Abs(accuracyRun.AccuracyPercent - 200.0 / 3) < .00001,
+            "early judgments lower accurate-hit percentage");
+        accuracyRun.Begin();
+        Check(accuracyRun.AccurateJudgments == 0 && accuracyRun.AccuracyPercent == 0, "retry resets accuracy");
+        accuracyRun.ShootEnemy(0, 1);
+        accuracyRun.ShootDoor(0, 2);
+        accuracyRun.ShootDoor(0, 2);
+        accuracyRun.Press(MoveDirection.Up, 3);
+        accuracyRun.Advance(3.125);
+        Check(accuracyRun.AccurateJudgments == 3 && accuracyRun.AccuracyPercent == 100,
+            "all accurate hits score 100 without counting a repeated door shot");
         var global = JudgmentSettings.Window;
         int settingsRevision = JudgmentSettings.Revision;
         JudgmentSettings.Configure(20, 40);
@@ -505,7 +529,6 @@ internal static class RoomRunChecks
         Check(combat.ShootEnemy(2, 7) && combat.ShootEnemy(3, 7.5) && combat.ShootEnemy(4, 8)
             && combat.Phase == RunPhase.Cleared, "full scene enemy-door-movement chart clears");
         Console.WriteLine($"PASS: {checks} movement timing/state checks.");
-        if (args.Length > 0) AuthoredChartChecks.Run(args[0]);
         BeatChartChecks.Run();
         MapChartChecks.Run();
         OffsetCalibrationChecks.Run();

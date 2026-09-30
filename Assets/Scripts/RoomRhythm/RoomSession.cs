@@ -11,6 +11,7 @@ namespace Gun.RoomRhythm
         [SerializeField] private RoomKeyboard keyboard;
         [SerializeField] private Transform player;
         [SerializeField] private SpriteRenderer playerSprite;
+        [SerializeField] private GeometricPlayerRig playerRig;
         [SerializeField] private RoomBinding[] rooms;
         [SerializeField] private TextMesh status;
         [SerializeField] private RoomAim aim;
@@ -18,6 +19,7 @@ namespace Gun.RoomRhythm
         [SerializeField] private RoomFeedback feedback;
         [SerializeField] private DebugTimingBar timingBar;
         private RunPhase lastFeedbackPhase;
+        private int presentedMoves;
         private readonly List<TimedCommand> commands = new List<TimedCommand>();
         private RoomBinding[] path;
         private int[] previousRoomOccurrences;
@@ -31,8 +33,11 @@ namespace Gun.RoomRhythm
         public RoomCinematics Cinematics => cinematics;
         public double PresentationTime => presentationTime;
         public RoomChart Chart => chart;
+        public bool IsCleared => run != null && run.Phase == RunPhase.Cleared;
+        public float AccuracyPercent => run != null ? (float)run.AccuracyPercent : 0;
+        [SerializeField] private bool restartOnClear = true;
         [SerializeField] private bool logInputTiming = true;
-        private readonly Color alive = new Color(0.3f, 1f, 0.8f);
+        private readonly Color alive = Color.white;
 
         private void Start()
         {
@@ -169,13 +174,12 @@ namespace Gun.RoomRhythm
             {
                 if (continuePressed)
                 {
-                    timeline.Begin(chart.music, chart.MusicDelaySeconds, chart.LoopMusic, InputOffsetSettings.Milliseconds(chart));
-                    run.Begin();
+                    TryBeginRun();
                 }
                 Present();
                 return;
             }
-            if ((run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared) && continuePressed)
+            if ((run.Phase == RunPhase.Dead || run.Phase == RunPhase.Cleared && restartOnClear) && continuePressed)
             {
                 restartTransition.Begin(InitializeRun);
                 return;
@@ -235,7 +239,17 @@ namespace Gun.RoomRhythm
             cinematics.ResetPresentation();
             deathRooms = deathFrames = deathDoorFrames = null;
             lastFeedbackPhase = RunPhase.Ready;
+            presentedMoves = 0;
             Present();
+        }
+
+        public bool TryBeginRun()
+        {
+            if (run == null || run.Phase != RunPhase.Ready || restartTransition != null && restartTransition.BlocksInput)
+                return false;
+            timeline.Begin(chart.music, chart.MusicDelaySeconds, chart.LoopMusic, InputOffsetSettings.Milliseconds(chart));
+            run.Begin();
+            return true;
         }
 
         private void Shoot(Vector2 pointer, double time)
@@ -302,9 +316,12 @@ namespace Gun.RoomRhythm
             playerColor.a *= cinematics.PlayerAlpha;
             playerSprite.color = playerColor;
             playerSprite.enabled = cinematics.PlayerVisible;
+            if (playerRig != null) playerRig.SetPresentation(cinematics.PlayerVisible, cinematics.PlayerAlpha);
             if (run.Phase == RunPhase.Dead && cinematics.Death == DeathPresentation.Execution)
                 aim.FadeWithPlayer(cinematics.PlayerAlpha);
-            if (run.Phase == RunPhase.Moving) cinematics.Trail();
+            if (current > presentedMoves && run.Phase != RunPhase.Dead)
+                feedback.ArrivalDust(path[current].Center, path[current].Center - path[current - 1].Center);
+            presentedMoves = current;
             bool showGrade = run.JudgmentVersion > 0 && time - run.LastJudgedAt < 0.9;
             status.color = Color.white;
             if (timingBar != null && run.Phase != RunPhase.Waiting)

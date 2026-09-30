@@ -75,7 +75,7 @@ namespace Gun.RoomRhythm
             }
         }
 
-        private void Emit(Vector3 position, Vector3 velocity, Color tint, Vector2 size, float life, float drag = 5, Sprite sprite = null, int order = 30)
+        private void Emit(Vector3 position, Vector3 velocity, Color tint, Vector2 size, float life, float drag = 5, Sprite sprite = null, int order = 30, Quaternion? rotation = null)
         {
             if (effectStrength <= 0) return;
             PrepareEffects();
@@ -86,7 +86,7 @@ namespace Gun.RoomRhythm
             p.renderer.sprite = sprite != null ? sprite : glowSprite;
             p.renderer.sortingOrder = order;
             p.renderer.transform.position = position;
-            p.renderer.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg);
+            p.renderer.transform.rotation = rotation ?? Quaternion.Euler(0, 0, Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg);
             p.renderer.color = tint; Size(p.renderer, p.size);
             p.renderer.gameObject.SetActive(true);
         }
@@ -103,10 +103,20 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public void Afterimage(SpriteRenderer body)
+        public void ArrivalDust(Vector3 position, Vector3 direction)
         {
-            Color tint = body.color; tint.a = .2f;
-            Emit(body.transform.position, Vector3.zero, tint, body.bounds.size, .16f, 5, body.sprite, 9);
+            direction = direction.normalized;
+            if (direction.sqrMagnitude < .001f) return;
+            Vector3 side = new Vector3(-direction.y, direction.x, 0);
+            // Reuse the existing effect pool; one short, understated burst per arrival.
+            for (int i = 0; i < 10; i++)
+            {
+                Vector3 origin = position + direction * .38f + side * UnityEngine.Random.Range(-.3f, .3f);
+                Vector3 velocity = Quaternion.Euler(0, 0, UnityEngine.Random.Range(-32f, 32f))
+                    * direction * UnityEngine.Random.Range(2f, 3.8f);
+                Emit(origin, velocity, new Color(.8f, .8f, .8f, .7f),
+                    Vector2.one * UnityEngine.Random.Range(.3f, .5f), UnityEngine.Random.Range(.28f, .38f), 6, null, 9);
+            }
         }
 
         public void DeathSpark(Vector3 position)
