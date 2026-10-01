@@ -135,6 +135,7 @@ namespace Gun.RoomRhythm
                 float progress = duration > 0 ? Mathf.Clamp01((float)((time - appearedAt) / duration)) : 1f;
                 double frameStart = enemyNotes[i].customAppearance ? enemyNotes[i].frameStartTime : appearedAt;
                 float brightness = run.EnemyRoomEntered(i) ? 1 : RoomChart.UpcomingEnemyBrightness;
+                orderedEnemies[i].AimAt(player.position);
                 orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time,
                     deathFrames != null ? deathFrames[i] : time >= frameStart, brightness, i == nextEnemy);
             }
@@ -161,10 +162,10 @@ namespace Gun.RoomRhythm
             return false;
         }
 
-        public SpriteRenderer FailureEnemy()
+        public RoomEnemy FailureEnemy()
         {
             int index = run.FailedEnemy;
-            return index >= 0 && index < orderedEnemies.Length ? orderedEnemies[index].Body : null;
+            return index >= 0 && index < orderedEnemies.Length ? orderedEnemies[index] : null;
         }
 
         public void FreezeAtDeath(double time)

@@ -491,7 +491,8 @@ internal static class RoomRunChecks
         movingShot.Begin(); movingShot.Press(MoveDirection.Up, 1);
         Check(movingShot.ShootEnemy(0, 1.1 + .2), "late boundary remains inclusive during movement");
         movingShot.Begin(); movingShot.Press(MoveDirection.Up, 1); movingShot.Advance(1.301);
-        Check(movingShot.Failure == FailureReason.MissedEnemy && movingShot.FailedEnemy == 0,
+        Check(movingShot.Failure == FailureReason.MissedEnemy && movingShot.FailedEnemy == 0
+            && movingShot.Death == DeathPresentation.Execution,
             "unshot destination enemy expires during movement without extending the deadline");
         var fastEnemy = new RoomRun(oneMove, Window, .125, new[] {
             new EnemyNote { id = "fast", roomId = "north", direction = EnemyDirection.Up, time = 2.3,

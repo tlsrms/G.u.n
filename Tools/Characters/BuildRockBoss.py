@@ -92,7 +92,7 @@ NODES = [
 ]
 
 
-def main():
+def build_boss(ART, PREFAB, SHAPES, NODES):
     ART.mkdir(parents=True,exist_ok=True)
     template = (ROOT/'Assets/Arts/Solid.png.meta').read_text(encoding='utf-8-sig')
     sprites = {}
@@ -132,30 +132,38 @@ def main():
             body=field(body,'m_SortingOrder',str(art[3]));emit(212,id+2,body)
     emit(95,1999,'Animator:\n'+base+'  m_GameObject: {fileID: 1000}\n  m_Enabled: 1\n  m_Avatar: {fileID: 0}\n  m_Controller: {fileID: 0}\n  m_CullingMode: 0\n  m_UpdateMode: 0\n  m_ApplyRootMotion: 0\n  m_LinearVelocityBlending: 0\n  m_StabilizeFeet: 0\n  m_WarningMessage: \n  m_HasTransformHierarchy: 1\n  m_AllowConstantClipSamplingOptimization: 1\n  m_KeepAnimatorStateOnDisable: 0\n  m_WriteDefaultValuesOnDisable: 0\n')
     PREFAB.write_text(HEADER+''.join(out),encoding='utf-8');guid(PREFAB,'PrefabImporter')
-    preview()
-    print(f'Authored RockBoss: {len(SHAPES)} sprites, {sum(bool(n[4]) for n in NODES)} separate parts, editable joints and impact markers.')
+    preview(NODES, SHAPES, PREFAB.stem)
+    print(f'Authored {PREFAB.stem}: {len(SHAPES)} sprites, {sum(bool(n[4]) for n in NODES)} separate parts, editable joints and impact markers.')
 
 
-def preview():
+def preview(NODES, SHAPES, output_name):
     poses={};parts=[]
     for name,parent,pos,angle,art in NODES:
         px,py,pa=poses[parent] if parent else (0,0,0);r=math.radians(pa)
         x=px+pos[0]*math.cos(r)-pos[1]*math.sin(r);y=py+pos[0]*math.sin(r)+pos[1]*math.cos(r)
         poses[name]=(x,y,pa+angle)
         if art:parts.append((art[3],x,y,pa+angle,art))
-    im=Image.new('RGB',(1100,1000),(17,17,19));draw=ImageDraw.Draw(im)
+    polygons=[]
     for _,x,y,a,art in sorted(parts):
         r=math.radians(a)
         for polygon,shade in SHAPES[art[0]]:
             points=[]
             for u,v in polygon:
                 dx=(u-.5)*art[1]*.9375;dy=(v-.5)*art[2]*.9375
-                points.append((550+(x+dx*math.cos(r)-dy*math.sin(r))*215,565-(y+dx*math.sin(r)+dy*math.cos(r))*215))
-            draw.polygon(points,fill=(shade,shade,shade))
-    destination = Path(__file__).parent / 'Previews/RockBossPreview.png'
+                points.append((x+dx*math.cos(r)-dy*math.sin(r),y+dx*math.sin(r)+dy*math.cos(r)))
+            polygons.append((points,shade))
+    vertices=[p for points,_ in polygons for p in points]
+    minx,maxx=min(p[0] for p in vertices),max(p[0] for p in vertices)
+    miny,maxy=min(p[1] for p in vertices),max(p[1] for p in vertices)
+    zoom=min(860/(maxx-minx),760/(maxy-miny))
+    cx,cy=(minx+maxx)/2,(miny+maxy)/2
+    im=Image.new('RGB',(1100,1000),(17,17,19));draw=ImageDraw.Draw(im)
+    for points,shade in polygons:
+        draw.polygon([(550+(x-cx)*zoom,500-(y-cy)*zoom) for x,y in points],fill=(shade,shade,shade))
+    destination = Path(__file__).parent / 'Previews' / (output_name + 'Preview.png')
     destination.parent.mkdir(exist_ok=True)
     im.save(destination)
 
 
-if __name__=='__main__':main()
+if __name__=='__main__':build_boss(ART, PREFAB, SHAPES, NODES)
 

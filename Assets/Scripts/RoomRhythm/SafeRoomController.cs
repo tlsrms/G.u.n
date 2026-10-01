@@ -54,8 +54,8 @@ namespace Gun.RoomRhythm
         {
             opening = Mathf.MoveTowards(opening, exitOpen ? 1 : 0, Time.unscaledDeltaTime * 2.5f);
             UpdateGate();
-            FacePointer();
             if (exiting) return;
+            FacePointer();
             float waking = wakeDuration > 0 ? Mathf.Clamp01((Time.unscaledTime - enteredAt) / wakeDuration) : 1;
             fade.alpha = 1 - Mathf.SmoothStep(0, 1, waking);
             if (!MovementEnabled || waking < 1) return;
@@ -103,6 +103,7 @@ namespace Gun.RoomRhythm
                 yield break;
             }
             exiting = true;
+            player.localRotation = Quaternion.Euler(0, 0, -90);
             StageSelection.IsRecordRun = recordRun;
             while (opening < .95f) yield return null;
             // Align with the passage first, so off-center opening rooms never cross a wall.

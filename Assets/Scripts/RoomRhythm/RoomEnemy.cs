@@ -16,6 +16,19 @@ namespace Gun.RoomRhythm
         public string Id => enemyId;
         public Vector3 Target => transform.position;
         public SpriteRenderer Body => body;
+        [SerializeField] private Vector2 muzzlePoint = new Vector2(.215f, .65f);
+        public Vector3 Muzzle => body.transform.TransformPoint(muzzlePoint);
+
+        public void AimAt(Vector3 target)
+        {
+            Vector2 direction = target - body.transform.position;
+            if (direction.sqrMagnitude < .001f) return;
+            // Compensate for the one-handed pistol's sideways offset.
+            float offset = muzzlePoint.x * body.transform.lossyScale.x;
+            float correction = Mathf.Asin(Mathf.Clamp(offset / direction.magnitude, -.95f, .95f)) * Mathf.Rad2Deg;
+            body.transform.rotation = Quaternion.Euler(0, 0,
+                Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90 + correction);
+        }
         public void ValidateReferences()
         {
             if (visuals == null || body == null || outline == null || judgmentFrame == null || timingRing == null)
@@ -55,16 +68,12 @@ namespace Gun.RoomRhythm
             visuals.SetActive(visible);
             if (!visible) return;
             judgmentFrame.gameObject.SetActive(showFrame);
-            float reveal = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.65f, 1f, progress));
-            body.color = Dim(Color.Lerp(new Color(.12f, .12f, .12f, Mathf.Max(.25f, chart.appearanceStartAlpha)),
-                new Color(1f, .015f, .025f, 1), reveal), brightness);
-            // Timing guides stay readable while the upcoming enemy body is still dimmed or revealing.
+            body.color = Color.white;
+            // Appearance timing controls visibility, never opacity or brightness.
             outline.startColor = outline.endColor = Color.white;
             SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target,
                 OutlineRadius, chart.enemyLineWidth, chart.Timing));
             timingRing.startColor = timingRing.endColor = TimingColor(next);
         }
-        private static Color Dim(Color color, float brightness)
-            => RoomPalette.Tint(new Color(color.r * brightness, color.g * brightness, color.b * brightness, color.a));
     }
 }

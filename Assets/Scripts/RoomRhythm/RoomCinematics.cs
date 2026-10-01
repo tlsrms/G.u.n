@@ -21,6 +21,8 @@ namespace Gun.RoomRhythm
         private bool combatFocus;
         private float focusChangedAt = -10, zoomFrom = 1;
         private bool impact;
+        private RoomEnemy executionEnemy;
+        private bool shotFired;
         public DeathPresentation Death { get; private set; }
         public bool CameraLocked => Death != DeathPresentation.None;
         public Vector3 CameraCenter => center;
@@ -64,6 +66,7 @@ namespace Gun.RoomRhythm
         public void ResetPresentation()
         {
             Death = DeathPresentation.None; impact = false;
+            executionEnemy = null; shotFired = false;
             combatFocus = false; focusChangedAt = -10; zoomFrom = 1;
             if (roomFlash == null) return;
             roomFlash.gameObject.SetActive(false);
@@ -81,9 +84,10 @@ namespace Gun.RoomRhythm
                 combatFocus = active;
             }
         }
-        public void BeginDeath(RoomRun run, RoomBinding room, RoomChart chart, Vector3 position, SpriteRenderer enemy)
+        public void BeginDeath(RoomRun run, RoomBinding room, RoomChart chart, Vector3 position, RoomEnemy enemy)
         {
             Death = run.Death; started = Time.unscaledTime; impact = false;
+            executionEnemy = enemy; shotFired = false;
             origin = position; center = room.Center; side = room.SideLength;
             passage = chart.passageWidth; thickness = chart.judgmentLineWidth;
             direction = run.DeathDirection == MoveDirection.Up ? Vector3.up : run.DeathDirection == MoveDirection.Down ? Vector3.down
@@ -97,6 +101,18 @@ namespace Gun.RoomRhythm
             float t = DeathElapsed;
             if (Death == DeathPresentation.Execution)
             {
+                if (!shotFired && executionEnemy != null && t >= .06f)
+                {
+                    shotFired = true;
+                    executionEnemy.AimAt(origin);
+                    feedback.EnemyExecutionShot(executionEnemy.Muzzle, origin);
+                }
+                if (!impact && shotFired && t >= .14f)
+                {
+                    impact = true;
+                    feedback.DeathSpark(origin);
+                    feedback.DeathBlood(origin, origin - executionEnemy.Muzzle);
+                }
                 roomFlash.gameObject.SetActive(t < .24f);
                 roomFlash.transform.position = center;
                 RoomFeedback.Size(roomFlash, Vector2.one * side);

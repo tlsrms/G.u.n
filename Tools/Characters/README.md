@@ -3,7 +3,9 @@
 게임 실행에 포함되지 않는 도형 에셋 원본과 오프라인 제작 도구입니다.
 
 - `BuildGeometricPlayer.py`: 플레이어 파츠·월드/UI 프리팹 제작
+- `BuildLegPrefabs.py`: 플레이어에 저장된 다리 관절을 독립 월드/UI 보행 프리팹으로 추출
 - `BuildRockBoss.py`: 바위 보스 파츠·프리팹·미리보기 제작
+- `BuildMafiaBoss.py`: 1스테이지 마피아 보스 파츠·프리팹·미리보기 제작 (공통 보스 제작 함수 재사용)
 - `PreviewGeometricPlayer.py`: 플레이어 미리보기만 갱신
 - `Templates/`: 프리팹 컴포넌트 직렬화 템플릿
 - `Previews/`: 정적 외형 미리보기

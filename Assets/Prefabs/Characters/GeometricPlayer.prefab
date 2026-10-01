@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1001}
+  - component: {fileID: 2010}
   - component: {fileID: 1999}
   m_Layer: 0
   m_Name: GeometricPlayer
@@ -2032,3 +2033,25 @@ MonoBehaviour:
   - {fileID: 1302}
   - {fileID: 1322}
   - {fileID: 1342}
+  legs: {fileID: 2010}
+--- !u!114 &2010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b81267a633c4ac3b3dce5eee02089cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  motionSource: {fileID: 1001}
+  leftHip: {fileID: 1021}
+  rightHip: {fileID: 1081}
+  leftKnee: {fileID: 1041}
+  rightKnee: {fileID: 1101}
+  unitsPerRigUnit: 1
+  stride: 0.32
+  cyclesPerSecond: 1.8
+  teleportDistance: 4

@@ -21,6 +21,7 @@ namespace Gun.RoomRhythm
             public Vector2 size;
             public Color tint;
             public float start, life, drag;
+            public bool shrink;
         }
         private Particle[] particles;
         private int nextParticle;
@@ -75,7 +76,7 @@ namespace Gun.RoomRhythm
             }
         }
 
-        private void Emit(Vector3 position, Vector3 velocity, Color tint, Vector2 size, float life, float drag = 5, Sprite sprite = null, int order = 30, Quaternion? rotation = null)
+        private void Emit(Vector3 position, Vector3 velocity, Color tint, Vector2 size, float life, float drag = 5, Sprite sprite = null, int order = 30, Quaternion? rotation = null, bool shrink = true)
         {
             if (effectStrength <= 0) return;
             PrepareEffects();
@@ -83,6 +84,7 @@ namespace Gun.RoomRhythm
             tint = RoomPalette.Tint(tint);
             p.origin = position; p.velocity = velocity; p.tint = tint;
             p.size = size * effectStrength; p.start = effectTime; p.life = life; p.drag = drag;
+            p.shrink = shrink;
             p.renderer.sprite = sprite != null ? sprite : glowSprite;
             p.renderer.sortingOrder = order;
             p.renderer.transform.position = position;
@@ -117,6 +119,15 @@ namespace Gun.RoomRhythm
                 Emit(origin, velocity, new Color(.8f, .8f, .8f, .7f),
                     Vector2.one * UnityEngine.Random.Range(.3f, .5f), UnityEngine.Random.Range(.28f, .38f), 6, null, 9);
             }
+        }
+
+        public void EnemyExecutionShot(Vector3 muzzle, Vector3 target)
+        {
+            Vector3 delta = target - muzzle;
+            Quaternion rotation = Quaternion.Euler(0, 0, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+            Emit((muzzle + target) * .5f, Vector3.zero, new Color(1, .92f, .8f, 1),
+                new Vector2(delta.magnitude / Mathf.Max(effectStrength, .001f), .025f), .1f, 0, edges[0].sprite, 2102, rotation, false);
+            Emit(muzzle, Vector3.zero, Color.white, Vector2.one * .3f, .09f, 0, null, 2103);
         }
 
         public void DeathSpark(Vector3 position)
@@ -189,7 +200,7 @@ namespace Gun.RoomRhythm
                 if (t >= 1) { p.life = 0; p.renderer.gameObject.SetActive(false); continue; }
                 p.renderer.transform.position = p.origin + p.velocity * (p.drag > 0 ? (1 - Mathf.Exp(-p.drag * elapsed)) / p.drag : elapsed);
                 Color tint = p.tint; tint.a *= (1 - t) * (1 - t); p.renderer.color = tint;
-                Size(p.renderer, p.size * Mathf.Lerp(1, .35f, t));
+                Size(p.renderer, p.size * (p.shrink ? Mathf.Lerp(1, .35f, t) : 1));
             }
             if (duration <= 0) return;
             float progress = (Time.unscaledTime - startedAt) / duration;

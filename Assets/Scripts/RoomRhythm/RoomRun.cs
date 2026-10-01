@@ -314,7 +314,7 @@ namespace Gun.RoomRhythm
             bool earlyExit = movementInput.HasValue && reason == FailureReason.TooEarly
                 && CompletedMoves < notes.Length && movementInput.Value == notes[CompletedMoves].direction
                 && (!notes[CompletedMoves].hasDoor || brokenDoors[CompletedMoves]);
-            Death = earlyExit ? DeathPresentation.Departure
+            Death = FailedEnemy >= 0 ? DeathPresentation.Execution : earlyExit ? DeathPresentation.Departure
                 : movementInput.HasValue ? DeathPresentation.Collision : DeathPresentation.Execution;
             Phase = RunPhase.Dead;
             Failure = reason;

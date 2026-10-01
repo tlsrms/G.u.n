@@ -135,7 +135,9 @@ def build_prefab(ui, sprite_guids, sprite_template, image_template, script_guid)
     for name,parent,pos,angle,art in NODES:
         id = ids[name]
         components = [id+1] + ([id+2,id+3] if art and ui else [id+2] if art else [])
-        if not ui and parent is None: components.append(1999)
+        if parent is None:
+            components.append(2010)
+            if not ui: components.append(1999)
         body = 'GameObject:\n'+base+'  serializedVersion: 6\n  m_Component:\n'+''.join(f'  - component: {{fileID: {c}}}\n' for c in components)
         body += f'  m_Layer: {5 if ui else 0}\n  m_Name: {"GeometricPlayerUI" if ui else "GeometricPlayer" if parent is None else name}\n'
         # Non-root names are shared between world and UI rigs for animation bindings.
@@ -166,11 +168,26 @@ def build_prefab(ui, sprite_guids, sprite_template, image_template, script_guid)
         body = 'MonoBehaviour:\n'+base+'  m_GameObject: {fileID: 1000}\n  m_Enabled: 1\n  m_EditorHideFlags: 0\n'+f'  m_Script: {{fileID: 11500000, guid: {script_guid}, type: 3}}\n  m_Name: \n  m_EditorClassIdentifier: \n'
         body += f'  grip: {{fileID: {ids["Grip"]+1}}}\n  muzzle: {{fileID: {ids["Muzzle"]+1}}}\n  parts:\n'
         body += ''.join(f'  - {{fileID: {ids[n[0]]+2}}}\n' for n in NODES if n[4])
+        body += '  legs: {fileID: 2010}\n'
         emit(114,1999,body)
+    emit(114,2010,leg_component(ui))
     path = PREFABS / ('GeometricPlayerUI.prefab' if ui else 'GeometricPlayer.prefab')
     path.write_text(HEADER+''.join(out),encoding='utf-8')
     guid(path,'PrefabImporter')
     return ids
+
+
+def leg_component(ui):
+    script = guid(ROOT/'Assets/Scripts/RoomRhythm/TopDownLegMotion.cs', 'MonoImporter')
+    return ('MonoBehaviour:\n  m_ObjectHideFlags: 0\n  m_CorrespondingSourceObject: {fileID: 0}\n'
+            '  m_PrefabInstance: {fileID: 0}\n  m_PrefabAsset: {fileID: 0}\n  m_GameObject: {fileID: 1000}\n'
+            '  m_Enabled: 1\n  m_EditorHideFlags: 0\n'
+            f'  m_Script: {{fileID: 11500000, guid: {script}, type: 3}}\n'
+            '  m_Name: \n  m_EditorClassIdentifier: \n  motionSource: {fileID: 1001}\n'
+            '  leftHip: {fileID: 1021}\n  rightHip: {fileID: 1081}\n'
+            '  leftKnee: {fileID: 1041}\n  rightKnee: {fileID: 1101}\n'
+            f'  unitsPerRigUnit: {60 if ui else 1}\n'
+            '  stride: 0.32\n  cyclesPerSecond: 1.8\n  teleportDistance: 4\n')
 
 
 def main():

@@ -61,7 +61,7 @@ All 12 player scenes use linked geometric character prefabs from `Assets/Prefabs
 
 The hub room station uses scale 0.25. Opening first darkens the map, then brings the large deck and rack down from above. Closing moves the deck, rack and selected case upward before fading the black panel; the small room objects are restored behind that panel. No runtime scene objects are created for this presentation.
 
-정수리 탑뷰 탐정 외형: 코트와 중절모, 권총을 든 오른팔만 보입니다. 왼팔·다리 관절은 프리팹에 보존하되 비활성화했습니다.
+정수리 탑뷰 탐정 외형: 코트와 중절모, 권총을 든 오른팔이 보입니다. 다리는 정지 중 숨겨지고 이동할 때 번갈아 드러납니다. 왼팔 관절은 프리팹에 보존하되 비활성화했습니다.
 
 
 ## 이동 연출과 입력

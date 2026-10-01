@@ -7,11 +7,13 @@ namespace Gun.RoomRhythm
     {
         [SerializeField] private Transform grip, muzzle;
         [SerializeField] private SpriteRenderer[] parts;
+        [SerializeField] private TopDownLegMotion legs;
         public Transform Grip => grip;
         public Transform Muzzle => muzzle;
 
         public void SetPresentation(bool visible, float alpha)
         {
+            if (legs != null) legs.SetVisible(visible && alpha > 0);
             foreach (SpriteRenderer part in parts)
             {
                 if (part == null) continue;

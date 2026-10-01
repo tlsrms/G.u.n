@@ -143,12 +143,9 @@ namespace Gun.RoomRhythm.Editor
             template.ValidateReferences(true);
             EnsureOwnedReferences(template, template.transform);
             EnsureOwnedReferences(template.Door, template.transform);
-            var enemyTemplate = Array.Find(oldEnemies, e => e != null);
-            // Keep reusable authored templates after a map with no enemies is saved.
-            if (enemyTemplate == null)
-                foreach (var root in scene.GetRootGameObjects())
-                    if (root.name == "Map Editor Templates") enemyTemplate = root.GetComponentInChildren<RoomEnemy>(true);
-            if (enemyTemplate == null) throw new ArgumentException("적 원형/판정선을 가진 씬 템플릿이 필요합니다.");
+            var enemyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Characters/RegularEnemy.prefab");
+            var enemyTemplate = enemyPrefab != null ? enemyPrefab.GetComponent<RoomEnemy>() : null;
+            if (enemyTemplate == null) throw new ArgumentException("RegularEnemy 프리팹이 필요합니다.");
             enemyTemplate.ValidateReferences();
             EnsureOwnedReferences(enemyTemplate, enemyTemplate.transform);
             foreach (var room in oldRooms)
@@ -204,12 +201,16 @@ namespace Gun.RoomRhythm.Editor
                 foreach (var enemy in map.enemies)
                 {
                     var parent = newRooms.Find(r => r.Id == enemy.roomId).transform;
-                    var clone = UnityEngine.Object.Instantiate(enemyTemplate.gameObject, parent);
+                    var clone = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefab, parent);
                     Undo.RegisterCreatedObjectUndo(clone, "적 배치"); clone.name = "Enemy - " + map.EnemyLabel(enemy); clone.SetActive(true);
                     var binding = clone.GetComponent<RoomEnemy>(); Id(binding, "enemyId", enemy.id);
                     var room = map.Room(enemy.roomId);
                     binding.Configure(new Vector3(map.WorldX(room), map.WorldY(room), 0), enemy.direction, chart);
-                    binding.Present(true, 1, 0, 0, false); newEnemies.Add(binding);
+                    binding.Present(true, 1, 0, 0, false);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(clone);
+                    foreach (var component in clone.GetComponentsInChildren<Component>(true))
+                        if (component != null) PrefabUtility.RecordPrefabInstancePropertyModifications(component);
+                    newEnemies.Add(binding);
                 }
                 if (newEnemies.Count == 0 && oldEnemies.Length > 0)
                 {
@@ -218,7 +219,7 @@ namespace Gun.RoomRhythm.Editor
                     {
                         var root = new GameObject("Map Editor Templates"); Undo.RegisterCreatedObjectUndo(root, "템플릿 보존");
                         UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root, scene);
-                        var retained = UnityEngine.Object.Instantiate(enemyTemplate.gameObject, root.transform);
+                        var retained = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefab, root.transform);
                         Undo.RegisterCreatedObjectUndo(retained, "적 템플릿 보존"); root.SetActive(false);
                     }
                 }

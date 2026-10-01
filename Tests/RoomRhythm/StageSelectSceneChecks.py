@@ -18,13 +18,24 @@ def load(path):
     matches = list(re.finditer(r"^--- !u!(\d+) &(\d+)(?: stripped)?\n(.*?)(?=^--- !u!|\Z)", read(path), re.M | re.S))
     objects = {int(m[2]): (int(m[1]), m[3]) for m in matches}
     assert len(objects) == len(matches), f"Duplicate file ID: {path}"
-    # Resolve only our two authored character prefabs, including stripped scene references.
-    prefab_paths = ["Assets/Prefabs/Characters/GeometricPlayer.prefab", "Assets/Prefabs/Characters/GeometricPlayerUI.prefab"]
+    # Resolve the authored character/enemy prefabs, including scene overrides and stripped references.
+    prefab_paths = ["Assets/Prefabs/Characters/GeometricPlayer.prefab", "Assets/Prefabs/Characters/GeometricPlayerUI.prefab", "Assets/Prefabs/Characters/RegularEnemy.prefab"]
     for instance, (kind, body) in list(objects.items()):
         if kind != 1001:
             continue
         prefab_path = next(p for p in prefab_paths if guid(p) in field(body, "m_SourcePrefab"))
         parts = {int(i): (int(k), b) for k, i, b in re.findall(r"^--- !u!(\d+) &(\d+)\n(.*?)(?=^--- !u!|\Z)", read(prefab_path), re.M | re.S)}
+        for source, prop, value in re.findall(r"    - target: \{fileID: (\d+),[^\n]+\n      propertyPath: ([^\n]+)\n      value: ([^\n]*)", body):
+            source = int(source)
+            part_kind, part = parts[source]
+            if "." in prop:
+                key, axis = prop.split(".")
+                pattern = r"(^  " + key + r": \{[^\n]*?" + axis + r": )[^,}]+"
+                part, count = re.subn(pattern, lambda m: m[1] + value, part, flags=re.M)
+            else:
+                part, count = re.subn(r"^  " + prop + r":.*", lambda m: "  " + prop + ": " + value, part, flags=re.M)
+            assert count == 1, (prefab_path, prop)
+            parts[source] = (part_kind, part)
         mapped = {id: instance * 10000 + id for id in parts}
         for id, (part_kind, part) in list(objects.items()):
             if f"m_PrefabInstance: {{fileID: {instance}}}" in part:
@@ -288,4 +299,4 @@ for prefab in ("Assets/Prefabs/Characters/GeometricPlayer.prefab", "Assets/Prefa
     for body in re.findall(r"^--- !u!1 &\d+\n(.*?)(?=^--- !u!|\Z)", authored, re.M | re.S):
         if field(body, "m_Name") in ("LeftHip", "RightHip", "LeftShoulder", "RightPauldron"):
             assert field(body, "m_IsActive") == "0", "Occluded limbs must remain hidden"
-print("PASS: overhead detective has no visible legs, free arm or armor shoulder plate.")
+print("PASS: overhead detective idle legs, free arm and armor shoulder plate are hidden.")

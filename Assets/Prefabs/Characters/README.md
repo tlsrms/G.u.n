@@ -1,6 +1,8 @@
 # 도형 탐정 플레이어 리그
 
-정수리에서 본 인간 탐정입니다. 코트·중절모·오른손 권총을 도형으로 표현합니다. 다리와 왼팔은 탑뷰에서 보이지 않도록 LeftHip, RightHip, LeftShoulder 오브젝트를 비활성화했습니다. RightPauldron도 숨겨 갑옷 같은 어깨판을 없앴습니다. 관절은 편집용으로 보존하지만 현재 실루엣에는 나타나지 않습니다.
+보스전 프리팹: **1스테이지 `MafiaBoss.prefab`**, **2스테이지 `RockBoss.prefab`**. 각각의 관절·연출 기준점은 `MafiaBoss.md`, `RockBoss.md`를 참고합니다.
+
+정수리에서 본 인간 탐정입니다. 코트·중절모·오른손 권총을 도형으로 표현합니다. 다리는 정지할 때 숨겨지고 이동할 때 번갈아 몸 밖으로 드러납니다. 왼팔 LeftShoulder와 갑옷처럼 보이던 RightPauldron은 계속 숨겨 둡니다.
 
 - `GeometricPlayer.prefab`: MainScene과 Stage01~05의 공용 SpriteRenderer 리그.
 - `GeometricPlayerUI.prefab`: AwakeningScene, SafeRoom01~04, StageSelectScene의 공용 UI Image 리그.
@@ -18,7 +20,9 @@
 
 2D 관절은 local Z rotation으로 회전합니다. 관절 scale은 (1,1,1)로 유지하고, 길이·너비는 자식 외형이나 다음 관절 위치로 조절하세요. 팔꿈치/무릎 이동과 회전 모두 직접 키를 줄 수 있습니다.
 
-Animation 창에서 **프리팹 루트 GeometricPlayer / GeometricPlayerUI**를 선택해 클립을 생성하면 같은 루트에 Animator를 붙여 사용할 수 있습니다. 두 리그의 자식 경로는 같아 Z 회전 트랙을 공유할 수 있지만 UI 위치 단위는 월드 리그의 60배이므로 position 트랙은 별도로 작성합니다. 현재 자동 보행/팔다리 회전이나 Animator Controller는 없으며, 사용자가 작성한 관절 포즈를 스크립트가 덮어쓰지 않습니다. 부모 Player 전체의 방향만 조준 으로 회전합니다. 안전지대에서는 자유 이동 없이 D로 다음 씬에 진입합니다.
+Animation 창에서 **프리팹 루트 GeometricPlayer / GeometricPlayerUI**를 선택해 클립을 생성하면 같은 루트에 Animator를 붙여 사용할 수 있습니다. 두 리그의 자식 경로는 같아 Z 회전 트랙을 공유할 수 있지만 UI 위치 단위는 월드 리그의 60배이므로 position 트랙은 별도로 작성합니다. `TopDownLegMotion`이 실제 이동 방향에 맞춰 다리 위치와 회전을 갱신합니다. 직접 다리 애니메이션을 작성할 때는 이 컴포넌트를 끄고 양쪽 Hip을 활성화하세요. 상체는 부모 Player의 마우스 조준 방향을 유지합니다. 안전지대에서는 D로 나가는 동안 보행이 표시됩니다.
+
+다른 적과 보스에 사용할 독립 다리 프리팹은 `TopDownLegs.prefab`, `TopDownLegsUI.prefab`입니다. 연결 방법은 [TopDownLegs.md](TopDownLegs.md)를 참고합니다.
 
 ## 생성 소스와 검증
 
