@@ -144,22 +144,13 @@ internal static class RoomRunChecks
         if (args.Length > 0)
         {
             MafiaStageChecks.Run(args[0]);
-            MapChartMigrationChecks.Run(args[0]);
         }
-        var sectionMoves = new[] { new MoveNote { destinationId = "section_end", time = 20, hasDoor = true, doorTime = 18, moveDelay = 2 } };
-        var sectionEnemies = new[] { new EnemyNote { id = "section_target", roomId = "start", time = 16 } };
-        Check(SectionTiming.CanEnter(sectionMoves, sectionEnemies, 15, Window), "section accepts entry before all windows");
-        Check(!SectionTiming.CanEnter(sectionMoves, sectionEnemies, 15.875, Window), "section rejects already-open enemy window");
-        Check(!SectionTiming.CanEnter(sectionMoves, null, 17.875, Window), "section rejects already-open door window");
-        Check(!SectionTiming.CanEnter(new[] { new MoveNote { time = 20 } }, null, 19.875, Window), "section rejects already-open movement window");
-        Check(!SectionTiming.CanEnter(sectionMoves, null, double.NaN, Window), "section rejects invalid clock");
-        Check(!SectionTiming.CanEnter(Array.Empty<MoveNote>(), null, 0, Window), "empty chart cannot become an action section");
         var absoluteRun = new RoomRun(new[] { new MoveNote { destinationId = "next", time = 20, direction = MoveDirection.Up } }, Window, .25);
         absoluteRun.Begin(); absoluteRun.Advance(15);
         absoluteRun.Press(MoveDirection.Up, 14);
-        Check(absoluteRun.Phase == RunPhase.Waiting && absoluteRun.JudgmentVersion == 0, "old section input cannot affect new run");
+        Check(absoluteRun.Phase == RunPhase.Waiting && absoluteRun.JudgmentVersion == 0, "out-of-order input cannot affect an advanced run");
         absoluteRun.Press(MoveDirection.Up, 20); absoluteRun.Advance(20.25);
-        Check(absoluteRun.Phase == RunPhase.Cleared && absoluteRun.AccuracyPercent == 100, "new section runs on absolute song time");
+        Check(absoluteRun.Phase == RunPhase.Cleared && absoluteRun.AccuracyPercent == 100, "run uses absolute song time");
         CheckActionResults();
         var accuracyRun = new RoomRun(new[] {
             new MoveNote { destinationId = "next", hasDoor = true, doorTime = 2, moveDelay = 1 }

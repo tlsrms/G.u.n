@@ -46,15 +46,6 @@ namespace Gun.RoomRhythm
             if (selectedEnemyDot != null) selectedEnemyDot.gameObject.SetActive(false);
         }
 
-        public void HideSection(double time)
-        {
-            Suspend();
-            foreach (var enemy in enemies ?? Array.Empty<RoomEnemy>())
-                if (enemy != null) enemy.Present(false, 0);
-            foreach (var target in stageTargets ?? Array.Empty<StageActionTarget>())
-                if (target != null) target.gameObject.SetActive(false);
-        }
-
         private Dictionary<string, RoomEnemy> EnemyLookup()
         {
             var lookup = new Dictionary<string, RoomEnemy>();

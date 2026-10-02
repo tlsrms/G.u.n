@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,7 +14,7 @@ namespace Gun.RoomRhythm.Editor
             RoomSession match = null;
             foreach (var session in UnityEngine.Object.FindObjectsByType<RoomSession>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (!session.OwnsChart(chart)) continue;
+                if (session.Chart != chart) continue;
                 if (match != null) throw new ArgumentException("이 채보를 사용하는 Session이 여러 개입니다. 편집할 씬 하나만 열어 주세요.");
                 match = session;
             }
@@ -30,7 +30,7 @@ namespace Gun.RoomRhythm.Editor
                     sessions.AddRange(root.GetComponentsInChildren<RoomSession>(true));
             if (sessions.Count == 1) return sessions[0];
             if (sessions.Count == 0) return Session(chart);
-            var matches = sessions.FindAll(session => session.OwnsChart(chart));
+            var matches = sessions.FindAll(session => session.Chart == chart);
             if (matches.Count == 1) return matches[0];
             throw new ArgumentException("활성 씬에 Room Session이 여러 개여서 적용 대상을 정할 수 없습니다. 적용할 Session이 하나인 씬을 활성화하세요.");
         }
@@ -58,8 +58,7 @@ namespace Gun.RoomRhythm.Editor
         internal static MapChart Import(RoomChart chart)
         {
             var session = Session(chart);
-            var section = session.SectionFor(chart);
-            var bindings = section != null ? section.rooms : References<RoomBinding>(session, "rooms");
+            var bindings = References<RoomBinding>(session, "rooms");
             var start = Array.Find(bindings, r => r != null && r.Id == chart.startingRoomId);
             if (start == null) throw new ArgumentException("시작 방 연결이 없습니다.");
             var map = new MapChart { settings = BeatChartCompiler.Import(chart.bpm, chart.Timing, chart.roomLeadTime, chart.enemyLeadTime, chart.moves, chart.enemies),
@@ -139,10 +138,8 @@ namespace Gun.RoomRhythm.Editor
             var session = ApplicationSession(chart);
             var scene = session.gameObject.scene;
             if (string.IsNullOrEmpty(scene.path) || !scene.isLoaded) throw new ArgumentException("먼저 대상 씬을 파일로 저장하세요.");
-            var section = session.SectionFor(chart);
-            var oldRooms = section != null ? section.rooms : References<RoomBinding>(session, "rooms");
-            session.ValidateSectionOwnership(section);
-            var combat = section != null ? section.combat : Reference<RoomCombat>(session, "combat");
+            var oldRooms = References<RoomBinding>(session, "rooms");
+            var combat = Reference<RoomCombat>(session, "combat");
             if (combat == null) throw new ArgumentException("Room Combat 연결이 없습니다.");
             combat.ValidateStageTargetOwnership(oldRooms);
             var oldEnemies = References<RoomEnemy>(combat, "enemies");
@@ -166,7 +163,7 @@ namespace Gun.RoomRhythm.Editor
                 Undo.RecordObject(chart, "게임 채보 적용");
                 Undo.RecordObject(session, "Room Session 채보 연결");
                 var sessionFields = new SerializedObject(session);
-                if (section == null) sessionFields.FindProperty("chart").objectReferenceValue = chart;
+                sessionFields.FindProperty("chart").objectReferenceValue = chart;
                 sessionFields.ApplyModifiedProperties();
                 var map = chart.mapDraft;
                 map.SynchronizeRoomStarts();
@@ -232,11 +229,10 @@ namespace Gun.RoomRhythm.Editor
                         Undo.RegisterCreatedObjectUndo(retained, "적 템플릿 보존"); root.SetActive(false);
                     }
                 }
-                if (section == null) References(session, "rooms", newRooms.ToArray());
-                else { section.rooms = newRooms.ToArray(); EditorUtility.SetDirty(session); }
+                References(session, "rooms", newRooms.ToArray());
                 References(combat, "enemies", newEnemies.ToArray());
                 var player = Reference<Transform>(session, "player");
-                if (player != null && section == null)
+                if (player != null)
                 {
                     Undo.RecordObject(player, "시작 위치"); var start = map.Room(map.settings.startingRoomId);
                     player.position = new Vector3(map.WorldX(start), map.WorldY(start), player.position.z);
@@ -244,13 +240,13 @@ namespace Gun.RoomRhythm.Editor
                 foreach (var root in scene.GetRootGameObjects())
                     foreach (var camera in root.GetComponentsInChildren<RoomCamera>(true))
                     {
-                        if (section != null || Reference<Transform>(camera, "player") != player) continue;
+                        if (Reference<Transform>(camera, "player") != player) continue;
                         var fields = new SerializedObject(camera); fields.FindProperty("session").objectReferenceValue = session; fields.ApplyModifiedProperties();
                         var pose = map.CameraAt(map.settings.Beat(0), player.position.x, player.position.y);
                         Undo.RecordObject(camera.transform, "초기 카메라 위치"); camera.transform.position = new Vector3(pose.x, pose.y, camera.transform.position.z);
                         var view = camera.GetComponent<Camera>(); if (view != null) { Undo.RecordObject(view, "초기 카메라 크기"); view.orthographicSize = pose.size; }
                     }
-                session.ValidateChartConfiguration(chart); // Original objects still exist until the complete replacement is valid.
+                session.ValidateConfiguration(); // Original objects still exist until the complete replacement is valid.
                 foreach (var room in oldRooms) Undo.DestroyObjectImmediate(room.gameObject);
                 foreach (var enemy in oldEnemies) if (enemy != null) Undo.DestroyObjectImmediate(enemy.gameObject);
                 chart.NotifyChartChanged(); EditorUtility.SetDirty(chart);

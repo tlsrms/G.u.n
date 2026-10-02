@@ -13,26 +13,13 @@ namespace Gun.RoomRhythm
         [SerializeField] private ShotCue[] shots;
         [SerializeField] private float bpm = 130;
         [SerializeField] private double entranceBeat = 128, battleBeat = 144, finishBeat = 384;
-        [SerializeField] private BossEntranceTimeline entranceTimeline;
-        // Set by the validated editor migration; legacy scenes retain section playback until migrated.
-        [SerializeField, HideInInspector] private bool singleChart;
-        [SerializeField, HideInInspector] private string entranceRoomId;
-        public string EntranceRoomId => singleChart ? entranceRoomId : null;
-        private bool battleStarted;
-        public BossEntranceTimeline EntranceTimeline => entranceTimeline;
-        public Transform Boss => boss;
-        public Transform RifleArm => rifleArm;
-        public float Bpm => bpm;
-        public double EntranceBeat => entranceBeat;
-        public double BattleBeat => battleBeat;
-        private BossPoseSnapshot entrancePose;
         private bool anchorCaptured;
-        private Vector3 bodyRest, entranceAnchor;
-        private Quaternion armRest;
+        private Vector3 bossRest, bodyRest, entranceAnchor;
+        private Quaternion bossRotationRest, armRest;
         private SpriteRenderer[] parts;
         private Color[] colors;
         private int cue;
-        private bool requested, defeated;
+        private bool defeated;
         private double firedAt = -100, hitAt = -100, defeatedAt;
 
         private void Awake()
@@ -42,8 +29,8 @@ namespace Gun.RoomRhythm
 
         private void CapturePose()
         {
-            if (entrancePose != null) return;
-            entrancePose = new BossPoseSnapshot(boss);
+            if (parts != null) return;
+            bossRest = boss.localPosition; bossRotationRest = boss.localRotation;
             bodyRest = body.localPosition; armRest = rifleArm.localRotation;
             parts = boss.GetComponentsInChildren<SpriteRenderer>(true);
             colors = new Color[parts.Length];
@@ -53,25 +40,23 @@ namespace Gun.RoomRhythm
         public override void ResetStage()
         {
             CapturePose();
-            if (entranceTimeline != null) entranceTimeline.Validate(battleBeat - entranceBeat);
-            entrancePose.Restore();
             anchorCaptured = false;
-            battleStarted = false;
-            cue = 0; requested = defeated = false; firedAt = hitAt = -100;
+            cue = 0; defeated = false; firedAt = hitAt = -100;
             boss.gameObject.SetActive(false); warning.enabled = shot.enabled = false;
+            boss.localPosition = bossRest; boss.localRotation = bossRotationRest;
             body.localPosition = bodyRest; rifleArm.localRotation = armRest;
             for (int i = 0; i < parts.Length; i++) parts[i].color = colors[i];
         }
 
         public override void OnChartCompleted()
         {
-            if (!singleChart && Session.CurrentSectionId == "initial") { entranceAnchor = player.position; anchorCaptured = true; }
-            else { defeated = true; defeatedAt = Session.SongTime; }
+            defeated = true;
+            defeatedAt = Session.SongTime;
         }
 
         public override void OnAction(RoomActionResult result)
         {
-            if (singleChart ? Session.SongTime * bpm / 60 < battleBeat : Session.CurrentSectionId != "mafia") return;
+            if (Session.SongTime * bpm / 60 < battleBeat) return;
             if (result.Kind == RoomActionKind.EnemyDefeated || result.Kind == RoomActionKind.DoorBroken) hitAt = Session.SongTime;
             if (result.Kind == RoomActionKind.Failed)
             {
@@ -85,34 +70,14 @@ namespace Gun.RoomRhythm
             double beat = songTime * bpm / 60;
             if (beat < entranceBeat) return;
             boss.gameObject.SetActive(true);
-            if (singleChart ? beat < battleBeat : Session.CurrentSectionId == "initial")
+            if (beat < battleBeat)
             {
                 if (!anchorCaptured) { entranceAnchor = player.position; anchorCaptured = true; }
-                if (entranceTimeline != null)
-                {
-                    entrancePose.Restore(forSampling: true);
-                    boss.gameObject.SetActive(true);
-                    entranceTimeline.Evaluate(boss, entranceAnchor, beat - entranceBeat);
-                }
-                else
-                {
-                    float t = Mathf.SmoothStep(0, 1, (float)((beat - entranceBeat) / 8));
-                    boss.position = entranceAnchor + Vector3.up * Mathf.Lerp(9, 2.8f, t);
-                    boss.rotation = Quaternion.Euler(0, 0, 180);
-                    rifleArm.localRotation = armRest * Quaternion.Euler(0, 0, Mathf.Lerp(-35, 0, t));
-                }
-                bool entranceEnded = entranceTimeline == null || beat >= entranceBeat + entranceTimeline.durationBeats;
-                if (!singleChart && Session.IsChartCompleted && entranceEnded && beat >= battleBeat && !requested)
-                {
-                    requested = true;
-                    if (!QueueSection("mafia")) Debug.LogError("Mafia section could not start.", this);
-                }
+                float t = Mathf.SmoothStep(0, 1, (float)((beat - entranceBeat) / 8));
+                boss.position = entranceAnchor + Vector3.up * Mathf.Lerp(9, 2.8f, t);
+                boss.rotation = Quaternion.Euler(0, 0, 180);
+                rifleArm.localRotation = armRest * Quaternion.Euler(0, 0, Mathf.Lerp(-35, 0, t));
                 return;
-            }
-            if (singleChart && !battleStarted)
-            {
-                battleStarted = true;
-                OnSectionStarted("mafia"); // Visual hand-off only; the chart, music and judgment model continue unchanged.
             }
             if (defeated)
             {
@@ -143,13 +108,5 @@ namespace Gun.RoomRhythm
             for (int i = 0; i < parts.Length; i++) parts[i].color = Color.Lerp(colors[i], Color.white, flash * .6f);
         }
 
-        public override void OnSectionStarted(string id)
-        {
-            if (id != "mafia" || entranceTimeline == null) return;
-            entrancePose.Restore();
-            boss.gameObject.SetActive(true);
-            boss.position = player.position + Vector3.up * 2.8f;
-            boss.rotation = Quaternion.Euler(0, 0, 180);
-        }
     }
 }

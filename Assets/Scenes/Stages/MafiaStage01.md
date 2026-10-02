@@ -14,23 +14,23 @@
 
 ## 구성과 수정 위치
 
-- `Stage1_Guards.asset`: 일반 구간. 기존 맵 에디터로 수정합니다.
-- `Stage1_Mafia.asset`: 보스 구간. 곡 전체 기준 시각을 사용하는 별도 채보입니다. 역시 기존 맵 에디터로 수정합니다.
-- `Game Session / MafiaStageDirector`: 등장 시각, 구간 전환, 사격 예고, 반동, 피격과 퇴장 연출.
-- 기존 등장 클립·음악 타임라인: 위 컴포넌트의 **등장 타임라인 편집·미리보기** 버튼. 현재 코드는 유지되지만 새 제작 흐름에서는 대체 예정이다. 전체 채보 기반 이관 계획은 `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md` 참고. 에셋 미연결 시 기존 등장 코드를 유지한다.
-- `Room Stage / 01 - Guards`, `02 - Mafia`: 구간별 방. 이전 구간 마지막 방과 다음 구간 시작 방은 같은 위치의 독립 오브젝트입니다.
-- `Normal combat`, `Boss combat`: 각 구간 판정 대상 연결.
+- `Assets/RoomChart/Stage1_Full.asset`: 일반 적부터 등장 공백, 보스전, 마지막 판정까지 한 채보입니다. 기존 시각적 맵 에디터에서 이 에셋을 열어 수정합니다. 맵 초안과 적용 데이터가 모두 들어 있습니다.
+- `Game Session / RoomSession`: 전체 채보와 방 43개, 하나의 Combat을 연결합니다. 이동 42회, 문 파괴 9회, 사격 132회로 총 183판정입니다.
+- `Game Session / MafiaStageDirector`: 등장 시각, 사격 예고, 반동, 피격과 퇴장 연출. 음악과 판정 모델을 교체하지 않습니다.
+- 보스 등장은 Director의 `Entrance Beat`부터 `Battle Beat`까지 기존 이동·팔 동작으로 재생됩니다. 구형 등장 타임라인 메뉴·편집 버튼은 제거했습니다. 전체 채보 기반 연출 편집 계획은 `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md`를 참고하세요.
+- `Room Stage / Authored rooms`: 전체 방을 연결합니다. `guard15`가 보스 등장 방이며 중복 시작 방은 제거했습니다.
+- `Stage combat`: 일반 적 48개와 보스 표적 90개(탄환 84개·장애물 6개)를 함께 연결합니다.
 - `Mafia presentation`: 연결된 MafiaBoss 프리팹, 사격 예고선과 발사선.
 - `Mafia targets and paths`: 탄환·장애물 프리팹과 탄환 출발/도착 기준점. 맵 에디터가 다시 만드는 방 계층 밖에 둡니다.
 
-보스 채보에서 표적 ID나 방 위치를 바꾸면 해당 StagePropTarget, 경로 기준점, Director의 Shots도 함께 수정해야 합니다.
+전체 채보에서 보스 표적 ID나 방 위치를 바꾸면 해당 StagePropTarget, 경로 기준점, Director의 Shots도 함께 수정해야 합니다. 노트 기준 연출 자동 연결과 범용 외부 연출 편집기는 개편 계획의 후속 단계입니다.
 보스는 이 초안에서 플레이어 위쪽을 따라다니며 공격합니다. 별도의 길찾기나 최종 보스 AI는 포함하지 않습니다.
-곡의 입력 보정은 두 채보에서 같아야 합니다. 판정선 색은 기존 설정을 유지합니다.
+곡의 입력 보정은 전체 채보 하나에 적용합니다. 판정선 색은 기존 설정을 유지합니다.
 
 ## 제작과 확인
 
 씬의 방·적·보스·탄환은 미리 저장되어 있고 실행 중 생성하지 않습니다.
-`Tools/Stages/BuildMafiaStage.py`는 최초 배치용 오프라인 제작 도구입니다. **다시 실행하면 이 씬과 두 채보의 수동 편집을 덮어쓰며, 허브 여섯 번째 레코드와 Build Settings도 갱신합니다.**
+분할 채보 제작·이관 도구는 사용을 마쳐 제거했습니다. 허브의 여섯 번째 레코드도 전체 채보를 참조합니다.
 
 Unity를 실행하지 않고 `Tests/RoomRhythm/Run-Checks.ps1`에서 실제 저장된 채보의 완주/판정과 C# 컴파일을 확인합니다.
 `Tests/RoomRhythm/MafiaStageSceneChecks.py`는 씬 참조와 프리팹 연결을 확인합니다.

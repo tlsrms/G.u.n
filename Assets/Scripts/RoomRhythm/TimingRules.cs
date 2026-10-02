@@ -49,18 +49,6 @@ namespace Gun.RoomRhythm
     }
 
     public enum MoveDirection { Up, Left, Down, Right }
-    public static class SectionTiming
-    {
-        public static bool CanEnter(MoveNote[] moves, EnemyNote[] enemies, double time, TimingWindow window)
-        {
-            if (moves == null || moves.Length == 0 || double.IsNaN(time) || double.IsInfinity(time)) return false;
-            foreach (var move in moves)
-                if (time >= move.HitTime - window.early || move.hasDoor && time >= move.doorTime - window.early) return false;
-            foreach (var enemy in enemies ?? Array.Empty<EnemyNote>())
-                if (time >= enemy.time - window.early) return false;
-            return true;
-        }
-    }
     public enum MovementEase { Smooth, Linear, EaseIn, EaseOut }
     public static class MovementProfile
     {

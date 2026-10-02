@@ -143,7 +143,7 @@ for index in range(1, 6):
     assert f'sceneName: "Stage{index:02}"' in controller
     assert guid(f"Assets/RoomChart/Tutorial_{index}.asset") in controller
 assert 'sceneName: "MafiaStage01"' in controller
-assert guid("Assets/RoomChart/Stage1_Guards.asset") in controller
+assert guid("Assets/RoomChart/Stage1_Full.asset") in controller
 for source in ("StageSelectScene.cs", "SafeRoomController.cs", "StageProgression.cs", "StageSelection.cs", "StageSelectSurface.cs"):
     assert not re.search(r"\b(Instantiate|AddComponent|CreateInstance|CloneTree)\s*[<(]|new\s+GameObject", read("Assets/Scripts/RoomRhythm/" + source)), source
 assert not any('m_Name: "Channel dial"' in body or 'm_Name: "Television cabinet"' in body for _, body in selection.values())

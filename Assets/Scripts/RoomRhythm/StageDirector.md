@@ -1,4 +1,4 @@
-# 스테이지 전용 진행 연결: 1단계
+# 스테이지 전용 진행과 재시작
 
 기존 씬은 RoomSession의 Stage Director를 비워 두면 됩니다. 채보 완료 시 음악 정지, 클리어 피드백, 기록 저장과 다음 씬 이동은 기존 경로를 그대로 사용합니다. 기존 맵 데이터와 에디터 저장 형식은 변경하지 않았습니다.
 
@@ -23,10 +23,12 @@ MoveStarted는 이동 입력 성공, MoveArrived는 도착, DoorBroken은 돌파
 
 Tick의 songTime은 기존 SongTimeline.Time으로 입력 보정 전 음악 진행 시계입니다. OnAction.Time은 입력 보정을 적용한 판정 시각입니다. 음악 시작 지연과 박자 변환에는 기존 채보 설정을 사용하고, 보스마다 별도 타이머를 누적하지 마세요. 시간 이벤트는 정확한 시간 일치가 아니라 구간 통과와 실행 여부로 판단해야 프레임 지연에도 누락되지 않습니다.
 
-## 현재 범위와 다음 작업
+## 한 채보 실행과 복원
 
-기존 채보 안에서 보스가 판정에 반응하고, 채보 종료 뒤 비입력 연출을 이어갈 수 있습니다. 4단계부터 QueueSection으로 미리 등록한 다음 채보 구간에 전환할 수 있습니다. 채보 자체가 빈 보스 전용 구간은 아직 지원하지 않습니다.
+스테이지는 하나의 전체 채보를 실행합니다. 보스 등장 공백도 노트 사이의 간격으로 작성하며, 중간에 채보·Combat·음악 시계를 교체하지 않습니다. 보스는 판정 결과에 반응하고 마지막 판정 뒤에도 퇴장 연출을 이어갈 수 있습니다.
 
-방별 가로·세로 크기와 이동 설정은 [MapExtensions.md](MapExtensions.md), 장애물·이동 표적은 [StageTargets.md](StageTargets.md), 채보 구간 전환과 재시작 상태 복원은 [StageSections.md](StageSections.md)를 참고하세요. 보스 공격 콘텐츠와 임의 시점 탐색, 범용 보스 에디터는 아직 포함하지 않습니다.
+`RoomSession`은 초기화 때 `StageResetState.Capture()`로 지정 루트의 원래 부모·위치·회전·크기·활성·렌더러·색을 저장합니다. 재시작 때 판정·음악·피드백을 초기화하고 `StageResetState.Restore()`, Director의 `ResetStage()`, 전용 표적의 `ResetTarget()` 순서로 복원합니다. Director는 코루틴과 실행별 플래그, 자신이 제어한 자세를 정리합니다.
+
+방 크기·이동은 [MapExtensions.md](MapExtensions.md), 장애물·이동 표적은 [StageTargets.md](StageTargets.md)를 참고하세요. 마피아의 현재 연결은 `Assets/Scenes/Stages/MafiaStage01.md`에 있습니다. 범용 연출 편집기와 노트 기준 모션 연결은 `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md`의 후속 단계입니다.
 
 Unity에서 확인할 항목: 기존 스테이지의 자동 시작·클리어·재시작, 진행 코드 연결 시 채보 종료 후 음악 유지, 전용 CompleteStage 호출 뒤 기존 클리어 이동. 이번 단계에서는 Unity를 실행하지 않았습니다.

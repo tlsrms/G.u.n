@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
-  m_Name: Stage1_Mafia
+  m_Name: Stage1_Full
   m_EditorClassIdentifier: 
   music: {fileID: 8300000, guid: 2cc366cd6f35084498090693948939ab, type: 3}
   inputOffsetMs: 0
-  startingRoomId: mafia0
+  startingRoomId: guard0
   bpm: 130
   moveDuration: 0.28
   aimRadius: 2.2
@@ -31,6 +31,186 @@ MonoBehaviour:
   appearanceStartAlpha: 0.05
   songTitle: Stage1_Bpm130
   moves:
+  - destinationId: "guard1"
+    direction: 3
+    time: 3.6923076923076925
+    duration: 0.28
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 1.8461538461538463
+    frameStartTime: 1.8461538461538463
+    doorFrameStartTime: 2.3076923076923075
+    hasDoor: 0
+    doorTime: 3.230769230769231
+    moveDelay: 0
+  - destinationId: "guard2"
+    direction: 3
+    time: 7.384615384615385
+    duration: 0.28
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 5.538461538461538
+    frameStartTime: 5.538461538461538
+    doorFrameStartTime: 6.0
+    hasDoor: 0
+    doorTime: 6.923076923076923
+    moveDelay: 0
+  - destinationId: "guard3"
+    direction: 3
+    time: 11.076923076923077
+    duration: 0.28
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 9.23076923076923
+    frameStartTime: 9.23076923076923
+    doorFrameStartTime: 9.692307692307692
+    hasDoor: 0
+    doorTime: 10.615384615384615
+    moveDelay: 0
+  - destinationId: "guard4"
+    direction: 0
+    time: 14.76923076923077
+    duration: 0.28
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 12.923076923076923
+    frameStartTime: 12.923076923076923
+    doorFrameStartTime: 13.384615384615385
+    hasDoor: 1
+    doorTime: 14.307692307692308
+    moveDelay: 0.46153846153846156
+  - destinationId: "guard5"
+    direction: 3
+    time: 18.46153846153846
+    duration: 0.28
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 16.615384615384617
+    frameStartTime: 16.615384615384617
+    doorFrameStartTime: 17.076923076923077
+    hasDoor: 0
+    doorTime: 18.0
+    moveDelay: 0
+  - destinationId: "guard6"
+    direction: 3
+    time: 22.153846153846153
+    duration: 0.28
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 20.307692307692307
+    frameStartTime: 20.307692307692307
+    doorFrameStartTime: 20.76923076923077
+    hasDoor: 0
+    doorTime: 21.692307692307693
+    moveDelay: 0
+  - destinationId: "guard7"
+    direction: 3
+    time: 25.846153846153847
+    duration: 0.28
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 24.0
+    frameStartTime: 24.0
+    doorFrameStartTime: 24.46153846153846
+    hasDoor: 0
+    doorTime: 25.384615384615383
+    moveDelay: 0
+  - destinationId: "guard8"
+    direction: 0
+    time: 29.53846153846154
+    duration: 0.28
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 27.692307692307693
+    frameStartTime: 27.692307692307693
+    doorFrameStartTime: 28.153846153846153
+    hasDoor: 1
+    doorTime: 29.076923076923077
+    moveDelay: 0.46153846153846156
+  - destinationId: "guard9"
+    direction: 3
+    time: 33.23076923076923
+    duration: 0.28
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 31.384615384615383
+    frameStartTime: 31.384615384615383
+    doorFrameStartTime: 31.846153846153847
+    hasDoor: 0
+    doorTime: 32.76923076923077
+    moveDelay: 0
+  - destinationId: "guard10"
+    direction: 3
+    time: 36.92307692307692
+    duration: 0.28
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 35.07692307692308
+    frameStartTime: 35.07692307692308
+    doorFrameStartTime: 35.53846153846154
+    hasDoor: 0
+    doorTime: 36.46153846153846
+    moveDelay: 0
+  - destinationId: "guard11"
+    direction: 3
+    time: 40.61538461538461
+    duration: 0.28
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 38.76923076923077
+    frameStartTime: 38.76923076923077
+    doorFrameStartTime: 39.23076923076923
+    hasDoor: 0
+    doorTime: 40.15384615384615
+    moveDelay: 0
+  - destinationId: "guard12"
+    direction: 0
+    time: 44.30769230769231
+    duration: 0.28
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 42.46153846153846
+    frameStartTime: 42.46153846153846
+    doorFrameStartTime: 42.92307692307692
+    hasDoor: 1
+    doorTime: 43.84615384615385
+    moveDelay: 0.46153846153846156
+  - destinationId: "guard13"
+    direction: 3
+    time: 48.0
+    duration: 0.28
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 46.15384615384615
+    frameStartTime: 46.15384615384615
+    doorFrameStartTime: 46.61538461538461
+    hasDoor: 0
+    doorTime: 47.53846153846154
+    moveDelay: 0
+  - destinationId: "guard14"
+    direction: 3
+    time: 51.69230769230769
+    duration: 0.28
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 49.84615384615385
+    frameStartTime: 49.84615384615385
+    doorFrameStartTime: 50.30769230769231
+    hasDoor: 0
+    doorTime: 51.23076923076923
+    moveDelay: 0
+  - destinationId: "guard15"
+    direction: 3
+    time: 55.38461538461539
+    duration: 0.28
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 53.53846153846154
+    frameStartTime: 53.53846153846154
+    doorFrameStartTime: 54.0
+    hasDoor: 0
+    doorTime: 54.92307692307692
+    moveDelay: 0
   - destinationId: "mafia1"
     direction: 3
     time: 70.15384615384616
@@ -356,22 +536,358 @@ MonoBehaviour:
     doorTime: 165.69230769230768
     moveDelay: 0
   enemies:
+  - id: "guard_shot_0_0"
+    roomId: "guard0"
+    direction: 0
+    time: 0.9230769230769231
+    customAppearance: 1
+    appearanceTime: 0.0
+    frameStartTime: 0.0
+  - id: "guard_shot_0_1"
+    roomId: "guard0"
+    direction: 2
+    time: 1.8461538461538463
+    customAppearance: 1
+    appearanceTime: 0.46153846153846156
+    frameStartTime: 0.46153846153846156
+  - id: "guard_shot_0_2"
+    roomId: "guard0"
+    direction: 6
+    time: 2.769230769230769
+    customAppearance: 1
+    appearanceTime: 1.3846153846153846
+    frameStartTime: 1.3846153846153846
+  - id: "guard_shot_1_0"
+    roomId: "guard1"
+    direction: 2
+    time: 4.615384615384615
+    customAppearance: 1
+    appearanceTime: 3.230769230769231
+    frameStartTime: 3.230769230769231
+  - id: "guard_shot_1_1"
+    roomId: "guard1"
+    direction: 6
+    time: 5.538461538461538
+    customAppearance: 1
+    appearanceTime: 4.153846153846154
+    frameStartTime: 4.153846153846154
+  - id: "guard_shot_1_2"
+    roomId: "guard1"
+    direction: 0
+    time: 6.461538461538462
+    customAppearance: 1
+    appearanceTime: 5.076923076923077
+    frameStartTime: 5.076923076923077
+  - id: "guard_shot_2_0"
+    roomId: "guard2"
+    direction: 6
+    time: 8.307692307692308
+    customAppearance: 1
+    appearanceTime: 6.923076923076923
+    frameStartTime: 6.923076923076923
+  - id: "guard_shot_2_1"
+    roomId: "guard2"
+    direction: 0
+    time: 9.23076923076923
+    customAppearance: 1
+    appearanceTime: 7.846153846153846
+    frameStartTime: 7.846153846153846
+  - id: "guard_shot_2_2"
+    roomId: "guard2"
+    direction: 2
+    time: 10.153846153846153
+    customAppearance: 1
+    appearanceTime: 8.76923076923077
+    frameStartTime: 8.76923076923077
+  - id: "guard_shot_3_0"
+    roomId: "guard3"
+    direction: 0
+    time: 12.0
+    customAppearance: 1
+    appearanceTime: 10.615384615384615
+    frameStartTime: 10.615384615384615
+  - id: "guard_shot_3_1"
+    roomId: "guard3"
+    direction: 2
+    time: 12.923076923076923
+    customAppearance: 1
+    appearanceTime: 11.538461538461538
+    frameStartTime: 11.538461538461538
+  - id: "guard_shot_3_2"
+    roomId: "guard3"
+    direction: 6
+    time: 13.846153846153847
+    customAppearance: 1
+    appearanceTime: 12.461538461538462
+    frameStartTime: 12.461538461538462
+  - id: "guard_shot_4_0"
+    roomId: "guard4"
+    direction: 2
+    time: 15.692307692307692
+    customAppearance: 1
+    appearanceTime: 14.307692307692308
+    frameStartTime: 14.307692307692308
+  - id: "guard_shot_4_1"
+    roomId: "guard4"
+    direction: 6
+    time: 16.615384615384617
+    customAppearance: 1
+    appearanceTime: 15.23076923076923
+    frameStartTime: 15.23076923076923
+  - id: "guard_shot_4_2"
+    roomId: "guard4"
+    direction: 0
+    time: 17.53846153846154
+    customAppearance: 1
+    appearanceTime: 16.153846153846153
+    frameStartTime: 16.153846153846153
+  - id: "guard_shot_5_0"
+    roomId: "guard5"
+    direction: 6
+    time: 19.384615384615383
+    customAppearance: 1
+    appearanceTime: 18.0
+    frameStartTime: 18.0
+  - id: "guard_shot_5_1"
+    roomId: "guard5"
+    direction: 0
+    time: 20.307692307692307
+    customAppearance: 1
+    appearanceTime: 18.923076923076923
+    frameStartTime: 18.923076923076923
+  - id: "guard_shot_5_2"
+    roomId: "guard5"
+    direction: 2
+    time: 21.23076923076923
+    customAppearance: 1
+    appearanceTime: 19.846153846153847
+    frameStartTime: 19.846153846153847
+  - id: "guard_shot_6_0"
+    roomId: "guard6"
+    direction: 0
+    time: 23.076923076923077
+    customAppearance: 1
+    appearanceTime: 21.692307692307693
+    frameStartTime: 21.692307692307693
+  - id: "guard_shot_6_1"
+    roomId: "guard6"
+    direction: 2
+    time: 24.0
+    customAppearance: 1
+    appearanceTime: 22.615384615384617
+    frameStartTime: 22.615384615384617
+  - id: "guard_shot_6_2"
+    roomId: "guard6"
+    direction: 6
+    time: 24.923076923076923
+    customAppearance: 1
+    appearanceTime: 23.53846153846154
+    frameStartTime: 23.53846153846154
+  - id: "guard_shot_7_0"
+    roomId: "guard7"
+    direction: 2
+    time: 26.76923076923077
+    customAppearance: 1
+    appearanceTime: 25.384615384615383
+    frameStartTime: 25.384615384615383
+  - id: "guard_shot_7_1"
+    roomId: "guard7"
+    direction: 6
+    time: 27.692307692307693
+    customAppearance: 1
+    appearanceTime: 26.307692307692307
+    frameStartTime: 26.307692307692307
+  - id: "guard_shot_7_2"
+    roomId: "guard7"
+    direction: 0
+    time: 28.615384615384617
+    customAppearance: 1
+    appearanceTime: 27.23076923076923
+    frameStartTime: 27.23076923076923
+  - id: "guard_shot_8_0"
+    roomId: "guard8"
+    direction: 6
+    time: 30.46153846153846
+    customAppearance: 1
+    appearanceTime: 29.076923076923077
+    frameStartTime: 29.076923076923077
+  - id: "guard_shot_8_1"
+    roomId: "guard8"
+    direction: 0
+    time: 31.384615384615383
+    customAppearance: 1
+    appearanceTime: 30.0
+    frameStartTime: 30.0
+  - id: "guard_shot_8_2"
+    roomId: "guard8"
+    direction: 2
+    time: 32.30769230769231
+    customAppearance: 1
+    appearanceTime: 30.923076923076923
+    frameStartTime: 30.923076923076923
+  - id: "guard_shot_9_0"
+    roomId: "guard9"
+    direction: 0
+    time: 34.15384615384615
+    customAppearance: 1
+    appearanceTime: 32.76923076923077
+    frameStartTime: 32.76923076923077
+  - id: "guard_shot_9_1"
+    roomId: "guard9"
+    direction: 2
+    time: 35.07692307692308
+    customAppearance: 1
+    appearanceTime: 33.69230769230769
+    frameStartTime: 33.69230769230769
+  - id: "guard_shot_9_2"
+    roomId: "guard9"
+    direction: 6
+    time: 36.0
+    customAppearance: 1
+    appearanceTime: 34.61538461538461
+    frameStartTime: 34.61538461538461
+  - id: "guard_shot_10_0"
+    roomId: "guard10"
+    direction: 2
+    time: 37.84615384615385
+    customAppearance: 1
+    appearanceTime: 36.46153846153846
+    frameStartTime: 36.46153846153846
+  - id: "guard_shot_10_1"
+    roomId: "guard10"
+    direction: 6
+    time: 38.76923076923077
+    customAppearance: 1
+    appearanceTime: 37.38461538461539
+    frameStartTime: 37.38461538461539
+  - id: "guard_shot_10_2"
+    roomId: "guard10"
+    direction: 0
+    time: 39.69230769230769
+    customAppearance: 1
+    appearanceTime: 38.30769230769231
+    frameStartTime: 38.30769230769231
+  - id: "guard_shot_11_0"
+    roomId: "guard11"
+    direction: 6
+    time: 41.53846153846154
+    customAppearance: 1
+    appearanceTime: 40.15384615384615
+    frameStartTime: 40.15384615384615
+  - id: "guard_shot_11_1"
+    roomId: "guard11"
+    direction: 0
+    time: 42.46153846153846
+    customAppearance: 1
+    appearanceTime: 41.07692307692308
+    frameStartTime: 41.07692307692308
+  - id: "guard_shot_11_2"
+    roomId: "guard11"
+    direction: 2
+    time: 43.38461538461539
+    customAppearance: 1
+    appearanceTime: 42.0
+    frameStartTime: 42.0
+  - id: "guard_shot_12_0"
+    roomId: "guard12"
+    direction: 0
+    time: 45.23076923076923
+    customAppearance: 1
+    appearanceTime: 43.84615384615385
+    frameStartTime: 43.84615384615385
+  - id: "guard_shot_12_1"
+    roomId: "guard12"
+    direction: 2
+    time: 46.15384615384615
+    customAppearance: 1
+    appearanceTime: 44.76923076923077
+    frameStartTime: 44.76923076923077
+  - id: "guard_shot_12_2"
+    roomId: "guard12"
+    direction: 6
+    time: 47.07692307692308
+    customAppearance: 1
+    appearanceTime: 45.69230769230769
+    frameStartTime: 45.69230769230769
+  - id: "guard_shot_13_0"
+    roomId: "guard13"
+    direction: 2
+    time: 48.92307692307692
+    customAppearance: 1
+    appearanceTime: 47.53846153846154
+    frameStartTime: 47.53846153846154
+  - id: "guard_shot_13_1"
+    roomId: "guard13"
+    direction: 6
+    time: 49.84615384615385
+    customAppearance: 1
+    appearanceTime: 48.46153846153846
+    frameStartTime: 48.46153846153846
+  - id: "guard_shot_13_2"
+    roomId: "guard13"
+    direction: 0
+    time: 50.76923076923077
+    customAppearance: 1
+    appearanceTime: 49.38461538461539
+    frameStartTime: 49.38461538461539
+  - id: "guard_shot_14_0"
+    roomId: "guard14"
+    direction: 6
+    time: 52.61538461538461
+    customAppearance: 1
+    appearanceTime: 51.23076923076923
+    frameStartTime: 51.23076923076923
+  - id: "guard_shot_14_1"
+    roomId: "guard14"
+    direction: 0
+    time: 53.53846153846154
+    customAppearance: 1
+    appearanceTime: 52.15384615384615
+    frameStartTime: 52.15384615384615
+  - id: "guard_shot_14_2"
+    roomId: "guard14"
+    direction: 2
+    time: 54.46153846153846
+    customAppearance: 1
+    appearanceTime: 53.07692307692308
+    frameStartTime: 53.07692307692308
+  - id: "guard_shot_15_0"
+    roomId: "guard15"
+    direction: 0
+    time: 56.30769230769231
+    customAppearance: 1
+    appearanceTime: 54.92307692307692
+    frameStartTime: 54.92307692307692
+  - id: "guard_shot_15_1"
+    roomId: "guard15"
+    direction: 2
+    time: 57.23076923076923
+    customAppearance: 1
+    appearanceTime: 55.84615384615385
+    frameStartTime: 55.84615384615385
+  - id: "guard_shot_15_2"
+    roomId: "guard15"
+    direction: 6
+    time: 58.15384615384615
+    customAppearance: 1
+    appearanceTime: 56.76923076923077
+    frameStartTime: 56.76923076923077
   - id: "mafia_shot_0_0"
-    roomId: "mafia0"
+    roomId: "guard15"
     direction: 0
     time: 67.38461538461539
     customAppearance: 1
     appearanceTime: 66.6923076923077
     frameStartTime: 66.6923076923077
   - id: "mafia_shot_0_1"
-    roomId: "mafia0"
+    roomId: "guard15"
     direction: 2
     time: 68.3076923076923
     customAppearance: 1
     appearanceTime: 67.61538461538461
     frameStartTime: 67.61538461538461
   - id: "mafia_shot_0_2"
-    roomId: "mafia0"
+    roomId: "guard15"
     direction: 6
     time: 69.23076923076923
     customAppearance: 1
@@ -954,32 +1470,272 @@ MonoBehaviour:
       subdivision: 2
       roomLeadBeats: 4
       enemyLeadBeats: 3
-      startingRoomId: "mafia0"
+      startingRoomId: "guard0"
       notes: []
     roomSize: 6
     originX: 0
     originY: 0
-    cameraX: 72.0
-    cameraY: 18.0
+    cameraX: 0
+    cameraY: 0
     cameraSize: 7
     cameraTrack: 0
     rooms:
-    - id: "mafia0"
+    - id: "guard0"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 0
+      frameBeat: 0
+      individualAppearance: 1
+      appearBeat: 0
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 0
+    - id: "guard1"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 6.0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 8
+      frameBeat: 4
+      individualAppearance: 1
+      appearBeat: 4
+      door: 0
+      doorBeat: 7
+      doorFrameBeat: 5
+    - id: "guard2"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 12.0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 16
+      frameBeat: 12
+      individualAppearance: 1
+      appearBeat: 12
+      door: 0
+      doorBeat: 15
+      doorFrameBeat: 13
+    - id: "guard3"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 18.0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 24
+      frameBeat: 20
+      individualAppearance: 1
+      appearBeat: 20
+      door: 0
+      doorBeat: 23
+      doorFrameBeat: 21
+    - id: "guard4"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 18.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 32
+      frameBeat: 28
+      individualAppearance: 1
+      appearBeat: 28
+      door: 1
+      doorBeat: 31
+      doorFrameBeat: 29
+    - id: "guard5"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 24.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 40
+      frameBeat: 36
+      individualAppearance: 1
+      appearBeat: 36
+      door: 0
+      doorBeat: 39
+      doorFrameBeat: 37
+    - id: "guard6"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 30.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 48
+      frameBeat: 44
+      individualAppearance: 1
+      appearBeat: 44
+      door: 0
+      doorBeat: 47
+      doorFrameBeat: 45
+    - id: "guard7"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 36.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 56
+      frameBeat: 52
+      individualAppearance: 1
+      appearBeat: 52
+      door: 0
+      doorBeat: 55
+      doorFrameBeat: 53
+    - id: "guard8"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 36.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 64
+      frameBeat: 60
+      individualAppearance: 1
+      appearBeat: 60
+      door: 1
+      doorBeat: 63
+      doorFrameBeat: 61
+    - id: "guard9"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 42.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 72
+      frameBeat: 68
+      individualAppearance: 1
+      appearBeat: 68
+      door: 0
+      doorBeat: 71
+      doorFrameBeat: 69
+    - id: "guard10"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 48.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 80
+      frameBeat: 76
+      individualAppearance: 1
+      appearBeat: 76
+      door: 0
+      doorBeat: 79
+      doorFrameBeat: 77
+    - id: "guard11"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 54.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 88
+      frameBeat: 84
+      individualAppearance: 1
+      appearBeat: 84
+      door: 0
+      doorBeat: 87
+      doorFrameBeat: 85
+    - id: "guard12"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 54.0
+      offsetY: 18.0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 96
+      frameBeat: 92
+      individualAppearance: 1
+      appearBeat: 92
+      door: 1
+      doorBeat: 95
+      doorFrameBeat: 93
+    - id: "guard13"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 60.0
+      offsetY: 18.0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 104
+      frameBeat: 100
+      individualAppearance: 1
+      appearBeat: 100
+      door: 0
+      doorBeat: 103
+      doorFrameBeat: 101
+    - id: "guard14"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 66.0
+      offsetY: 18.0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 112
+      frameBeat: 108
+      individualAppearance: 1
+      appearBeat: 108
+      door: 0
+      doorBeat: 111
+      doorFrameBeat: 109
+    - id: "guard15"
       x: 0
       y: 0
       width: 6
       height: 6
       offsetX: 72.0
       offsetY: 18.0
-      moveDuration: 0.32
-      moveEase: 0
-      hitBeat: 144
-      frameBeat: 140
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 120
+      frameBeat: 116
       individualAppearance: 1
-      appearBeat: 140
+      appearBeat: 116
       door: 0
-      doorBeat: 0
-      doorFrameBeat: 141
+      doorBeat: 119
+      doorFrameBeat: 117
     - id: "mafia1"
       x: 0
       y: 0
@@ -1413,20 +2169,308 @@ MonoBehaviour:
       doorBeat: 359
       doorFrameBeat: 357
     enemies:
+    - id: "guard_shot_0_0"
+      roomId: "guard0"
+      direction: 0
+      hitBeat: 2
+      appearBeat: 0
+      frameBeat: 0
+    - id: "guard_shot_0_1"
+      roomId: "guard0"
+      direction: 2
+      hitBeat: 4
+      appearBeat: 1
+      frameBeat: 1
+    - id: "guard_shot_0_2"
+      roomId: "guard0"
+      direction: 6
+      hitBeat: 6
+      appearBeat: 3
+      frameBeat: 3
+    - id: "guard_shot_1_0"
+      roomId: "guard1"
+      direction: 2
+      hitBeat: 10
+      appearBeat: 7
+      frameBeat: 7
+    - id: "guard_shot_1_1"
+      roomId: "guard1"
+      direction: 6
+      hitBeat: 12
+      appearBeat: 9
+      frameBeat: 9
+    - id: "guard_shot_1_2"
+      roomId: "guard1"
+      direction: 0
+      hitBeat: 14
+      appearBeat: 11
+      frameBeat: 11
+    - id: "guard_shot_2_0"
+      roomId: "guard2"
+      direction: 6
+      hitBeat: 18
+      appearBeat: 15
+      frameBeat: 15
+    - id: "guard_shot_2_1"
+      roomId: "guard2"
+      direction: 0
+      hitBeat: 20
+      appearBeat: 17
+      frameBeat: 17
+    - id: "guard_shot_2_2"
+      roomId: "guard2"
+      direction: 2
+      hitBeat: 22
+      appearBeat: 19
+      frameBeat: 19
+    - id: "guard_shot_3_0"
+      roomId: "guard3"
+      direction: 0
+      hitBeat: 26
+      appearBeat: 23
+      frameBeat: 23
+    - id: "guard_shot_3_1"
+      roomId: "guard3"
+      direction: 2
+      hitBeat: 28
+      appearBeat: 25
+      frameBeat: 25
+    - id: "guard_shot_3_2"
+      roomId: "guard3"
+      direction: 6
+      hitBeat: 30
+      appearBeat: 27
+      frameBeat: 27
+    - id: "guard_shot_4_0"
+      roomId: "guard4"
+      direction: 2
+      hitBeat: 34
+      appearBeat: 31
+      frameBeat: 31
+    - id: "guard_shot_4_1"
+      roomId: "guard4"
+      direction: 6
+      hitBeat: 36
+      appearBeat: 33
+      frameBeat: 33
+    - id: "guard_shot_4_2"
+      roomId: "guard4"
+      direction: 0
+      hitBeat: 38
+      appearBeat: 35
+      frameBeat: 35
+    - id: "guard_shot_5_0"
+      roomId: "guard5"
+      direction: 6
+      hitBeat: 42
+      appearBeat: 39
+      frameBeat: 39
+    - id: "guard_shot_5_1"
+      roomId: "guard5"
+      direction: 0
+      hitBeat: 44
+      appearBeat: 41
+      frameBeat: 41
+    - id: "guard_shot_5_2"
+      roomId: "guard5"
+      direction: 2
+      hitBeat: 46
+      appearBeat: 43
+      frameBeat: 43
+    - id: "guard_shot_6_0"
+      roomId: "guard6"
+      direction: 0
+      hitBeat: 50
+      appearBeat: 47
+      frameBeat: 47
+    - id: "guard_shot_6_1"
+      roomId: "guard6"
+      direction: 2
+      hitBeat: 52
+      appearBeat: 49
+      frameBeat: 49
+    - id: "guard_shot_6_2"
+      roomId: "guard6"
+      direction: 6
+      hitBeat: 54
+      appearBeat: 51
+      frameBeat: 51
+    - id: "guard_shot_7_0"
+      roomId: "guard7"
+      direction: 2
+      hitBeat: 58
+      appearBeat: 55
+      frameBeat: 55
+    - id: "guard_shot_7_1"
+      roomId: "guard7"
+      direction: 6
+      hitBeat: 60
+      appearBeat: 57
+      frameBeat: 57
+    - id: "guard_shot_7_2"
+      roomId: "guard7"
+      direction: 0
+      hitBeat: 62
+      appearBeat: 59
+      frameBeat: 59
+    - id: "guard_shot_8_0"
+      roomId: "guard8"
+      direction: 6
+      hitBeat: 66
+      appearBeat: 63
+      frameBeat: 63
+    - id: "guard_shot_8_1"
+      roomId: "guard8"
+      direction: 0
+      hitBeat: 68
+      appearBeat: 65
+      frameBeat: 65
+    - id: "guard_shot_8_2"
+      roomId: "guard8"
+      direction: 2
+      hitBeat: 70
+      appearBeat: 67
+      frameBeat: 67
+    - id: "guard_shot_9_0"
+      roomId: "guard9"
+      direction: 0
+      hitBeat: 74
+      appearBeat: 71
+      frameBeat: 71
+    - id: "guard_shot_9_1"
+      roomId: "guard9"
+      direction: 2
+      hitBeat: 76
+      appearBeat: 73
+      frameBeat: 73
+    - id: "guard_shot_9_2"
+      roomId: "guard9"
+      direction: 6
+      hitBeat: 78
+      appearBeat: 75
+      frameBeat: 75
+    - id: "guard_shot_10_0"
+      roomId: "guard10"
+      direction: 2
+      hitBeat: 82
+      appearBeat: 79
+      frameBeat: 79
+    - id: "guard_shot_10_1"
+      roomId: "guard10"
+      direction: 6
+      hitBeat: 84
+      appearBeat: 81
+      frameBeat: 81
+    - id: "guard_shot_10_2"
+      roomId: "guard10"
+      direction: 0
+      hitBeat: 86
+      appearBeat: 83
+      frameBeat: 83
+    - id: "guard_shot_11_0"
+      roomId: "guard11"
+      direction: 6
+      hitBeat: 90
+      appearBeat: 87
+      frameBeat: 87
+    - id: "guard_shot_11_1"
+      roomId: "guard11"
+      direction: 0
+      hitBeat: 92
+      appearBeat: 89
+      frameBeat: 89
+    - id: "guard_shot_11_2"
+      roomId: "guard11"
+      direction: 2
+      hitBeat: 94
+      appearBeat: 91
+      frameBeat: 91
+    - id: "guard_shot_12_0"
+      roomId: "guard12"
+      direction: 0
+      hitBeat: 98
+      appearBeat: 95
+      frameBeat: 95
+    - id: "guard_shot_12_1"
+      roomId: "guard12"
+      direction: 2
+      hitBeat: 100
+      appearBeat: 97
+      frameBeat: 97
+    - id: "guard_shot_12_2"
+      roomId: "guard12"
+      direction: 6
+      hitBeat: 102
+      appearBeat: 99
+      frameBeat: 99
+    - id: "guard_shot_13_0"
+      roomId: "guard13"
+      direction: 2
+      hitBeat: 106
+      appearBeat: 103
+      frameBeat: 103
+    - id: "guard_shot_13_1"
+      roomId: "guard13"
+      direction: 6
+      hitBeat: 108
+      appearBeat: 105
+      frameBeat: 105
+    - id: "guard_shot_13_2"
+      roomId: "guard13"
+      direction: 0
+      hitBeat: 110
+      appearBeat: 107
+      frameBeat: 107
+    - id: "guard_shot_14_0"
+      roomId: "guard14"
+      direction: 6
+      hitBeat: 114
+      appearBeat: 111
+      frameBeat: 111
+    - id: "guard_shot_14_1"
+      roomId: "guard14"
+      direction: 0
+      hitBeat: 116
+      appearBeat: 113
+      frameBeat: 113
+    - id: "guard_shot_14_2"
+      roomId: "guard14"
+      direction: 2
+      hitBeat: 118
+      appearBeat: 115
+      frameBeat: 115
+    - id: "guard_shot_15_0"
+      roomId: "guard15"
+      direction: 0
+      hitBeat: 122
+      appearBeat: 119
+      frameBeat: 119
+    - id: "guard_shot_15_1"
+      roomId: "guard15"
+      direction: 2
+      hitBeat: 124
+      appearBeat: 121
+      frameBeat: 121
+    - id: "guard_shot_15_2"
+      roomId: "guard15"
+      direction: 6
+      hitBeat: 126
+      appearBeat: 123
+      frameBeat: 123
     - id: "mafia_shot_0_0"
-      roomId: "mafia0"
+      roomId: "guard15"
       direction: 0
       hitBeat: 146
       appearBeat: 144.5
       frameBeat: 144.5
     - id: "mafia_shot_0_1"
-      roomId: "mafia0"
+      roomId: "guard15"
       direction: 2
       hitBeat: 148
       appearBeat: 146.5
       frameBeat: 146.5
     - id: "mafia_shot_0_2"
-      roomId: "mafia0"
+      roomId: "guard15"
       direction: 6
       hitBeat: 150
       appearBeat: 148.5
@@ -1930,32 +2974,272 @@ MonoBehaviour:
       subdivision: 2
       roomLeadBeats: 4
       enemyLeadBeats: 3
-      startingRoomId: "mafia0"
+      startingRoomId: "guard0"
       notes: []
     roomSize: 6
     originX: 0
     originY: 0
-    cameraX: 72.0
-    cameraY: 18.0
+    cameraX: 0
+    cameraY: 0
     cameraSize: 7
     cameraTrack: 0
     rooms:
-    - id: "mafia0"
+    - id: "guard0"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 0
+      frameBeat: 0
+      individualAppearance: 1
+      appearBeat: 0
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 0
+    - id: "guard1"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 6.0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 8
+      frameBeat: 4
+      individualAppearance: 1
+      appearBeat: 4
+      door: 0
+      doorBeat: 7
+      doorFrameBeat: 5
+    - id: "guard2"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 12.0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 16
+      frameBeat: 12
+      individualAppearance: 1
+      appearBeat: 12
+      door: 0
+      doorBeat: 15
+      doorFrameBeat: 13
+    - id: "guard3"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 18.0
+      offsetY: 0
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 24
+      frameBeat: 20
+      individualAppearance: 1
+      appearBeat: 20
+      door: 0
+      doorBeat: 23
+      doorFrameBeat: 21
+    - id: "guard4"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 18.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 32
+      frameBeat: 28
+      individualAppearance: 1
+      appearBeat: 28
+      door: 1
+      doorBeat: 31
+      doorFrameBeat: 29
+    - id: "guard5"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 24.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 40
+      frameBeat: 36
+      individualAppearance: 1
+      appearBeat: 36
+      door: 0
+      doorBeat: 39
+      doorFrameBeat: 37
+    - id: "guard6"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 30.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 48
+      frameBeat: 44
+      individualAppearance: 1
+      appearBeat: 44
+      door: 0
+      doorBeat: 47
+      doorFrameBeat: 45
+    - id: "guard7"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 36.0
+      offsetY: 6.0
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 56
+      frameBeat: 52
+      individualAppearance: 1
+      appearBeat: 52
+      door: 0
+      doorBeat: 55
+      doorFrameBeat: 53
+    - id: "guard8"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 36.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 64
+      frameBeat: 60
+      individualAppearance: 1
+      appearBeat: 60
+      door: 1
+      doorBeat: 63
+      doorFrameBeat: 61
+    - id: "guard9"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 42.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 72
+      frameBeat: 68
+      individualAppearance: 1
+      appearBeat: 68
+      door: 0
+      doorBeat: 71
+      doorFrameBeat: 69
+    - id: "guard10"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 48.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 80
+      frameBeat: 76
+      individualAppearance: 1
+      appearBeat: 76
+      door: 0
+      doorBeat: 79
+      doorFrameBeat: 77
+    - id: "guard11"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 54.0
+      offsetY: 12.0
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 88
+      frameBeat: 84
+      individualAppearance: 1
+      appearBeat: 84
+      door: 0
+      doorBeat: 87
+      doorFrameBeat: 85
+    - id: "guard12"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 54.0
+      offsetY: 18.0
+      moveDuration: 0.28
+      moveEase: 0
+      hitBeat: 96
+      frameBeat: 92
+      individualAppearance: 1
+      appearBeat: 92
+      door: 1
+      doorBeat: 95
+      doorFrameBeat: 93
+    - id: "guard13"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 60.0
+      offsetY: 18.0
+      moveDuration: 0.28
+      moveEase: 1
+      hitBeat: 104
+      frameBeat: 100
+      individualAppearance: 1
+      appearBeat: 100
+      door: 0
+      doorBeat: 103
+      doorFrameBeat: 101
+    - id: "guard14"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 66.0
+      offsetY: 18.0
+      moveDuration: 0.28
+      moveEase: 2
+      hitBeat: 112
+      frameBeat: 108
+      individualAppearance: 1
+      appearBeat: 108
+      door: 0
+      doorBeat: 111
+      doorFrameBeat: 109
+    - id: "guard15"
       x: 0
       y: 0
       width: 6
       height: 6
       offsetX: 72.0
       offsetY: 18.0
-      moveDuration: 0.32
-      moveEase: 0
-      hitBeat: 144
-      frameBeat: 140
+      moveDuration: 0.28
+      moveEase: 3
+      hitBeat: 120
+      frameBeat: 116
       individualAppearance: 1
-      appearBeat: 140
+      appearBeat: 116
       door: 0
-      doorBeat: 0
-      doorFrameBeat: 141
+      doorBeat: 119
+      doorFrameBeat: 117
     - id: "mafia1"
       x: 0
       y: 0
@@ -2389,20 +3673,308 @@ MonoBehaviour:
       doorBeat: 359
       doorFrameBeat: 357
     enemies:
+    - id: "guard_shot_0_0"
+      roomId: "guard0"
+      direction: 0
+      hitBeat: 2
+      appearBeat: 0
+      frameBeat: 0
+    - id: "guard_shot_0_1"
+      roomId: "guard0"
+      direction: 2
+      hitBeat: 4
+      appearBeat: 1
+      frameBeat: 1
+    - id: "guard_shot_0_2"
+      roomId: "guard0"
+      direction: 6
+      hitBeat: 6
+      appearBeat: 3
+      frameBeat: 3
+    - id: "guard_shot_1_0"
+      roomId: "guard1"
+      direction: 2
+      hitBeat: 10
+      appearBeat: 7
+      frameBeat: 7
+    - id: "guard_shot_1_1"
+      roomId: "guard1"
+      direction: 6
+      hitBeat: 12
+      appearBeat: 9
+      frameBeat: 9
+    - id: "guard_shot_1_2"
+      roomId: "guard1"
+      direction: 0
+      hitBeat: 14
+      appearBeat: 11
+      frameBeat: 11
+    - id: "guard_shot_2_0"
+      roomId: "guard2"
+      direction: 6
+      hitBeat: 18
+      appearBeat: 15
+      frameBeat: 15
+    - id: "guard_shot_2_1"
+      roomId: "guard2"
+      direction: 0
+      hitBeat: 20
+      appearBeat: 17
+      frameBeat: 17
+    - id: "guard_shot_2_2"
+      roomId: "guard2"
+      direction: 2
+      hitBeat: 22
+      appearBeat: 19
+      frameBeat: 19
+    - id: "guard_shot_3_0"
+      roomId: "guard3"
+      direction: 0
+      hitBeat: 26
+      appearBeat: 23
+      frameBeat: 23
+    - id: "guard_shot_3_1"
+      roomId: "guard3"
+      direction: 2
+      hitBeat: 28
+      appearBeat: 25
+      frameBeat: 25
+    - id: "guard_shot_3_2"
+      roomId: "guard3"
+      direction: 6
+      hitBeat: 30
+      appearBeat: 27
+      frameBeat: 27
+    - id: "guard_shot_4_0"
+      roomId: "guard4"
+      direction: 2
+      hitBeat: 34
+      appearBeat: 31
+      frameBeat: 31
+    - id: "guard_shot_4_1"
+      roomId: "guard4"
+      direction: 6
+      hitBeat: 36
+      appearBeat: 33
+      frameBeat: 33
+    - id: "guard_shot_4_2"
+      roomId: "guard4"
+      direction: 0
+      hitBeat: 38
+      appearBeat: 35
+      frameBeat: 35
+    - id: "guard_shot_5_0"
+      roomId: "guard5"
+      direction: 6
+      hitBeat: 42
+      appearBeat: 39
+      frameBeat: 39
+    - id: "guard_shot_5_1"
+      roomId: "guard5"
+      direction: 0
+      hitBeat: 44
+      appearBeat: 41
+      frameBeat: 41
+    - id: "guard_shot_5_2"
+      roomId: "guard5"
+      direction: 2
+      hitBeat: 46
+      appearBeat: 43
+      frameBeat: 43
+    - id: "guard_shot_6_0"
+      roomId: "guard6"
+      direction: 0
+      hitBeat: 50
+      appearBeat: 47
+      frameBeat: 47
+    - id: "guard_shot_6_1"
+      roomId: "guard6"
+      direction: 2
+      hitBeat: 52
+      appearBeat: 49
+      frameBeat: 49
+    - id: "guard_shot_6_2"
+      roomId: "guard6"
+      direction: 6
+      hitBeat: 54
+      appearBeat: 51
+      frameBeat: 51
+    - id: "guard_shot_7_0"
+      roomId: "guard7"
+      direction: 2
+      hitBeat: 58
+      appearBeat: 55
+      frameBeat: 55
+    - id: "guard_shot_7_1"
+      roomId: "guard7"
+      direction: 6
+      hitBeat: 60
+      appearBeat: 57
+      frameBeat: 57
+    - id: "guard_shot_7_2"
+      roomId: "guard7"
+      direction: 0
+      hitBeat: 62
+      appearBeat: 59
+      frameBeat: 59
+    - id: "guard_shot_8_0"
+      roomId: "guard8"
+      direction: 6
+      hitBeat: 66
+      appearBeat: 63
+      frameBeat: 63
+    - id: "guard_shot_8_1"
+      roomId: "guard8"
+      direction: 0
+      hitBeat: 68
+      appearBeat: 65
+      frameBeat: 65
+    - id: "guard_shot_8_2"
+      roomId: "guard8"
+      direction: 2
+      hitBeat: 70
+      appearBeat: 67
+      frameBeat: 67
+    - id: "guard_shot_9_0"
+      roomId: "guard9"
+      direction: 0
+      hitBeat: 74
+      appearBeat: 71
+      frameBeat: 71
+    - id: "guard_shot_9_1"
+      roomId: "guard9"
+      direction: 2
+      hitBeat: 76
+      appearBeat: 73
+      frameBeat: 73
+    - id: "guard_shot_9_2"
+      roomId: "guard9"
+      direction: 6
+      hitBeat: 78
+      appearBeat: 75
+      frameBeat: 75
+    - id: "guard_shot_10_0"
+      roomId: "guard10"
+      direction: 2
+      hitBeat: 82
+      appearBeat: 79
+      frameBeat: 79
+    - id: "guard_shot_10_1"
+      roomId: "guard10"
+      direction: 6
+      hitBeat: 84
+      appearBeat: 81
+      frameBeat: 81
+    - id: "guard_shot_10_2"
+      roomId: "guard10"
+      direction: 0
+      hitBeat: 86
+      appearBeat: 83
+      frameBeat: 83
+    - id: "guard_shot_11_0"
+      roomId: "guard11"
+      direction: 6
+      hitBeat: 90
+      appearBeat: 87
+      frameBeat: 87
+    - id: "guard_shot_11_1"
+      roomId: "guard11"
+      direction: 0
+      hitBeat: 92
+      appearBeat: 89
+      frameBeat: 89
+    - id: "guard_shot_11_2"
+      roomId: "guard11"
+      direction: 2
+      hitBeat: 94
+      appearBeat: 91
+      frameBeat: 91
+    - id: "guard_shot_12_0"
+      roomId: "guard12"
+      direction: 0
+      hitBeat: 98
+      appearBeat: 95
+      frameBeat: 95
+    - id: "guard_shot_12_1"
+      roomId: "guard12"
+      direction: 2
+      hitBeat: 100
+      appearBeat: 97
+      frameBeat: 97
+    - id: "guard_shot_12_2"
+      roomId: "guard12"
+      direction: 6
+      hitBeat: 102
+      appearBeat: 99
+      frameBeat: 99
+    - id: "guard_shot_13_0"
+      roomId: "guard13"
+      direction: 2
+      hitBeat: 106
+      appearBeat: 103
+      frameBeat: 103
+    - id: "guard_shot_13_1"
+      roomId: "guard13"
+      direction: 6
+      hitBeat: 108
+      appearBeat: 105
+      frameBeat: 105
+    - id: "guard_shot_13_2"
+      roomId: "guard13"
+      direction: 0
+      hitBeat: 110
+      appearBeat: 107
+      frameBeat: 107
+    - id: "guard_shot_14_0"
+      roomId: "guard14"
+      direction: 6
+      hitBeat: 114
+      appearBeat: 111
+      frameBeat: 111
+    - id: "guard_shot_14_1"
+      roomId: "guard14"
+      direction: 0
+      hitBeat: 116
+      appearBeat: 113
+      frameBeat: 113
+    - id: "guard_shot_14_2"
+      roomId: "guard14"
+      direction: 2
+      hitBeat: 118
+      appearBeat: 115
+      frameBeat: 115
+    - id: "guard_shot_15_0"
+      roomId: "guard15"
+      direction: 0
+      hitBeat: 122
+      appearBeat: 119
+      frameBeat: 119
+    - id: "guard_shot_15_1"
+      roomId: "guard15"
+      direction: 2
+      hitBeat: 124
+      appearBeat: 121
+      frameBeat: 121
+    - id: "guard_shot_15_2"
+      roomId: "guard15"
+      direction: 6
+      hitBeat: 126
+      appearBeat: 123
+      frameBeat: 123
     - id: "mafia_shot_0_0"
-      roomId: "mafia0"
+      roomId: "guard15"
       direction: 0
       hitBeat: 146
       appearBeat: 144.5
       frameBeat: 144.5
     - id: "mafia_shot_0_1"
-      roomId: "mafia0"
+      roomId: "guard15"
       direction: 2
       hitBeat: 148
       appearBeat: 146.5
       frameBeat: 146.5
     - id: "mafia_shot_0_2"
-      roomId: "mafia0"
+      roomId: "guard15"
       direction: 6
       hitBeat: 150
       appearBeat: 148.5

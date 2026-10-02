@@ -22770,7 +22770,7 @@ MonoBehaviour:
     label: {fileID: 4400000434}
     sleeve: {fileID: 4400000370}
     record: {fileID: 4200001014}
-  - chart: {fileID: 11400000, guid: b850f9faaa7c4582aacfd21a36adbe04, type: 2}
+  - chart: {fileID: 11400000, guid: 4dff15c7b0054f8aaffb441c066b1cb4, type: 2}
     sceneName: "MafiaStage01"
     button: {fileID: 4500000192}
     label: {fileID: 4500000187}

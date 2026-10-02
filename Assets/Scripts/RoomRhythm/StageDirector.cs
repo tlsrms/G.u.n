@@ -14,8 +14,6 @@ namespace Gun.RoomRhythm
         public virtual void OnChartCompleted() { }
         public virtual void Tick(double songTime) { }
         protected bool CompleteStage() => Session != null && Session.CompleteStage();
-        protected bool QueueSection(string id) => Session != null && Session.QueueSection(id);
-        public virtual void OnSectionStarted(string id) { }
         internal void RestartStage()
         {
             StopAllCoroutines();

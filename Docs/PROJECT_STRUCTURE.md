@@ -28,8 +28,7 @@ G.u.n/
 │  └─ _Recovery/               기본 탐색 대상에서 제외; 복구 요청 때 확인
 ├─ Tests/RoomRhythm/            C# 로직 검사, Python 에셋 검사, 실행 스크립트
 ├─ Tools/
-│  ├─ Characters/              캐릭터 제작·미리보기 스크립트와 템플릿
-│  └─ Stages/                  스테이지 제작 스크립트
+│  └─ Characters/              캐릭터 제작·미리보기 스크립트와 템플릿
 ├─ Packages/                   패키지 선언과 잠금 파일
 └─ ProjectSettings/            Unity 프로젝트 설정
 ```
@@ -43,19 +42,18 @@ G.u.n/
 | 요청 영역 | 먼저 확인할 파일 | 필요할 때 연결할 영역 |
 | --- | --- | --- |
 | 플레이 시작·재시작·전체 세션 연결 | `RoomSession.cs` | `RoomRun.cs`, `SongTimeline.cs`, `RoomRestartTransition.cs` |
-| 인스펙터 Debug Mode·무적 자동 진행 | `RoomSession.cs`의 `debugMode`, `RoomRun.cs`의 `AdvanceAutomatically` | `Editor/RoomInspectors.cs`의 `Tools > Gun > Select Stage Session`으로 열린 씬의 컴포넌트 선택. `RoomCombat.cs`의 자동 사격 연출, `StageProgression.cs`의 디버그 기록 저장 제외. 시작 시 적용하며 구간 전환에도 유지 |
+| 인스펙터 Debug Mode·무적 자동 진행 | `RoomSession.cs`의 `debugMode`, `RoomRun.cs`의 `AdvanceAutomatically` | `Editor/RoomInspectors.cs`의 `Tools > Gun > Select Stage Session`으로 열린 씬의 컴포넌트 선택. `RoomCombat.cs`의 자동 사격 연출, `StageProgression.cs`의 디버그 기록 저장 제외. 시작 시 적용하며 전체 채보를 자동 진행 |
 | 이동·문·적의 성공/실패 판정 | `RoomRun.cs`, `TimingRules.cs` | `RoomChart.cs`, `Tests/RoomRhythm/RoomRunChecks.cs` |
 | 키 입력·음악 시간·입력 보정 | `RoomKeyboard.cs`, `SongTimeline.cs`, `InputOffsetSettings.cs` | `OffsetCalibration.cs`, `OffsetCalibrationScene.cs`, 오프셋 관련 검사 |
 | 판정 허용 범위·설정 UI | `JudgmentSettingsConfig.cs`, `TimingRules.cs` | `Assets/Resources/JudgmentSettings.json`, `Editor/JudgmentSettingsProvider.cs` |
 | 채보 데이터·비트·맵 모델 | `RoomChart.cs`, `BeatChart.cs`, `MapChart.cs` | `MapTimelineEditing.cs`, `Assets/RoomChart/`, 비트·맵 검사 |
-| 마피아 단일 전체 채보 이관 | `Editor/MapChartMigration.cs`, `Editor/MafiaChartMigrationWindow.cs` | `Tools > Gun > Migrate Mafia To Single Chart`. 원본 보존·새 채보 생성·씬 연결. `Tests/RoomRhythm/MapChartMigrationChecks.cs` 및 개편 계획의 진행 상태 참고 |
+| 마피아 전체 채보·씬 연결 | `Assets/RoomChart/Stage1_Full.asset`, `Assets/Scenes/Stages/MafiaStage01.md` | 기존 맵 에디터로 전체 채보 편집. `Tests/RoomRhythm/MafiaStageChecks.cs`, `MafiaStageSceneChecks.py` |
 | 맵·채보 편집기 | `Editor/MapChartWindow.cs` | `MapChartCanvas.cs`, `MapChartTimeline.cs`, `MapChartSelection.cs`, `MapAudioPreview.cs`, `MapSceneStore.cs` (모두 `Editor/`) |
 | Inspector 편집 | `Editor/RoomInspectors.cs` | 편집 대상 데이터 모델 |
 | 방·문·적의 씬 연결과 표시 | `RoomBinding.cs`, `RoomDoor.cs`, `RoomEnemy.cs` | `RoomSession.cs`, `RoomCombat.cs` |
 | 조준·사격·대상 선택 | `RoomAim.cs`, `RoomCombat.cs`, `TargetSelection.cs` | `StageActionTarget.cs`, `StagePropTarget.cs` |
 | 카메라·판정 표시·사망/이동 연출 | `RoomCamera.cs`, `RoomFeedback.cs`, `JudgmentPresentation.cs` | `RoomCinematics.cs`, `RoomRestartTransition.cs`, `DebugTimingBar.cs` |
-| 스테이지 전용 진행·보스·구간 전환 | `StageDirector.cs`, `MafiaStageDirector.cs` | `StageSection.cs`, `StageResetState.cs`, 아래 확장 문서 |
-| 기존 마피아 등장 클립·미리보기 (개편 시 대체 예정) | `BossEntranceTimeline.cs`, `Editor/BossEntranceWindow.cs` | 현재 코드 유지. 이관·검증 순서: `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md` |
+| 스테이지 전용 진행·보스·재시작 | `StageDirector.cs`, `MafiaStageDirector.cs` | `StageResetState.cs`, 아래 확장 문서 |
 | 클리어 후 이동·안전지대 | `StageProgression.cs`, `SafeRoomController.cs` | `Assets/Scenes/README.md` |
 | 허브·곡 선택·턴테이블 | `StageSelectScene.cs`, `StageSelectSurface.cs`, `StageSelection.cs` | `Assets/Scenes/Hub/`, `Assets/Scenes/README.md` |
 | 최고 기록 저장 | `StageRecordStore.cs` | `Tests/RoomRhythm/StageRecordStoreChecks.cs` |
@@ -67,9 +65,9 @@ G.u.n/
 - 허브에서 자동 진행을 설정하려면 `StageSelectScene.cs`의 인스펙터 `Debug Mode`를 사용한다. 곡 START 시 `StageSelection.cs`를 통해 입장 스테이지의 `RoomSession`에 전달된다. 허브에는 `RoomSession`이 없어도 된다. 스테이지를 직접 실행할 때는 해당 `RoomSession`의 `Debug Mode`를 사용한다.
 - `RoomChart`는 음악·채보·맵 데이터를 담는 ScriptableObject다. 실제 채보 에셋은 `Assets/RoomChart/`에 있다.
 - `RoomSession`은 채보, `SongTimeline`, `RoomKeyboard`, `RoomRun`, 방 연결과 전투·피드백을 연결하는 런타임 진입점이다. 판정 문제는 `RoomRun`부터, 표시 문제는 해당 표시 컴포넌트부터 확인한다.
-- `StageDirector`는 스테이지별 진행 확장점이다. `RoomSession`과 연결하며, 구간 전환·재시작은 `StageSection`, `StageResetState` 및 관련 문서를 함께 확인한다.
-- 단일 채보 이관 도구를 적용하면 `MafiaStageDirector`는 채보 교체 없이 등장·전투·퇴장을 이어 간다. 미이관 씬은 기존 구간 방식을 유지한다. 기존 등장 편집기는 저장된 등장 기준 방 ID를 사용한다. 구간 API와 등장 전용 도구는 검증 후 제거할 대상으로 남아 있다.
-- `Editor/`는 Unity 편집용 코드다. 편집 화면 문제는 해당 편집기 파일, 저장·실행 데이터 문제는 연결된 모델로 범위를 좁힌다.
+- `StageDirector`는 스테이지별 진행 확장점이다. `RoomSession`의 한 채보 판정 결과에 반응하고 채보 완료 뒤 퇴장을 진행한다. 재시작은 `StageResetState` 및 `StageDirector.md`를 확인한다.
+- 마피아 씬과 허브는 `Stage1_Full.asset` 하나를 참조한다. 43개 방과 하나의 Combat을 사용하며 `guard15`에서 보스 등장 공백을 지난다. 구간 API·분할 채보·이관 도구는 제거했다. 등장 전용 편집 도구는 제거했고 현재 등장은 `MafiaStageDirector`가 처리한다. 노트 기반 연출 연결과 범용 연출 편집기는 후속 계획에 남아 있다.
+- `Editor/`는 Unity 편집용 코드다. 현재 진입점은 `Window > Gun > 시각적 맵 에디터`, `Tools > Gun > Select Stage Session`, `Project Settings > Gun`의 `Audio`·`Judgment`와 채보·세션 Inspector다. 편집 화면 문제는 해당 편집기 파일, 저장·실행 데이터 문제는 연결된 모델로 범위를 좁힌다.
 - `Tools/`는 오프라인 제작 도구이고 게임 실행 결과물은 `Assets/`에 있다. 제작 도구 재실행은 에셋을 덮어쓸 수 있으므로 해당 README와 수정 목적을 먼저 확인한다.
 
 ## 씬·콘텐츠·제작 작업
@@ -77,7 +75,7 @@ G.u.n/
 | 작업 | 경로와 안내 |
 | --- | --- |
 | 씬 역할·진행 흐름 | `Assets/Scenes/README.md`부터 확인. `Opening/`, `Tutorials/`, `SafeRooms/`, `Hub/`, `Stages/`, `Development/`, `Settings/`로 구분 |
-| 마피아 스테이지 | `Assets/Scenes/Stages/MafiaStage01.md`, `MafiaStageDirector.cs`, `Tools/Stages/BuildMafiaStage.py` |
+| 마피아 스테이지 | `Assets/Scenes/Stages/MafiaStage01.md`, `Assets/RoomChart/Stage1_Full.asset`, `MafiaStageDirector.cs` |
 | 플레이어·일반 적·보스 제작 | `Tools/Characters/README.md` → 해당 `BuildGeometricPlayer.py`, `BuildRegularEnemy.py`, `BuildRockBoss.py`, `BuildMafiaBoss.py` |
 | 다리 제작·외형 미리보기 | `Tools/Characters/BuildLegPrefabs.py`, `PreviewGeometricPlayer.py`; 같은 폴더의 `Templates/`, `Previews/` |
 | 보스·다리 편집 안내 | `Assets/Prefabs/Characters/`의 `MafiaBoss.md`, `RockBoss.md`, `TopDownLegs.md` |
@@ -87,10 +85,10 @@ G.u.n/
 
 ## 상세 문서와 검사
 
-- 전체 채보 기반 보스 연출 개편 계획: `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md`. 한 씬·한 전체 채보, 세 액션의 외형 대체, 이관·검증·제거 순서와 현재 진행 상태. 단일 채보 이관 코드·검사는 구현되었으며 실제 씬 적용과 Unity 검증은 별도 확인이 필요하다.
+- 전체 채보 기반 보스 연출 개편 계획: `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md`. 한 씬·한 전체 채보, 세 액션의 외형 대체, 이관·검증·제거 순서와 현재 진행 상태. 전체 채보·씬/허브 연결과 분할 구조 제거는 완료. 노트 기반 연출 연결·범용 연출 편집기 및 Unity 실행 검증은 남아 있다.
 - 편집기 사용법: `Assets/Scripts/채보 편집기 사용법.md`.
 - 기획 원문: `Assets/Scripts/기획.md`. 현재 구현 확인을 대신하지 않으며 이번 개편의 제작 흐름은 위 개편 계획을 따른다.
-- 확장 설명: `Assets/Scripts/RoomRhythm/`의 `MapExtensions.md` (방 크기·이동), `StageDirector.md` (전용 진행), `StageTargets.md` (장애물·표적), `StageSections.md` (구간·재시작).
+- 확장 설명: `Assets/Scripts/RoomRhythm/`의 `MapExtensions.md` (방 크기·이동), `StageDirector.md` (전용 진행·재시작), `StageTargets.md` (장애물·표적).
 - 검사 시작점: `Tests/RoomRhythm/README.md`, `Run-Checks.ps1`. C# 컴파일·로직 검사에는 생성된 프로젝트 참조와 .NET 런타임이 필요하다.
 - C# 검사: 같은 폴더의 `RoomRunChecks.cs`, `BeatChartChecks.cs`, `MapChartChecks.cs`, `OffsetCalibrationChecks.cs`, `SongOffsetChecks.cs`, `StageRecordStoreChecks.cs`, `MafiaStageChecks.cs` 중 변경 영역에 해당하는 검사를 확인한다.
 - 에셋 검사: 같은 폴더의 `StageSelectSceneChecks.py`, `RockBossChecks.py`, `MafiaStageSceneChecks.py`. 씬·프리팹 검사 요청 범위에서 선택하며 실제 실행 방법·의존성은 해당 검사에서 확인한다. Unity 플레이 모드 검증을 대신하지 않는다.
