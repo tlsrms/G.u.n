@@ -47,8 +47,60 @@ internal static class RoomRunChecks
         return false;
     }
 
+    private static void CheckActionResults()
+    {
+        var run = new RoomRun(new[] {
+            new MoveNote { destinationId = "next", direction = MoveDirection.Up,
+                hasDoor = true, doorTime = 1, moveDelay = 1 }
+        }, Window, .125, new[] {
+            new EnemyNote { id = "target", roomId = "next", time = 3 }
+        });
+        run.Begin();
+        Check(run.ShootDoor(0, 1), "event door accepted");
+        run.Press(MoveDirection.Up, 2);
+        run.Advance(2.5);
+        Check(run.ShootEnemy(0, 3), "event enemy accepted");
+        var kinds = new[] { RoomActionKind.DoorBroken, RoomActionKind.MoveStarted,
+            RoomActionKind.MoveArrived, RoomActionKind.EnemyDefeated };
+        var times = new[] { 1.0, 2.0, 2.125, 3.0 };
+        for (int i = 0; i < kinds.Length; i++)
+        {
+            Check(run.TryDequeueResult(out var result), "all batched actions retained");
+            Check(result.Kind == kinds[i] && result.Time == times[i], "ordered action and exact time");
+            Check(result.TargetId == (i == 3 ? "target" : "next"), "stable action target");
+        }
+        Check(!run.TryDequeueResult(out _), "actions delivered once");
+        Check(run.Phase == RunPhase.Cleared && run.JudgmentVersion == 3, "events preserve score and completion");
+        run.Begin();
+        run.Advance(1.5);
+        Check(run.TryDequeueResult(out var failure) && failure.Kind == RoomActionKind.Failed
+            && failure.Failure == FailureReason.MissedDoor && failure.TargetId == "next"
+            && failure.Time == 1.125, "timeout event carries deadline and target");
+        run.Advance(5);
+        Check(!run.TryDequeueResult(out _), "failure delivered once");
+        run.Begin();
+        run.ShootDoor(0, 1);
+        run.Reset();
+        Check(!run.TryDequeueResult(out _), "reset drops stale actions");
+    }
+
     public static void Main(string[] args)
     {
+        var sectionMoves = new[] { new MoveNote { destinationId = "section_end", time = 20, hasDoor = true, doorTime = 18, moveDelay = 2 } };
+        var sectionEnemies = new[] { new EnemyNote { id = "section_target", roomId = "start", time = 16 } };
+        Check(SectionTiming.CanEnter(sectionMoves, sectionEnemies, 15, Window), "section accepts entry before all windows");
+        Check(!SectionTiming.CanEnter(sectionMoves, sectionEnemies, 15.875, Window), "section rejects already-open enemy window");
+        Check(!SectionTiming.CanEnter(sectionMoves, null, 17.875, Window), "section rejects already-open door window");
+        Check(!SectionTiming.CanEnter(new[] { new MoveNote { time = 20 } }, null, 19.875, Window), "section rejects already-open movement window");
+        Check(!SectionTiming.CanEnter(sectionMoves, null, double.NaN, Window), "section rejects invalid clock");
+        Check(!SectionTiming.CanEnter(Array.Empty<MoveNote>(), null, 0, Window), "empty chart cannot become an action section");
+        var absoluteRun = new RoomRun(new[] { new MoveNote { destinationId = "next", time = 20, direction = MoveDirection.Up } }, Window, .25);
+        absoluteRun.Begin(); absoluteRun.Advance(15);
+        absoluteRun.Press(MoveDirection.Up, 14);
+        Check(absoluteRun.Phase == RunPhase.Waiting && absoluteRun.JudgmentVersion == 0, "old section input cannot affect new run");
+        absoluteRun.Press(MoveDirection.Up, 20); absoluteRun.Advance(20.25);
+        Check(absoluteRun.Phase == RunPhase.Cleared && absoluteRun.AccuracyPercent == 100, "new section runs on absolute song time");
+        CheckActionResults();
         var accuracyRun = new RoomRun(new[] {
             new MoveNote { destinationId = "next", hasDoor = true, doorTime = 2, moveDelay = 1 }
         }, Window, .125, new[] {
@@ -323,6 +375,12 @@ internal static class RoomRunChecks
         Check(TargetSelection.Select(new[] { new AimCandidate(5, 1, 0), new AimCandidate(2, 3, 0) }, 1, 0, 45) == 2,
             "angle ties use stable note id");
         Check(TargetSelection.Select(Array.Empty<AimCandidate>(), 1, 0, 45) == -1, "empty sector");
+        Check(TargetSelection.Select(new[] { new AimCandidate(3, 0, 0, 2), new AimCandidate(4, 2, 0, 3) }, 1, 0, 45) == 3,
+            "projectile at player center remains interceptable on its hit beat");
+        Check(TargetSelection.Select(new[] { new AimCandidate(3, 0, 2, 2) }, 1, 0, 45) == -1,
+            "moving target outside current aim cone is unavailable");
+        Check(TargetSelection.Select(new[] { new AimCandidate(3, 2, 0, 2) }, 1, 0, 45) == 3,
+            "same moving target becomes selectable when its sampled position enters cone");
         Check(TargetSelection.Select(new[] { new AimCandidate(0, 1, .99) }, 1, 0, 45) == 0, "inside cone edge");
         Check(TargetSelection.Select(new[] { new AimCandidate(0, 1, 1) }, 1, 0, 45) == 0, "inclusive cone edge");
         Check(TargetSelection.Select(new[] { new AimCandidate(0, 1, 1.01) }, 1, 0, 45) == -1, "outside cone edge");

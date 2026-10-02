@@ -7,6 +7,10 @@ namespace Gun.RoomRhythm
     {
         public string id;
         public int x, y;
+        public float width, height, offsetX, offsetY;
+        public double moveDuration;
+        public MovementEase moveEase;
+        public double Duration(double fallback) => moveDuration == 0 ? fallback : moveDuration;
         public double hitBeat = 8, frameBeat = 4;
         // Legacy fields are retained only to migrate existing saved drafts.
         public string groupId;
@@ -117,8 +121,23 @@ namespace Gun.RoomRhythm
             }
             groups = Array.Empty<MapGroup>();
         }
-        public float WorldX(MapRoom room) => originX + room.x * roomSize;
-        public float WorldY(MapRoom room) => originY + room.y * roomSize;
+        public float WorldX(MapRoom room) => originX + room.x * roomSize + room.offsetX;
+        public float WorldY(MapRoom room) => originY + room.y * roomSize + room.offsetY;
+        public float Width(MapRoom room) => room.width == 0 ? roomSize : room.width;
+        public float Height(MapRoom room) => room.height == 0 ? roomSize : room.height;
+        public bool Connected(MapRoom a, MapRoom b) =>
+            Math.Abs(WorldY(a) - WorldY(b)) < .001f && Math.Abs(Math.Abs(WorldX(a) - WorldX(b)) - (Width(a) + Width(b)) * .5f) < .001f
+            || Math.Abs(WorldX(a) - WorldX(b)) < .001f && Math.Abs(Math.Abs(WorldY(a) - WorldY(b)) - (Height(a) + Height(b)) * .5f) < .001f;
+        public bool Overlaps(MapRoom a, MapRoom b) =>
+            Math.Abs(WorldX(a) - WorldX(b)) < (Width(a) + Width(b)) * .5f - .001f
+            && Math.Abs(WorldY(a) - WorldY(b)) < (Height(a) + Height(b)) * .5f - .001f;
+        public void Attach(MapRoom room, MapRoom previous, MoveDirection direction)
+        {
+            float dx = direction == MoveDirection.Right ? 1 : direction == MoveDirection.Left ? -1 : 0;
+            float dy = direction == MoveDirection.Up ? 1 : direction == MoveDirection.Down ? -1 : 0;
+            room.offsetX = WorldX(previous) + dx * (Width(previous) + Width(room)) * .5f - originX - room.x * roomSize;
+            room.offsetY = WorldY(previous) + dy * (Height(previous) + Height(room)) * .5f - originY - room.y * roomSize;
+        }
         public MapRoom[] OrderedRooms()
         {
             var ordered = (MapRoom[])rooms.Clone();
@@ -144,7 +163,7 @@ namespace Gun.RoomRhythm
         {
             var ordered = OrderedRooms(); int index = Array.IndexOf(ordered, room);
             return index >= 0 && index + 1 < ordered.Length
-                ? ordered[index + 1].hitBeat + movementSeconds * settings.bpm / 60
+                ? ordered[index + 1].hitBeat + ordered[index + 1].Duration(movementSeconds) * settings.bpm / 60
                 : double.PositiveInfinity;
         }
         public void ValidateRoomReuse(double movementSeconds)
@@ -153,7 +172,7 @@ namespace Gun.RoomRhythm
             for (int i = 1; i < ordered.Length; i++)
                 for (int j = 0; j < i; j++)
                 {
-                    if (ordered[i].x != ordered[j].x || ordered[i].y != ordered[j].y) continue;
+                    if (!Overlaps(ordered[i], ordered[j])) continue;
                     // An early visual start is legal: the occupied tile postpones its rendering.
                     // Reject only when even the earliest departure misses the next judgment window.
                     double earliestFree = DepartureBeat(ordered[j], movementSeconds) - settings.toleranceBeats;
@@ -172,7 +191,7 @@ namespace Gun.RoomRhythm
             foreach (var previous in OrderedRooms())
             {
                 if (previous == room) break;
-                if (previous.x == room.x && previous.y == room.y)
+                if (Overlaps(previous, room))
                     start = Math.Max(start, DepartureBeat(previous, movementSeconds));
             }
             return start;
@@ -234,6 +253,9 @@ namespace Gun.RoomRhythm
             {
                 Require(room != null && !string.IsNullOrWhiteSpace(room.id) && !rooms.ContainsKey(room.id), "방 ID가 없거나 중복됩니다.");
                 rooms.Add(room.id, room);
+                Require(Finite(map.Width(room)) && map.Width(room) > 0 && Finite(map.Height(room)) && map.Height(room) > 0
+                    && Finite(map.WorldX(room)) && Finite(map.WorldY(room)), "Invalid room dimensions/position: " + room.id);
+                Require(Finite(room.moveDuration) && room.moveDuration >= 0 && Enum.IsDefined(typeof(MovementEase), room.moveEase), "Invalid movement profile: " + room.id);
             }
             Require(rooms.ContainsKey(s.startingRoomId ?? ""), "시작 방을 지정하세요.");
             var moves = new List<MapRoom>();
@@ -243,9 +265,11 @@ namespace Gun.RoomRhythm
             MapRoom previous = rooms[s.startingRoomId];
             foreach (var room in moves)
             {
-                long dx = (long)room.x - previous.x, dy = (long)room.y - previous.y;
-                Require(Math.Abs(dx) + Math.Abs(dy) == 1, "시간순 다음 방은 바로 옆 칸이어야 합니다: " + room.id);
-                var direction = dx == 1 ? MoveDirection.Right : dx == -1 ? MoveDirection.Left : dy == 1 ? MoveDirection.Up : MoveDirection.Down;
+                double dx = map.WorldX(room) - map.WorldX(previous), dy = map.WorldY(room) - map.WorldY(previous);
+                bool horizontal = Math.Abs(dy) < .001 && Math.Abs(Math.Abs(dx) - (map.Width(room) + map.Width(previous)) * .5) < .001;
+                bool vertical = Math.Abs(dx) < .001 && Math.Abs(Math.Abs(dy) - (map.Height(room) + map.Height(previous)) * .5) < .001;
+                Require(horizontal || vertical, "시간순 다음 방은 중심축을 맞추고 변이 맞닿아야 합니다: " + room.id);
+                var direction = horizontal ? (dx > 0 ? MoveDirection.Right : MoveDirection.Left) : (dy > 0 ? MoveDirection.Up : MoveDirection.Down);
                 Frame(s, map.AppearanceBeat(room), map.AppearanceBeat(room), room.hitBeat, "방 " + map.RoomLabel(room));
                 notes.Add(new BeatNote { kind = BeatNoteKind.Move, roomId = room.id, beat = room.hitBeat, moveDirection = direction });
                 if (room.door)
@@ -271,6 +295,8 @@ namespace Gun.RoomRhythm
             for (int i = 0; i < result.Moves.Length; i++)
             {
                 var room = rooms[result.Moves[i].destinationId];
+                result.Moves[i].duration = room.moveDuration;
+                result.Moves[i].ease = room.moveEase;
                 result.Moves[i].customAppearance = true;
                 result.Moves[i].appearanceTime = result.Moves[i].appearTime = s.Seconds(map.AppearanceBeat(room));
                 result.Moves[i].frameStartTime = result.Moves[i].appearanceTime;

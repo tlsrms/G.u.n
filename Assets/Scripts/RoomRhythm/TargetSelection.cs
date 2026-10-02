@@ -23,9 +23,13 @@ namespace Gun.RoomRhythm
             foreach (AimCandidate candidate in candidates)
             {
                 double length = Math.Sqrt(candidate.X * candidate.X + candidate.Y * candidate.Y);
-                if (length <= 0) continue;
-                double dot = (candidate.X * aimX + candidate.Y * aimY) / (length * aimLength);
-                if (dot + 1e-10 < minimum) continue;
+                // A projectile can reach the player's center exactly on its hit beat.
+                // At that point there is no direction to exclude from the aiming cone.
+                if (length > 1e-8)
+                {
+                    double dot = (candidate.X * aimX + candidate.Y * aimY) / (length * aimLength);
+                    if (dot + 1e-10 < minimum) continue;
+                }
                 if (candidate.HitTime < best || (candidate.HitTime == best && (selected < 0 || candidate.Id < selected)))
                 { best = candidate.HitTime; selected = candidate.Id; }
             }

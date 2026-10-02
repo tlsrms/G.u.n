@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,7 +14,7 @@ namespace Gun.RoomRhythm.Editor
             RoomSession match = null;
             foreach (var session in UnityEngine.Object.FindObjectsByType<RoomSession>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (session.Chart != chart) continue;
+                if (!session.OwnsChart(chart)) continue;
                 if (match != null) throw new ArgumentException("이 채보를 사용하는 Session이 여러 개입니다. 편집할 씬 하나만 열어 주세요.");
                 match = session;
             }
@@ -30,7 +30,7 @@ namespace Gun.RoomRhythm.Editor
                     sessions.AddRange(root.GetComponentsInChildren<RoomSession>(true));
             if (sessions.Count == 1) return sessions[0];
             if (sessions.Count == 0) return Session(chart);
-            var matches = sessions.FindAll(session => session.Chart == chart);
+            var matches = sessions.FindAll(session => session.OwnsChart(chart));
             if (matches.Count == 1) return matches[0];
             throw new ArgumentException("활성 씬에 Room Session이 여러 개여서 적용 대상을 정할 수 없습니다. 적용할 Session이 하나인 씬을 활성화하세요.");
         }
@@ -58,7 +58,8 @@ namespace Gun.RoomRhythm.Editor
         internal static MapChart Import(RoomChart chart)
         {
             var session = Session(chart);
-            var bindings = References<RoomBinding>(session, "rooms");
+            var section = session.SectionFor(chart);
+            var bindings = section != null ? section.rooms : References<RoomBinding>(session, "rooms");
             var start = Array.Find(bindings, r => r != null && r.Id == chart.startingRoomId);
             if (start == null) throw new ArgumentException("시작 방 연결이 없습니다.");
             var map = new MapChart { settings = BeatChartCompiler.Import(chart.bpm, chart.Timing, chart.roomLeadTime, chart.enemyLeadTime, chart.moves, chart.enemies),
@@ -73,9 +74,10 @@ namespace Gun.RoomRhythm.Editor
                 string groupId = "group_" + binding.Id;
                 groups.Add(new MapGroup { id = groupId, name = "Bundle", appearBeat = map.settings.Beat(appearance) });
                 float gx = (binding.Center.x - start.Center.x) / map.roomSize, gy = (binding.Center.y - start.Center.y) / map.roomSize;
-                if (Mathf.Abs(gx - Mathf.Round(gx)) > .001f || Mathf.Abs(gy - Mathf.Round(gy)) > .001f || Mathf.Abs(binding.SideLength - map.roomSize) > .001f)
-                    throw new ArgumentException("같은 크기의 정사각 격자 방만 가져올 수 있습니다.");
                 rooms.Add(new MapRoom { id = binding.Id, x = Mathf.RoundToInt(gx), y = Mathf.RoundToInt(gy), groupId = groupId,
+                    width = binding.Size.x, height = binding.Size.y,
+                    offsetX = (gx - Mathf.Round(gx)) * map.roomSize, offsetY = (gy - Mathf.Round(gy)) * map.roomSize,
+                    moveDuration = note.duration, moveEase = note.ease,
                     hitBeat = map.settings.Beat(note.HitTime), frameBeat = map.settings.Beat(note.customAppearance ? note.frameStartTime : appearance), door = note.hasDoor,
                     doorBeat = map.settings.Beat(note.doorTime), doorFrameBeat = map.settings.Beat(note.customAppearance ? note.doorFrameStartTime : appearance) });
             }
@@ -101,11 +103,14 @@ namespace Gun.RoomRhythm.Editor
             if (chart.mapDraftMusic == null) throw new ArgumentException("곡 설정 탭에서 음악을 지정하세요.");
             var map = chart.mapDraft;
             var compiled = MapChartCompiler.Compile(map, chart.moveDuration, chart.enemyReadTime, chart.mapDraftMusic.length, chart.judgmentLineWidth);
-            if (!(chart.roomFrameStartSize > map.roomSize) || float.IsInfinity(chart.roomFrameStartSize))
-                throw new ArgumentException("방 판정선 시작 크기는 방 한 변보다 큰 유한한 값이어야 합니다.");
-            if (!(chart.passageWidth > 0 && chart.passageWidth < map.roomSize - chart.judgmentLineWidth)
-                || !(chart.aimRadius + .38f + chart.enemyLineWidth / 2 < map.roomSize / 2))
-                throw new ArgumentException("방 크기는 통로와 적 배치 반경보다 충분히 커야 합니다.");
+            foreach (var room in map.rooms)
+            {
+                if (!(chart.roomFrameStartSize > Mathf.Max(map.Width(room), map.Height(room))) || float.IsInfinity(chart.roomFrameStartSize))
+                    throw new ArgumentException("방 판정선 시작 크기는 방 한 변보다 큰 유한한 값이어야 합니다.");
+                if (!(chart.passageWidth > 0 && chart.passageWidth < Mathf.Min(map.Width(room), map.Height(room)) - chart.judgmentLineWidth)
+                    || !(chart.aimRadius + .38f + chart.enemyLineWidth / 2 < Mathf.Min(map.Width(room), map.Height(room)) / 2))
+                    throw new ArgumentException("방 크기는 통로와 적 배치 반경보다 충분히 커야 합니다.");
+            }
             return compiled;
         }
 
@@ -134,9 +139,12 @@ namespace Gun.RoomRhythm.Editor
             var session = ApplicationSession(chart);
             var scene = session.gameObject.scene;
             if (string.IsNullOrEmpty(scene.path) || !scene.isLoaded) throw new ArgumentException("먼저 대상 씬을 파일로 저장하세요.");
-            var oldRooms = References<RoomBinding>(session, "rooms");
-            var combat = Reference<RoomCombat>(session, "combat");
+            var section = session.SectionFor(chart);
+            var oldRooms = section != null ? section.rooms : References<RoomBinding>(session, "rooms");
+            session.ValidateSectionOwnership(section);
+            var combat = section != null ? section.combat : Reference<RoomCombat>(session, "combat");
             if (combat == null) throw new ArgumentException("Room Combat 연결이 없습니다.");
+            combat.ValidateStageTargetOwnership(oldRooms);
             var oldEnemies = References<RoomEnemy>(combat, "enemies");
             var template = Array.Find(oldRooms, r => r != null && r.Door != null && Reference<Transform>(r, "judgmentFrame") != null);
             if (template == null) throw new ArgumentException("씬에 문과 판정선을 갖춘 방 템플릿이 하나 필요합니다.");
@@ -158,7 +166,7 @@ namespace Gun.RoomRhythm.Editor
                 Undo.RecordObject(chart, "게임 채보 적용");
                 Undo.RecordObject(session, "Room Session 채보 연결");
                 var sessionFields = new SerializedObject(session);
-                sessionFields.FindProperty("chart").objectReferenceValue = chart;
+                if (section == null) sessionFields.FindProperty("chart").objectReferenceValue = chart;
                 sessionFields.ApplyModifiedProperties();
                 var map = chart.mapDraft;
                 map.SynchronizeRoomStarts();
@@ -176,7 +184,8 @@ namespace Gun.RoomRhythm.Editor
                     foreach (var embedded in clone.GetComponentsInChildren<RoomEnemy>(true)) Undo.DestroyObjectImmediate(embedded.gameObject);
                     clone.transform.SetPositionAndRotation(new Vector3(map.WorldX(room), map.WorldY(room), 0), Quaternion.identity);
                     var binding = clone.GetComponent<RoomBinding>(); Id(binding, "roomId", room.id);
-                    var fields = new SerializedObject(binding); fields.FindProperty("sideLength").floatValue = map.roomSize; fields.ApplyModifiedProperties();
+                    var fields = new SerializedObject(binding); fields.FindProperty("sideLength").floatValue = map.roomSize;
+                    fields.FindProperty("dimensions").vector2Value = new Vector2(map.Width(room), map.Height(room)); fields.ApplyModifiedProperties();
                     var route = map.OrderedRooms();
                     int routeIndex = Array.IndexOf(route, room);
                     MoveDirection? exit = routeIndex + 1 < route.Length
@@ -185,15 +194,15 @@ namespace Gun.RoomRhythm.Editor
                     binding.Configure(chart, exit, routeIndex > 0 ? (MoveDirection)(((int)entranceNote.direction + 2) % 4) : (MoveDirection?)null);
                     binding.Present(true, routeIndex == 0, false, 1, false, 0, 0);
                     var surfaces = References<SpriteRenderer>(binding, "surfaces");
-                    if (surfaces.Length > 0) surfaces[0].transform.localScale = new Vector3(map.roomSize, map.roomSize, 1);
+                    if (surfaces.Length > 0) surfaces[0].transform.localScale = new Vector3(map.Width(room), map.Height(room), 1);
                     Reference<GameObject>(binding, "visuals").SetActive(true);
                     Transform frame = Reference<Transform>(binding, "judgmentFrame");
-                    frame.gameObject.SetActive(false); Square(References<SpriteRenderer>(binding, "frameEdges"), map.roomSize, chart.judgmentLineWidth);
+                    frame.gameObject.SetActive(false); Square(References<SpriteRenderer>(binding, "frameEdges"), binding.Size, chart.judgmentLineWidth);
                     binding.RefreshFrameDirections();
                     MoveNote note = Array.Find(compiled.Moves, n => n.destinationId == room.id);
                     Vector2 toward = Direction(note.direction);
                     var door = binding.Door;
-                    door.transform.position = binding.Center - (Vector3)(toward * map.roomSize * .5f);
+                    door.transform.position = binding.Center - (Vector3)(toward * binding.Extent(note.direction) * .5f);
                     door.transform.rotation = Quaternion.Euler(0, 0, toward.x != 0 ? 90 : 0);
                     door.Present(room.door && room.id != map.settings.startingRoomId, false, 1, chart.doorCloseDuration, note.doorTime, 0, showFrame: false);
                     newRooms.Add(binding);
@@ -223,9 +232,11 @@ namespace Gun.RoomRhythm.Editor
                         Undo.RegisterCreatedObjectUndo(retained, "적 템플릿 보존"); root.SetActive(false);
                     }
                 }
-                References(session, "rooms", newRooms.ToArray()); References(combat, "enemies", newEnemies.ToArray());
+                if (section == null) References(session, "rooms", newRooms.ToArray());
+                else { section.rooms = newRooms.ToArray(); EditorUtility.SetDirty(session); }
+                References(combat, "enemies", newEnemies.ToArray());
                 var player = Reference<Transform>(session, "player");
-                if (player != null)
+                if (player != null && section == null)
                 {
                     Undo.RecordObject(player, "시작 위치"); var start = map.Room(map.settings.startingRoomId);
                     player.position = new Vector3(map.WorldX(start), map.WorldY(start), player.position.z);
@@ -233,13 +244,13 @@ namespace Gun.RoomRhythm.Editor
                 foreach (var root in scene.GetRootGameObjects())
                     foreach (var camera in root.GetComponentsInChildren<RoomCamera>(true))
                     {
-                        if (Reference<Transform>(camera, "player") != player) continue;
+                        if (section != null || Reference<Transform>(camera, "player") != player) continue;
                         var fields = new SerializedObject(camera); fields.FindProperty("session").objectReferenceValue = session; fields.ApplyModifiedProperties();
                         var pose = map.CameraAt(map.settings.Beat(0), player.position.x, player.position.y);
                         Undo.RecordObject(camera.transform, "초기 카메라 위치"); camera.transform.position = new Vector3(pose.x, pose.y, camera.transform.position.z);
                         var view = camera.GetComponent<Camera>(); if (view != null) { Undo.RecordObject(view, "초기 카메라 크기"); view.orthographicSize = pose.size; }
                     }
-                session.ValidateConfiguration(); // Original objects still exist until the complete replacement is valid.
+                session.ValidateChartConfiguration(chart); // Original objects still exist until the complete replacement is valid.
                 foreach (var room in oldRooms) Undo.DestroyObjectImmediate(room.gameObject);
                 foreach (var enemy in oldEnemies) if (enemy != null) Undo.DestroyObjectImmediate(enemy.gameObject);
                 chart.NotifyChartChanged(); EditorUtility.SetDirty(chart);
@@ -263,7 +274,7 @@ namespace Gun.RoomRhythm.Editor
                     throw new ArgumentException("템플릿 바깥을 참조합니다: " + component.name + "/" + iterator.propertyPath);
             }
         }
-        private static void Square(SpriteRenderer[] edges, float size, float width)
+        private static void Square(SpriteRenderer[] edges, Vector2 size, float width)
         {
             for (int i = 0; i < edges.Length; i++)
             {
@@ -272,8 +283,8 @@ namespace Gun.RoomRhythm.Editor
                 bool collapsed = p.sqrMagnitude <= 0.0001f;
                 bool horizontal = collapsed ? i % 2 == 0 : Mathf.Abs(p.y) > Mathf.Abs(p.x);
                 float side = collapsed ? (i < 2 ? 1 : -1) : horizontal ? Mathf.Sign(p.y) : Mathf.Sign(p.x);
-                edge.transform.localPosition = horizontal ? new Vector3(0, side * size / 2, 0) : new Vector3(side * size / 2, 0, 0);
-                edge.transform.localScale = horizontal ? new Vector3(size + width, width, 1) : new Vector3(width, size + width, 1);
+                edge.transform.localPosition = horizontal ? new Vector3(0, side * size.y / 2, 0) : new Vector3(side * size.x / 2, 0, 0);
+                edge.transform.localScale = horizontal ? new Vector3(size.x + width, width, 1) : new Vector3(width, size.y + width, 1);
             }
         }
     }

@@ -6,6 +6,7 @@ namespace Gun.RoomRhythm
     {
         [SerializeField] private string roomId;
         [SerializeField, Min(0.1f)] private float sideLength = 6f;
+        [SerializeField] private Vector2 dimensions;
         [SerializeField] private GameObject visuals;
         [SerializeField] private SpriteRenderer[] surfaces;
         [SerializeField] private Transform judgmentFrame;
@@ -21,24 +22,30 @@ namespace Gun.RoomRhythm
         public Vector3 Center => transform.position;
         public RoomDoor Door => door;
         public float SideLength => sideLength;
+        public Vector2 Size => new Vector2(dimensions.x == 0 ? sideLength : dimensions.x, dimensions.y == 0 ? sideLength : dimensions.y);
+        public float Extent(MoveDirection direction) => direction == MoveDirection.Left || direction == MoveDirection.Right ? Size.x : Size.y;
+        public bool Overlaps(RoomBinding other) => Mathf.Abs(Center.x - other.Center.x) < (Size.x + other.Size.x) * .5f - .001f
+            && Mathf.Abs(Center.y - other.Center.y) < (Size.y + other.Size.y) * .5f - .001f;
         public void Configure(RoomChart settings, MoveDirection? exit = null, MoveDirection? entrance = null)
         {
-            if (!(settings.roomFrameStartSize > sideLength))
+            if (!(settings.roomFrameStartSize > Mathf.Max(Size.x, Size.y)))
                 throw new System.ArgumentException("방 판정선 시작 크기는 방 한 변보다 커야 합니다.");
             chart = settings;
             exitDirection = exit; entranceDirection = entrance;
             if (baseColors == null || baseColors.Length != surfaces.Length) Awake();
             completed = false; flashAt = -10;
-            float half = sideLength * 0.5f;
-            float length = half - chart.passageWidth * 0.5f + chart.judgmentLineWidth * 0.5f;
-            float center = (half + chart.passageWidth * 0.5f + chart.judgmentLineWidth * 0.5f) * 0.5f;
+            surfaces[0].transform.localScale = new Vector3(Size.x, Size.y, 1);
             for (int i = 1; i < surfaces.Length; i++)
             {
                 Transform wall = surfaces[i].transform;
                 Vector3 p = wall.localPosition;
                 bool horizontal = wall.localScale.x > wall.localScale.y;
-                wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * center, Mathf.Sign(p.y) * half, 0)
-                    : new Vector3(Mathf.Sign(p.x) * half, Mathf.Sign(p.y) * center, 0);
+                float half = (horizontal ? Size.x : Size.y) * .5f;
+                float boundary = (horizontal ? Size.y : Size.x) * .5f;
+                float length = half - chart.passageWidth * .5f + chart.judgmentLineWidth * .5f;
+                float center = (half + chart.passageWidth * .5f + chart.judgmentLineWidth * .5f) * .5f;
+                wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * center, Mathf.Sign(p.y) * boundary, 0)
+                    : new Vector3(Mathf.Sign(p.x) * boundary, Mathf.Sign(p.y) * center, 0);
                 wall.localScale = horizontal ? new Vector3(length, chart.judgmentLineWidth, 1)
                     : new Vector3(chart.judgmentLineWidth, length, 1);
             }
@@ -47,7 +54,7 @@ namespace Gun.RoomRhythm
         }
         public void ValidateReferences(bool needsFrame)
         {
-            if (!(sideLength > 0) || float.IsInfinity(sideLength))
+            if (!(Size.x > 0 && Size.y > 0) || float.IsInfinity(Size.x) || float.IsInfinity(Size.y))
                 throw new System.InvalidOperationException("Invalid room size: " + roomId);
             if (visuals == null || surfaces == null || surfaces.Length == 0)
                 throw new System.InvalidOperationException("Missing room visuals: " + roomId);
@@ -95,29 +102,32 @@ namespace Gun.RoomRhythm
                     MoveDirection side = horizontal ? (p.y > 0 ? MoveDirection.Up : MoveDirection.Down)
                         : (p.x > 0 ? MoveDirection.Right : MoveDirection.Left);
                     bool open = !sealExit && (side == exitDirection || !current && side == entranceDirection);
-                    float half = sideLength * .5f;
+                    float half = (horizontal ? Size.x : Size.y) * .5f;
+                    float boundary = (horizontal ? Size.y : Size.x) * .5f;
                     float gap = open ? chart.passageWidth * .5f : 0;
                     float length = half - gap + chart.judgmentLineWidth * .5f;
                     float middle = (half + gap + chart.judgmentLineWidth * .5f) * .5f;
-                    wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * middle, Mathf.Sign(p.y) * half, 0)
-                        : new Vector3(Mathf.Sign(p.x) * half, Mathf.Sign(p.y) * middle, 0);
+                    wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * middle, Mathf.Sign(p.y) * boundary, 0)
+                        : new Vector3(Mathf.Sign(p.x) * boundary, Mathf.Sign(p.y) * middle, 0);
                     wall.localScale = horizontal ? new Vector3(length, chart.judgmentLineWidth, 1)
                         : new Vector3(chart.judgmentLineWidth, length, 1);
                 }
             }
             if (judgmentFrame == null) return;
             judgmentFrame.localScale = Vector3.one;
-            float radius = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
-                chart.roomFrameStartSize * .5f, sideLength * .5f);
+            float radiusX = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
+                chart.roomFrameStartSize * .5f, Size.x * .5f);
+            float radiusY = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
+                chart.roomFrameStartSize * .5f, Size.y * .5f);
             if (frameDirections == null || frameDirections.Length != frameEdges.Length) RefreshFrameDirections();
             for (int i = 0; i < frameEdges.Length; i++)
             {
                 SpriteRenderer edge = frameEdges[i];
                 Transform line = edge.transform;
                 bool horizontal = Mathf.Abs(frameDirections[i].y) > 0.5f;
-                line.localPosition = frameDirections[i] * radius;
-                line.localScale = horizontal ? new Vector3(radius * 2 + chart.judgmentLineWidth, chart.judgmentLineWidth, 1)
-                    : new Vector3(chart.judgmentLineWidth, radius * 2 + chart.judgmentLineWidth, 1);
+                line.localPosition = frameDirections[i] * (horizontal ? radiusY : radiusX);
+                line.localScale = horizontal ? new Vector3(radiusX * 2 + chart.judgmentLineWidth, chart.judgmentLineWidth, 1)
+                    : new Vector3(chart.judgmentLineWidth, radiusY * 2 + chart.judgmentLineWidth, 1);
                 float frameAlpha = frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress);
                 edge.color = future ? new Color(0.6f, 0.6f, 0.6f, frameAlpha) : new Color(0.3f, 1f, 0.8f, frameAlpha);
                 edge.color = RoomPalette.Tint(Color.Lerp(edge.color, Color.white, flash));

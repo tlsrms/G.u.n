@@ -49,6 +49,33 @@ namespace Gun.RoomRhythm
     }
 
     public enum MoveDirection { Up, Left, Down, Right }
+    public static class SectionTiming
+    {
+        public static bool CanEnter(MoveNote[] moves, EnemyNote[] enemies, double time, TimingWindow window)
+        {
+            if (moves == null || moves.Length == 0 || double.IsNaN(time) || double.IsInfinity(time)) return false;
+            foreach (var move in moves)
+                if (time >= move.HitTime - window.early || move.hasDoor && time >= move.doorTime - window.early) return false;
+            foreach (var enemy in enemies ?? Array.Empty<EnemyNote>())
+                if (time >= enemy.time - window.early) return false;
+            return true;
+        }
+    }
+    public enum MovementEase { Smooth, Linear, EaseIn, EaseOut }
+    public static class MovementProfile
+    {
+        public static double Evaluate(double progress, MovementEase ease)
+        {
+            double t = Math.Max(0, Math.Min(1, progress));
+            switch (ease)
+            {
+                case MovementEase.Linear: return t;
+                case MovementEase.EaseIn: return t * t;
+                case MovementEase.EaseOut: return 1 - (1 - t) * (1 - t);
+                default: return t * t * (3 - 2 * t);
+            }
+        }
+    }
     public enum TimingGrade { None, TooEarly, Early, Accurate, Late, TooLate }
     public enum EnemyDirection { Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft }
 
@@ -93,6 +120,10 @@ namespace Gun.RoomRhythm
     [Serializable]
     public struct MoveNote
     {
+        // Zero preserves the chart-wide duration in older assets.
+        public double duration;
+        public MovementEase ease;
+        public double Duration(double fallback) => duration == 0 ? fallback : duration;
         public string destinationId;
         public MoveDirection direction;
         public double time;

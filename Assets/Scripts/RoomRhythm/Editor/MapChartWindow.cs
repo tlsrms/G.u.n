@@ -223,7 +223,9 @@ namespace Gun.RoomRhythm.Editor
             propertiesScroll = EditorGUILayout.BeginScrollView(propertiesScroll);
             EditorGUILayout.LabelField("곡 설정", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(serialized.FindProperty("roomFrameStartSize"), new GUIContent("방 판정선 시작 크기"));
-            if (serialized.FindProperty("roomFrameStartSize").floatValue <= map.FindPropertyRelative("roomSize").floatValue)
+            float largestRoom = Map.roomSize;
+            foreach (var room in Map.rooms) largestRoom = Mathf.Max(largestRoom, Map.Width(room), Map.Height(room));
+            if (serialized.FindProperty("roomFrameStartSize").floatValue <= largestRoom)
                 EditorGUILayout.HelpBox("방 판정선 시작 크기를 방 한 변보다 크게 설정하세요.", MessageType.Error);
             EditorGUILayout.PropertyField(serialized.FindProperty("roomStartBrightness"), new GUIContent("방 초기 밝기"));
             EditorGUILayout.PropertyField(serialized.FindProperty("roomRevealStart"), new GUIContent("방 급등장 시작 비율"));
@@ -263,7 +265,7 @@ namespace Gun.RoomRhythm.Editor
             Field(settings, "startingRoomId", "시작 방 ID");
             EditorGUILayout.Space(); EditorGUILayout.LabelField("새 채보 기본값", EditorStyles.boldLabel);
             Field(settings, "roomLeadBeats", "방 판정선 선행 박"); Field(settings, "enemyLeadBeats", "적 등장 선행 박");
-            Field(map, "roomSize", "방 한 변 (월드 유닛)"); Field(map, "originX", "격자 원점 X"); Field(map, "originY", "격자 원점 Y");
+            Field(map, "roomSize", "기본 방 크기 / 격자 간격"); Field(map, "originX", "격자 원점 X"); Field(map, "originY", "격자 원점 Y");
             EditorGUILayout.Space(); EditorGUILayout.LabelField("카메라", EditorStyles.boldLabel);
             Field(map, "cameraTrack", "직접 만든 이동 이벤트 사용");
             Field(map, "cameraX", "초기 위치 X"); Field(map, "cameraY", "초기 위치 Y"); Field(map, "cameraSize", "초기 크기 (세로 반높이)");
@@ -369,18 +371,35 @@ namespace Gun.RoomRhythm.Editor
             serialized.Update(); var draft = serialized.FindProperty("mapDraft");
             var data = draft.FindPropertyRelative("rooms").GetArrayElementAtIndex(Array.IndexOf(Map.rooms, room));
             EditorGUILayout.LabelField(Map.RoomLabel(room), EditorStyles.boldLabel);
+            Field(data, "width", "가로 (0: 기본값)");
+            Field(data, "height", "세로 (0: 기본값)");
+            Field(data, "offsetX", "격자 기준 X 보정");
+            Field(data, "offsetY", "격자 기준 Y 보정");
             if (room.id != Map.settings.startingRoomId)
             {
                 Field(data, "appearBeat", "방·판정선 시작 박");
                 data.FindPropertyRelative("frameBeat").doubleValue = data.FindPropertyRelative("appearBeat").doubleValue;
 
                 Field(data, "hitBeat", "방 이동 정확 박");
+                Field(data, "moveDuration", "이동 시간/초 (0: 기본값)");
+                Field(data, "moveEase", "이동 속도 곡선");
                 EditorGUILayout.Space(); Field(data, "door", "입구 문");
                 if (data.FindPropertyRelative("door").boolValue)
                 { Field(data, "doorFrameBeat", "문 등장 박"); Field(data, "doorBeat", "문 사격 정확 박"); }
             }
             else EditorGUILayout.HelpBox("시작 방은 처음부터 표시됩니다.", MessageType.None);
             if (serialized.ApplyModifiedProperties()) message = null;
+            var route = Map.OrderedRooms();
+            int roomIndex = Array.IndexOf(route, room);
+            if (roomIndex > 0)
+            {
+                EditorGUILayout.LabelField("시간순 이전 방에 붙이기");
+                EditorGUILayout.BeginHorizontal();
+                foreach (MoveDirection direction in Enum.GetValues(typeof(MoveDirection)))
+                    if (GUILayout.Button(direction.ToString()))
+                        Edit("방 경계 연결", () => Map.Attach(room, route[roomIndex - 1], direction));
+                EditorGUILayout.EndHorizontal();
+            }
             EditorGUILayout.Space(); EditorGUILayout.LabelField("이 방 옆에 방 추가", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             string[] arrows = { "↑", "→", "↓", "←" };
@@ -495,7 +514,7 @@ namespace Gun.RoomRhythm.Editor
             if (!Map.settings.loopMusic) return end;
             // Repeated audio allows authored notes beyond one clip; leave editing room after them.
             double last = Map.settings.Beat(0);
-            foreach (var room in Map.rooms) last = Math.Max(last, room.hitBeat);
+            foreach (var room in Map.rooms) last = Math.Max(last, room.hitBeat + room.Duration(chart.moveDuration) * Map.settings.bpm / 60);
             foreach (var enemy in Map.enemies) last = Math.Max(last, enemy.hitBeat);
             foreach (var camera in Map.cameras) last = Math.Max(last, camera.beat + camera.duration);
             foreach (var shake in Map.shakes) last = Math.Max(last, shake.beat + shake.duration);

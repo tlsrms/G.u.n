@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Gun.RoomRhythm
 {
@@ -17,6 +17,7 @@ namespace Gun.RoomRhythm
         private SpriteRenderer player, roomFlash;
         private readonly SpriteRenderer[] shutters = new SpriteRenderer[8];
         private Vector3 origin, center, direction;
+        private Vector2 roomSize;
         private float side, passage, thickness, started;
         private bool combatFocus;
         private float focusChangedAt = -10, zoomFrom = 1;
@@ -88,7 +89,7 @@ namespace Gun.RoomRhythm
         {
             Death = run.Death; started = Time.unscaledTime; impact = false;
             executionEnemy = enemy; shotFired = false;
-            origin = position; center = room.Center; side = room.SideLength;
+            origin = position; center = room.Center; side = room.Extent(run.DeathDirection); roomSize = room.Size;
             passage = chart.passageWidth; thickness = chart.judgmentLineWidth;
             direction = run.DeathDirection == MoveDirection.Up ? Vector3.up : run.DeathDirection == MoveDirection.Down ? Vector3.down
                 : run.DeathDirection == MoveDirection.Left ? Vector3.left : Vector3.right;
@@ -115,7 +116,7 @@ namespace Gun.RoomRhythm
                 }
                 roomFlash.gameObject.SetActive(t < .24f);
                 roomFlash.transform.position = center;
-                RoomFeedback.Size(roomFlash, Vector2.one * side);
+                RoomFeedback.Size(roomFlash, roomSize);
                 roomFlash.color = DeathFlash(t);
             }
             else if (Death == DeathPresentation.Collision)
@@ -131,7 +132,7 @@ namespace Gun.RoomRhythm
                     var shutter = shutters[i]; shutter.gameObject.SetActive(t >= .28f);
                     Quaternion rotation = Quaternion.Euler(0, 0, (i / 2) * 90);
                     float offset = Mathf.Lerp(passage * .75f, passage * .25f, close) * (i % 2 == 0 ? -1 : 1);
-                    shutter.transform.position = center + rotation * new Vector3(offset, side * .5f, 0);
+                    shutter.transform.position = center + rotation * new Vector3(offset, (i / 2 % 2 == 0 ? roomSize.y : roomSize.x) * .5f, 0);
                     shutter.transform.rotation = rotation;
                     RoomFeedback.Size(shutter, new Vector2(passage * .5f, thickness));
                     shutter.color = Color.Lerp(Color.white, new Color(.75f, .75f, .75f), Mathf.Clamp01((t - .44f) / .15f));

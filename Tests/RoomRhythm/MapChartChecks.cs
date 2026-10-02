@@ -22,8 +22,60 @@ internal static class MapChartChecks
         enemies = new[] { new MapEnemy { id = "e", roomId = "north", direction = EnemyDirection.Right, hitBeat = 12, appearBeat = 9, frameBeat = 10 } }
     };
     private static MapChart WithLateFrame() { var map = Example(); map.rooms[1].frameBeat = 7.9; return map; }
+    private static void CheckRectangularMovement()
+    {
+        var map = Example();
+        Near(map.Width(map.rooms[0]), 6, "Legacy width fallback");
+        Near(map.Height(map.rooms[0]), 6, "Legacy height fallback");
+        map.rooms[1].width = 10; map.rooms[1].height = 18;
+        map.rooms[1].moveDuration = .4; map.rooms[1].moveEase = MovementEase.Linear;
+        map.rooms[2].width = 14; map.rooms[2].height = 8;
+        map.rooms[2].moveDuration = 1.2; map.rooms[2].moveEase = MovementEase.EaseIn;
+        map.Attach(map.rooms[1], map.rooms[0], MoveDirection.Up);
+        map.Attach(map.rooms[2], map.rooms[1], MoveDirection.Right);
+        Near(map.WorldY(map.rooms[1]), 12, "Unequal heights share boundary");
+        Near(map.WorldX(map.rooms[2]), 12, "Unequal widths share boundary");
+        Check(map.Connected(map.rooms[0], map.rooms[1]) && map.Connected(map.rooms[1], map.rooms[2]), "Mixed rectangles connect");
+        Check(!map.Overlaps(map.rooms[0], map.rooms[1]), "Touching edges are not overlap");
+        var compiled = Compile(map);
+        Near(compiled.Moves[0].Duration(.18), .4, "First move duration compiled");
+        Check(compiled.Moves[1].ease == MovementEase.EaseIn, "Move ease compiled");
+        var run = new RoomRun(compiled.Moves, compiled.Timing, .18, compiled.Enemies);
+        run.Begin(); run.ShootDoor(0, 3); run.Press(MoveDirection.Up, 4);
+        Near(run.MoveEndsAt, 4.4, "Runtime uses first duration");
+        run.Advance(4.3); Check(run.Phase == RunPhase.Moving, "First movement not prematurely completed");
+        run.Advance(4.4); Check(run.CompletedMoves == 1, "First movement arrives on time");
+        run.ShootEnemy(0, 6); run.Press(MoveDirection.Right, 8);
+        Near(run.MoveEndsAt, 9.2, "Runtime uses second duration");
+        run.Advance(9.1); Check(run.Phase == RunPhase.Moving, "Long movement remains active");
+        run.Advance(9.2); Check(run.Phase == RunPhase.Cleared, "Long movement completes normally");
+        Near(map.DepartureBeat(map.rooms[1], .18), 18.4, "Preview departure uses outgoing duration");
+        Near(MovementProfile.Evaluate(.25, MovementEase.Linear), .25, "Linear movement");
+        Near(MovementProfile.Evaluate(.25, MovementEase.Smooth), .15625, "Legacy smooth movement");
+        Near(MovementProfile.Evaluate(.25, MovementEase.EaseIn), .0625, "Acceleration");
+        Near(MovementProfile.Evaluate(.25, MovementEase.EaseOut), .4375, "Deceleration");
+        foreach (MovementEase ease in Enum.GetValues(typeof(MovementEase)))
+        { Near(MovementProfile.Evaluate(-1, ease), 0, "Movement clamps before start"); Near(MovementProfile.Evaluate(2, ease), 1, "Movement clamps after end"); }
+        MapTimelineEditing.Duplicate(map, new[] { new MapTimelineItem(1, 1) });
+        var copy = map.rooms[3];
+        Check(copy.width == 10 && copy.height == 18 && copy.offsetY == 6
+            && copy.moveDuration == .4 && copy.moveEase == MovementEase.Linear, "Duplicate retains spatial and movement settings");
+        copy.offsetX += 1; copy.hitBeat = 24; map.SetRoomStart(copy, 0);
+        Check(map.Overlaps(copy, map.rooms[1]), "Partial rectangle overlap detected despite different centers");
+        Near(map.VisibleAppearanceBeat(copy, .18), map.DepartureBeat(map.rooms[2], .18), "Overlapping prior rectangles defer appearance until latest departure");
+        Reject(m => m.rooms[1].width = -1);
+        Reject(m => m.rooms[1].height = float.NaN);
+        Reject(m => m.rooms[1].offsetX = float.PositiveInfinity);
+        Reject(m => m.rooms[1].moveDuration = -1);
+        Reject(m => m.rooms[1].moveDuration = double.NaN);
+        Reject(m => m.rooms[1].moveEase = (MovementEase)99);
+        Reject(m => m.rooms[1].moveDuration = 10);
+        Reject(m => m.rooms[1].width = 10); // Its unchanged next room no longer shares the boundary.
+    }
+
     private static void CheckTimelineEditing()
     {
+        CheckRectangularMovement();
         var map = Example(); map.MigrateAppearance();
         map.cameras = new[] { new MapCameraKey { roomId = "north", beat = 4, duration = 2, x = 3 } };
         map.shakes = new[] { new MapShake { roomId = "north", beat = 5, duration = 3, strength = .7f } };

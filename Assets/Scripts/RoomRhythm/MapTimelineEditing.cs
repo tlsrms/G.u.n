@@ -80,6 +80,8 @@ namespace Gun.RoomRhythm
                 if (item.Lane > 1 || roomIndices.ContainsKey(item.Index)) continue;
                 var source = map.rooms[item.Index];
                 var copy = new MapRoom { id = "room_" + Guid.NewGuid().ToString("N"), x = source.x, y = source.y,
+                    width = source.width, height = source.height, offsetX = source.offsetX, offsetY = source.offsetY,
+                    moveDuration = source.moveDuration, moveEase = source.moveEase,
                     hitBeat = source.hitBeat, door = source.door, doorBeat = source.doorBeat, doorFrameBeat = source.doorFrameBeat };
                 map.SetRoomStart(copy, map.AppearanceBeat(source));
                 roomIndices.Add(item.Index, Append(ref map.rooms, copy)); roomCopies.Add(source.id, copy.id);

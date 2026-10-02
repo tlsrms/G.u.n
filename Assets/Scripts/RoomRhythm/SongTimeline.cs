@@ -14,6 +14,7 @@ namespace Gun.RoomRhythm
         private bool playing;
         private double inputOffset;
         public double Time => playing ? AudioSettings.dspTime - dspOrigin : frozenTime;
+        public double JudgmentTime => Time - inputOffset;
 
         public void ValidateReferences()
         {

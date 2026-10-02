@@ -9,6 +9,22 @@ namespace Gun.RoomRhythm
     public sealed class RoomCombat : MonoBehaviour
     {
         [SerializeField] private RoomEnemy[] enemies;
+        [SerializeField] private StageActionTarget[] stageTargets = Array.Empty<StageActionTarget>();
+        private StageActionTarget[] shotOverrides, doorOverrides;
+        public StageActionTarget FindOverride(StageTargetRole role, string id)
+            => Array.Find(stageTargets ?? Array.Empty<StageActionTarget>(), t => t != null && t.Role == role && t.Id == id);
+
+        public void ValidateStageTargetOwnership(RoomBinding[] rebuiltRooms)
+        {
+            foreach (var target in stageTargets ?? Array.Empty<StageActionTarget>())
+            {
+                if (target == null) throw new InvalidOperationException("Missing stage target reference.");
+                foreach (var room in rebuiltRooms)
+                    if (room != null) target.ValidateOutside(room.transform);
+                foreach (var enemy in enemies ?? Array.Empty<RoomEnemy>())
+                    if (enemy != null) target.ValidateOutside(enemy.transform);
+            }
+        }
         [SerializeField] private Transform selectedEnemyDot;
         [SerializeField] private Transform player;
         private readonly List<AimCandidate> candidates = new List<AimCandidate>();
@@ -30,28 +46,59 @@ namespace Gun.RoomRhythm
             if (selectedEnemyDot != null) selectedEnemyDot.gameObject.SetActive(false);
         }
 
+        public void HideSection(double time)
+        {
+            Suspend();
+            foreach (var enemy in enemies ?? Array.Empty<RoomEnemy>())
+                if (enemy != null) enemy.Present(false, 0);
+            foreach (var target in stageTargets ?? Array.Empty<StageActionTarget>())
+                if (target != null) target.gameObject.SetActive(false);
+        }
+
+        private Dictionary<string, RoomEnemy> EnemyLookup()
+        {
+            var lookup = new Dictionary<string, RoomEnemy>();
+            foreach (var enemy in enemies)
+                if (enemy == null || string.IsNullOrWhiteSpace(enemy.Id) || !lookup.TryAdd(enemy.Id, enemy))
+                    throw new InvalidOperationException("Missing or duplicate scene enemy ID.");
+            return lookup;
+        }
+
         public void ValidateConfiguration(RoomChart chart, RoomBinding[] path, RoomRun run)
         {
             if (selectedEnemyDot == null || player == null || enemies == null)
                 throw new InvalidOperationException("Missing combat scene references.");
             var notes = chart.enemies ?? Array.Empty<EnemyNote>();
-            var lookup = new Dictionary<string, RoomEnemy>();
-            foreach (RoomEnemy enemy in enemies)
+            var keys = new HashSet<(StageTargetRole, string)>();
+            foreach (var target in stageTargets ?? Array.Empty<StageActionTarget>())
             {
-                if (enemy == null || string.IsNullOrWhiteSpace(enemy.Id) || !lookup.TryAdd(enemy.Id, enemy))
-                    throw new InvalidOperationException("Missing or duplicate scene enemy ID.");
-                enemy.ValidateReferences();
+                if (target == null || string.IsNullOrWhiteSpace(target.Id)
+                    || !Enum.IsDefined(typeof(StageTargetRole), target.Role) || !keys.Add((target.Role, target.Id)))
+                    throw new InvalidOperationException("Missing or duplicate stage target ID/role.");
+                bool exists = target.Role == StageTargetRole.Shot ? Array.Exists(notes, n => n.id == target.Id)
+                    : Array.Exists(chart.moves, n => n.hasDoor && n.destinationId == target.Id);
+                if (!exists) throw new InvalidOperationException("Stage target has no matching chart action: " + target.Id);
+                if (target.gameObject.scene != gameObject.scene)
+                    throw new InvalidOperationException("Stage target belongs to another scene: " + target.Id);
+                target.ValidateReferences();
             }
-            if (lookup.Count != notes.Length) throw new InvalidOperationException("Enemy bindings do not match chart.");
+            var lookup = EnemyLookup();
+            foreach (var pair in lookup)
+            {
+                if (!Array.Exists(notes, n => n.id == pair.Key))
+                    throw new InvalidOperationException("Enemy binding has no chart note: " + pair.Key);
+                pair.Value.ValidateReferences();
+            }
             for (int i = 0; i < notes.Length; i++)
             {
-                if (!lookup.TryGetValue(notes[i].id, out RoomEnemy enemy))
-                    throw new InvalidOperationException("Missing enemy binding: " + notes[i].id);
                 if (!chart.LoopMusic && notes[i].time > chart.music.length + chart.MusicDelaySeconds)
                     throw new InvalidOperationException("Enemy window extends past the music.");
+                if (FindOverride(StageTargetRole.Shot, notes[i].id) != null) continue;
+                if (!lookup.TryGetValue(notes[i].id, out RoomEnemy enemy))
+                    throw new InvalidOperationException("Missing enemy or stage target: " + notes[i].id);
                 float angle = (90 - 45 * (int)notes[i].direction) * Mathf.Deg2Rad;
                 Vector3 expected = path[run.EnemyRoom(i)].Center + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * chart.aimRadius;
-                if (Vector3.Distance(enemy.Target, expected) > 0.01f)
+                if (Vector3.Distance(enemy.Target, expected) > .01f)
                     throw new InvalidOperationException("Enemy scene position differs from chart: " + notes[i].id);
             }
         }
@@ -60,28 +107,28 @@ namespace Gun.RoomRhythm
         {
             configured = false;
             this.chart = chart; this.path = path; this.run = run; this.aim = aim;
-            this.feedback = feedback;
-            this.previousRoomOccurrences = previousRoomOccurrences;
+            this.feedback = feedback; this.previousRoomOccurrences = previousRoomOccurrences;
             deathVisible = deathFrames = null;
-            if (selectedEnemyDot == null || player == null || enemies == null)
-                throw new InvalidOperationException("Missing combat scene references.");
             enemyNotes = chart.enemies ?? Array.Empty<EnemyNote>();
             orderedEnemies = new RoomEnemy[enemyNotes.Length];
-            var lookup = new Dictionary<string, RoomEnemy>();
-            foreach (RoomEnemy enemy in enemies)
-            {
-                if (enemy == null || string.IsNullOrWhiteSpace(enemy.Id) || !lookup.TryAdd(enemy.Id, enemy))
-                    throw new InvalidOperationException("Missing or duplicate scene enemy ID.");
-                enemy.Present(false, 0);
-            }
-            if (lookup.Count != enemyNotes.Length) throw new InvalidOperationException("Enemy bindings do not match chart.");
+            shotOverrides = new StageActionTarget[enemyNotes.Length];
+            doorOverrides = new StageActionTarget[chart.moves.Length];
+            var lookup = EnemyLookup();
+            foreach (var enemy in enemies) enemy.Present(false, 0);
             for (int i = 0; i < enemyNotes.Length; i++)
             {
                 EnemyNote note = enemyNotes[i];
-                if (!chart.LoopMusic && note.time > chart.music.length + chart.MusicDelaySeconds)
-                    throw new InvalidOperationException("Enemy window extends past the music.");
-                orderedEnemies[i] = lookup[note.id];
-                orderedEnemies[i].Configure(path[run.EnemyRoom(i)].Center, note.direction, chart);
+                shotOverrides[i] = FindOverride(StageTargetRole.Shot, note.id);
+                if (shotOverrides[i] == null)
+                {
+                    orderedEnemies[i] = lookup[note.id];
+                    orderedEnemies[i].Configure(path[run.EnemyRoom(i)].Center, note.direction, chart);
+                }
+            }
+            for (int i = 0; i < chart.moves.Length; i++)
+            {
+                var note = chart.moves[i];
+                doorOverrides[i] = FindOverride(StageTargetRole.Breakthrough, note.destinationId);
             }
             selectedEnemyDot.gameObject.SetActive(false);
             configured = true;
@@ -91,31 +138,54 @@ namespace Gun.RoomRhythm
         {
             candidates.Clear();
             for (int i = 0; i < orderedEnemies.Length; i++)
-                if (run.EnemyAvailable(i)) AddCandidate(i, orderedEnemies[i].Target - origin, enemyNotes[i].time);
+                if (run.EnemyAvailable(i)) AddCandidate(i, TargetPosition(i, time) - origin, enemyNotes[i].time);
             for (int i = run.CompletedMoves; i < chart.moves.Length; i++)
             {
                 MoveNote note = chart.moves[i];
                 if (note.hasDoor && !run.DoorBroken(i) && time >= (note.customAppearance ? note.doorFrameStartTime : chart.RoomAppearsAt(note))
                     && previousRoomOccurrences[i + 1] < run.CompletedMoves)
-                    AddCandidate(orderedEnemies.Length + i, path[i + 1].Door.Target - origin, note.doorTime);
+                    AddCandidate(orderedEnemies.Length + i, TargetPosition(orderedEnemies.Length + i, time) - origin, note.doorTime);
             }
             return TargetSelection.Select(candidates, direction.x, direction.y, chart.aimHalfAngle);
         }
 
         private void AddCandidate(int id, Vector3 offset, double hitTime) => candidates.Add(new AimCandidate(id, offset.x, offset.y, hitTime));
-        private Vector3 TargetPosition(int id) => id < orderedEnemies.Length ? orderedEnemies[id].Target
-            : path[id - orderedEnemies.Length + 1].Door.Target;
+        public void ResetStageTargets()
+        {
+            foreach (var target in stageTargets ?? Array.Empty<StageActionTarget>())
+                if (target != null) target.gameObject.SetActive(true);
+            for (int i = 0; i < shotOverrides.Length; i++)
+                if (shotOverrides[i] != null) shotOverrides[i].ResetTarget(chart, run.EnemyVisualAppearsAt(i), enemyNotes[i].time);
+            for (int i = 0; i < doorOverrides.Length; i++)
+                if (doorOverrides[i] != null)
+                {
+                    var note = chart.moves[i];
+                    doorOverrides[i].ResetTarget(chart, note.customAppearance ? note.DoorAppearsAt : chart.RoomAppearsAt(note), note.doorTime);
+                }
+        }
+        private StageActionTarget Override(int id) => id < orderedEnemies.Length ? shotOverrides[id] : doorOverrides[id - orderedEnemies.Length];
+        private Vector3 TargetPosition(int id, double time)
+        {
+            var target = Override(id);
+            return target != null ? target.PositionAt(time) : id < orderedEnemies.Length ? orderedEnemies[id].Target
+                : path[id - orderedEnemies.Length + 1].Door.Target;
+        }
 
         public void Shoot(Vector2 pointer, double time, Vector3 origin)
         {
             Vector2 direction = aim.DirectionAt(pointer, origin);
             int target = Select(direction, origin, time);
-            aim.Fire(origin, direction, target >= 0 ? TargetPosition(target) : (Vector3?)null);
+            aim.Fire(origin, direction, target >= 0 ? TargetPosition(target, time) : (Vector3?)null);
             if (target < 0) { run.MissShot(time); return; }
             bool hit = target < orderedEnemies.Length ? run.ShootEnemy(target, time)
                 : run.ShootDoor(target - orderedEnemies.Length, time);
+            if (hit && Override(target) != null)
+            {
+                Override(target).OnHit(time);
+                return;
+            }
             if (hit && target < orderedEnemies.Length)
-                feedback.EnemyDeath(TargetPosition(target), TargetPosition(target) - origin);
+                feedback.EnemyDeath(TargetPosition(target, time), TargetPosition(target, time) - origin);
             else if (hit)
             {
                 RoomDoor door = path[target - orderedEnemies.Length + 1].Door;
@@ -135,9 +205,23 @@ namespace Gun.RoomRhythm
                 float progress = duration > 0 ? Mathf.Clamp01((float)((time - appearedAt) / duration)) : 1f;
                 double frameStart = enemyNotes[i].customAppearance ? enemyNotes[i].frameStartTime : appearedAt;
                 float brightness = run.EnemyRoomEntered(i) ? 1 : RoomChart.UpcomingEnemyBrightness;
+                if (shotOverrides[i] != null)
+                {
+                    shotOverrides[i].Present(visible, deathFrames != null ? deathFrames[i] : time >= frameStart, time, i == nextEnemy);
+                    continue;
+                }
                 orderedEnemies[i].AimAt(player.position);
                 orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time,
                     deathFrames != null ? deathFrames[i] : time >= frameStart, brightness, i == nextEnemy);
+            }
+            for (int i = 0; i < doorOverrides.Length; i++)
+            {
+                if (doorOverrides[i] == null) continue;
+                var note = chart.moves[i];
+                bool visible = run.Phase != RunPhase.Ready && i >= run.CompletedMoves && !run.DoorBroken(i)
+                    && time >= (note.customAppearance ? note.DoorAppearsAt : chart.RoomAppearsAt(note))
+                    && previousRoomOccurrences[i + 1] < run.CompletedMoves;
+                doorOverrides[i].Present(visible, run.Phase != RunPhase.Dead, time, false);
             }
             if (!run.IsActive) selectedEnemyDot.gameObject.SetActive(false);
         }
@@ -152,7 +236,7 @@ namespace Gun.RoomRhythm
             int target = Select(aim.DirectionAt(Mouse.current.position.ReadValue(), player.position), player.position, displayedTime);
             bool show = target >= 0 && target < orderedEnemies.Length;
             selectedEnemyDot.gameObject.SetActive(show);
-            if (show) selectedEnemyDot.position = orderedEnemies[target].Target;
+            if (show) selectedEnemyDot.position = TargetPosition(target, displayedTime);
         }
 
         public bool HasLivingEnemies(int room)
@@ -170,6 +254,11 @@ namespace Gun.RoomRhythm
 
         public void FreezeAtDeath(double time)
         {
+            int failed = run.FailedEnemy;
+            if (failed >= 0 && shotOverrides[failed] != null) shotOverrides[failed].OnFailure(time);
+            else if ((run.Failure == FailureReason.MissedDoor || run.Failure == FailureReason.DoorCollision)
+                && run.CompletedMoves < doorOverrides.Length && doorOverrides[run.CompletedMoves] != null)
+                doorOverrides[run.CompletedMoves].OnFailure(time);
             deathVisible = new bool[orderedEnemies.Length]; deathFrames = new bool[orderedEnemies.Length];
             for (int i = 0; i < orderedEnemies.Length; i++)
             {

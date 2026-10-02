@@ -7,6 +7,21 @@ namespace Gun.RoomRhythm
     public enum FailureReason { None, WrongDirection, TooEarly, TooLate, MissedDoor, MissedEnemy, DoorCollision }
     public enum DeathPresentation { None, Execution, Collision, Departure }
 
+    public enum RoomActionKind { MoveStarted, MoveArrived, DoorBroken, EnemyDefeated, Failed }
+
+    public readonly struct RoomActionResult
+    {
+        public readonly RoomActionKind Kind;
+        public readonly string TargetId;
+        public readonly double Time;
+        public readonly TimingGrade Grade;
+        public readonly FailureReason Failure;
+
+        public RoomActionResult(RoomActionKind kind, string targetId, double time,
+            TimingGrade grade = TimingGrade.None, FailureReason failure = FailureReason.None)
+        { Kind = kind; TargetId = targetId; Time = time; Grade = grade; Failure = failure; }
+    }
+
     // Pure state machine: caller submits timestamped input before advancing to frame time.
     public sealed class RoomRun
     {
@@ -20,6 +35,13 @@ namespace Gun.RoomRhythm
         private readonly int[] enemyRooms;
         private readonly bool[] defeatedEnemies;
         private MoveDirection? movementInput;
+        private readonly Queue<RoomActionResult> results = new Queue<RoomActionResult>();
+        public bool TryDequeueResult(out RoomActionResult result)
+        {
+            if (results.Count > 0) { result = results.Dequeue(); return true; }
+            result = default;
+            return false;
+        }
         public DeathPresentation Death { get; private set; }
         public MoveDirection DeathDirection { get; private set; }
         public int FailedEnemy { get; private set; } = -1;
@@ -36,7 +58,7 @@ namespace Gun.RoomRhythm
         public double LastJudgedAt { get; private set; }
         public double? LastTimingErrorMs { get; private set; }
         public double RoomArrivedAt { get; private set; }
-        public double MoveEndsAt => MoveStartedAt + moveDuration;
+        public double MoveEndsAt => MoveStartedAt + notes[Math.Min(CompletedMoves, notes.Length - 1)].Duration(moveDuration);
         public bool IsActive => Phase == RunPhase.Waiting || Phase == RunPhase.Moving;
 
         public RoomRun(MoveNote[] notes, TimingWindow window, double moveDuration,
@@ -52,6 +74,9 @@ namespace Gun.RoomRhythm
             for (int i = 0; i < notes.Length; i++)
             {
                 MoveNote note = notes[i];
+                if (double.IsNaN(note.duration) || double.IsInfinity(note.duration) || note.duration < 0
+                    || !Enum.IsDefined(typeof(MovementEase), note.ease))
+                    throw new ArgumentException("Invalid movement profile.");
                 if (string.IsNullOrWhiteSpace(note.destinationId) || note.HitTime < 0
                     || double.IsNaN(note.HitTime) || double.IsInfinity(note.HitTime)
                     || !Enum.IsDefined(typeof(MoveDirection), notes[i].direction))
@@ -70,7 +95,7 @@ namespace Gun.RoomRhythm
                 if (note.hasDoor) earliestInput = Math.Max(earliestInput, note.doorTime - window.early);
                 if (earliestInput >= note.HitTime + window.late)
                     throw new ArgumentException("이전 이동 애니메이션이 끝난 뒤 다음 이동을 입력할 수 있는 시간이 없습니다.");
-                earliestArrivals[i + 1] = earliestInput + moveDuration;
+                earliestArrivals[i + 1] = earliestInput + note.Duration(moveDuration);
             }
             this.notes = (MoveNote[])notes.Clone();
             this.window = window;
@@ -93,7 +118,7 @@ namespace Gun.RoomRhythm
                 enemyRooms[i] = room;
                 if (enemy.customAppearance && (double.IsNaN(enemy.appearanceTime) || double.IsInfinity(enemy.appearanceTime) || enemy.appearanceTime < 0 || enemy.appearanceTime > enemy.time))
                     throw new ArgumentException("Invalid enemy appearance time.");
-                double earliestEntry = room == 0 ? 0 : earliestArrivals[room] - moveDuration;
+                double earliestEntry = room == 0 ? 0 : earliestArrivals[room] - notes[room - 1].Duration(moveDuration);
                 double earliestShot = Math.Max(earliestEntry, enemy.customAppearance ? enemy.appearanceTime : enemy.time - enemyLeadTime);
                 if (earliestShot >= enemy.time + window.late)
                     throw new ArgumentException("입장 및 적 등장 이후 사격할 수 있는 시간이 없습니다.");
@@ -109,6 +134,7 @@ namespace Gun.RoomRhythm
 
         public void Reset()
         {
+            results.Clear();
             Phase = RunPhase.Ready;
             Failure = FailureReason.None;
             Death = DeathPresentation.None; FailedEnemy = -1; DeathTime = 0; movementInput = null;
@@ -138,6 +164,8 @@ namespace Gun.RoomRhythm
             if (Phase == RunPhase.Moving && time >= MoveEndsAt)
             {
                 RoomArrivedAt = MoveEndsAt;
+                results.Enqueue(new RoomActionResult(RoomActionKind.MoveArrived,
+                    notes[CompletedMoves].destinationId, RoomArrivedAt));
                 CompletedMoves++;
                 Phase = RunPhase.Waiting;
             }
@@ -216,6 +244,7 @@ namespace Gun.RoomRhythm
                 LastTimingErrorMs = (time - note.HitTime) * 1000;
                 JudgmentVersion++;
                 if (LastGrade == TimingGrade.Accurate) AccurateJudgments++;
+                results.Enqueue(new RoomActionResult(RoomActionKind.MoveStarted, note.destinationId, time, LastGrade));
             }
         }
 
@@ -283,6 +312,7 @@ namespace Gun.RoomRhythm
             LastTimingErrorMs = (time - enemies[index].time) * 1000;
             JudgmentVersion++;
             if (LastGrade == TimingGrade.Accurate) AccurateJudgments++;
+            results.Enqueue(new RoomActionResult(RoomActionKind.EnemyDefeated, enemies[index].id, time, LastGrade));
             Advance(time);
             return true;
         }
@@ -303,6 +333,7 @@ namespace Gun.RoomRhythm
             LastTimingErrorMs = (time - note.doorTime) * 1000;
             JudgmentVersion++;
             if (LastGrade == TimingGrade.Accurate) AccurateJudgments++;
+            results.Enqueue(new RoomActionResult(RoomActionKind.DoorBroken, note.destinationId, time, LastGrade));
             return true;
         }
 
@@ -320,6 +351,9 @@ namespace Gun.RoomRhythm
             Failure = reason;
             LastGrade = grade;
             LastTimingErrorMs = errorMs;
+            string target = FailedEnemy >= 0 ? enemies[FailedEnemy].id
+                : CompletedMoves < notes.Length ? notes[CompletedMoves].destinationId : null;
+            results.Enqueue(new RoomActionResult(RoomActionKind.Failed, target, DeathTime, grade, reason));
         }
 
         public void MissShot(double time)
