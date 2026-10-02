@@ -179,14 +179,36 @@ namespace Gun.RoomRhythm
             if (target < 0) { run.MissShot(time); return; }
             bool hit = target < orderedEnemies.Length ? run.ShootEnemy(target, time)
                 : run.ShootDoor(target - orderedEnemies.Length, time);
-            if (hit && Override(target) != null)
+            if (hit) PresentHit(target, time, origin);
+        }
+
+        public void PresentDebugAction(RoomActionResult result, Vector3 origin)
+        {
+            int target;
+            if (result.Kind == RoomActionKind.EnemyDefeated)
+                target = Array.FindIndex(enemyNotes, note => note.id == result.TargetId);
+            else if (result.Kind == RoomActionKind.DoorBroken)
+            {
+                int door = Array.FindIndex(chart.moves, note => note.destinationId == result.TargetId);
+                target = door < 0 ? -1 : orderedEnemies.Length + door;
+            }
+            else return;
+            if (target < 0) return;
+            Vector3 position = TargetPosition(target, result.Time);
+            aim.Fire(origin, (Vector2)(position - origin).normalized, position);
+            PresentHit(target, result.Time, origin);
+        }
+
+        private void PresentHit(int target, double time, Vector3 origin)
+        {
+            if (Override(target) != null)
             {
                 Override(target).OnHit(time);
                 return;
             }
-            if (hit && target < orderedEnemies.Length)
+            if (target < orderedEnemies.Length)
                 feedback.EnemyDeath(TargetPosition(target, time), TargetPosition(target, time) - origin);
-            else if (hit)
+            else
             {
                 RoomDoor door = path[target - orderedEnemies.Length + 1].Door;
                 feedback.DoorBreak(door.Target, door.Target - origin, door.FragmentColor);

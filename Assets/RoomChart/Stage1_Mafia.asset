@@ -1,0 +1,2899 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0213ac1c5a3411c8dc11f8dc642b170, type: 3}
+  m_Name: Stage1_Mafia
+  m_EditorClassIdentifier: 
+  music: {fileID: 8300000, guid: 2cc366cd6f35084498090693948939ab, type: 3}
+  inputOffsetMs: 0
+  startingRoomId: mafia0
+  bpm: 130
+  moveDuration: 0.28
+  aimRadius: 2.2
+  aimHalfAngle: 38
+  judgmentLineWidth: 0.1
+  enemyLineWidth: 0.05
+  passageWidth: 2.8
+  roomLeadTime: 1.8461538461538463
+  enemyLeadTime: 1.3846153846153846
+  roomFrameStartSize: 20
+  roomStartBrightness: 0.15
+  roomRevealStart: 0.88
+  doorCloseDuration: 0.2
+  appearanceStartAlpha: 0.05
+  songTitle: Stage1_Bpm130
+  moves:
+  - destinationId: "mafia1"
+    direction: 3
+    time: 70.15384615384616
+    duration: 0.32
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 68.3076923076923
+    frameStartTime: 68.3076923076923
+    doorFrameStartTime: 68.76923076923077
+    hasDoor: 0
+    doorTime: 69.6923076923077
+    moveDelay: 0
+  - destinationId: "mafia2"
+    direction: 3
+    time: 73.84615384615384
+    duration: 0.65
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 72.0
+    frameStartTime: 72.0
+    doorFrameStartTime: 72.46153846153847
+    hasDoor: 0
+    doorTime: 73.38461538461539
+    moveDelay: 0
+  - destinationId: "mafia3"
+    direction: 3
+    time: 77.53846153846153
+    duration: 0.32
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 75.6923076923077
+    frameStartTime: 75.6923076923077
+    doorFrameStartTime: 76.15384615384616
+    hasDoor: 0
+    doorTime: 77.07692307692308
+    moveDelay: 0
+  - destinationId: "mafia4"
+    direction: 0
+    time: 81.23076923076923
+    duration: 0.32
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 79.38461538461539
+    frameStartTime: 79.38461538461539
+    doorFrameStartTime: 79.84615384615384
+    hasDoor: 1
+    doorTime: 80.76923076923077
+    moveDelay: 0.46153846153846156
+  - destinationId: "mafia5"
+    direction: 3
+    time: 84.92307692307692
+    duration: 0.65
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 83.07692307692308
+    frameStartTime: 83.07692307692308
+    doorFrameStartTime: 83.53846153846153
+    hasDoor: 0
+    doorTime: 84.46153846153847
+    moveDelay: 0
+  - destinationId: "mafia6"
+    direction: 3
+    time: 88.61538461538461
+    duration: 0.32
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 86.76923076923077
+    frameStartTime: 86.76923076923077
+    doorFrameStartTime: 87.23076923076923
+    hasDoor: 0
+    doorTime: 88.15384615384616
+    moveDelay: 0
+  - destinationId: "mafia7"
+    direction: 3
+    time: 92.3076923076923
+    duration: 0.32
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 90.46153846153847
+    frameStartTime: 90.46153846153847
+    doorFrameStartTime: 90.92307692307692
+    hasDoor: 0
+    doorTime: 91.84615384615384
+    moveDelay: 0
+  - destinationId: "mafia8"
+    direction: 0
+    time: 96.0
+    duration: 0.65
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 94.15384615384616
+    frameStartTime: 94.15384615384616
+    doorFrameStartTime: 94.61538461538461
+    hasDoor: 1
+    doorTime: 95.53846153846153
+    moveDelay: 0.46153846153846156
+  - destinationId: "mafia9"
+    direction: 3
+    time: 99.6923076923077
+    duration: 0.32
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 97.84615384615384
+    frameStartTime: 97.84615384615384
+    doorFrameStartTime: 98.3076923076923
+    hasDoor: 0
+    doorTime: 99.23076923076923
+    moveDelay: 0
+  - destinationId: "mafia10"
+    direction: 3
+    time: 103.38461538461539
+    duration: 0.32
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 101.53846153846153
+    frameStartTime: 101.53846153846153
+    doorFrameStartTime: 102.0
+    hasDoor: 0
+    doorTime: 102.92307692307692
+    moveDelay: 0
+  - destinationId: "mafia11"
+    direction: 3
+    time: 107.07692307692308
+    duration: 0.65
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 105.23076923076923
+    frameStartTime: 105.23076923076923
+    doorFrameStartTime: 105.6923076923077
+    hasDoor: 0
+    doorTime: 106.61538461538461
+    moveDelay: 0
+  - destinationId: "mafia12"
+    direction: 0
+    time: 110.76923076923077
+    duration: 0.32
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 108.92307692307692
+    frameStartTime: 108.92307692307692
+    doorFrameStartTime: 109.38461538461539
+    hasDoor: 1
+    doorTime: 110.3076923076923
+    moveDelay: 0.46153846153846156
+  - destinationId: "mafia13"
+    direction: 3
+    time: 114.46153846153847
+    duration: 0.32
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 112.61538461538461
+    frameStartTime: 112.61538461538461
+    doorFrameStartTime: 113.07692307692308
+    hasDoor: 0
+    doorTime: 114.0
+    moveDelay: 0
+  - destinationId: "mafia14"
+    direction: 3
+    time: 118.15384615384616
+    duration: 0.65
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 116.3076923076923
+    frameStartTime: 116.3076923076923
+    doorFrameStartTime: 116.76923076923077
+    hasDoor: 0
+    doorTime: 117.6923076923077
+    moveDelay: 0
+  - destinationId: "mafia15"
+    direction: 3
+    time: 121.84615384615384
+    duration: 0.32
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 120.0
+    frameStartTime: 120.0
+    doorFrameStartTime: 120.46153846153847
+    hasDoor: 0
+    doorTime: 121.38461538461539
+    moveDelay: 0
+  - destinationId: "mafia16"
+    direction: 0
+    time: 125.53846153846153
+    duration: 0.32
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 123.6923076923077
+    frameStartTime: 123.6923076923077
+    doorFrameStartTime: 124.15384615384616
+    hasDoor: 1
+    doorTime: 125.07692307692308
+    moveDelay: 0.46153846153846156
+  - destinationId: "mafia17"
+    direction: 3
+    time: 129.23076923076923
+    duration: 0.65
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 127.38461538461539
+    frameStartTime: 127.38461538461539
+    doorFrameStartTime: 127.84615384615384
+    hasDoor: 0
+    doorTime: 128.76923076923077
+    moveDelay: 0
+  - destinationId: "mafia18"
+    direction: 3
+    time: 132.92307692307693
+    duration: 0.32
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 131.07692307692307
+    frameStartTime: 131.07692307692307
+    doorFrameStartTime: 131.53846153846155
+    hasDoor: 0
+    doorTime: 132.46153846153845
+    moveDelay: 0
+  - destinationId: "mafia19"
+    direction: 3
+    time: 136.6153846153846
+    duration: 0.32
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 134.76923076923077
+    frameStartTime: 134.76923076923077
+    doorFrameStartTime: 135.23076923076923
+    hasDoor: 0
+    doorTime: 136.15384615384616
+    moveDelay: 0
+  - destinationId: "mafia20"
+    direction: 0
+    time: 140.30769230769232
+    duration: 0.65
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 138.46153846153845
+    frameStartTime: 138.46153846153845
+    doorFrameStartTime: 138.92307692307693
+    hasDoor: 1
+    doorTime: 139.84615384615384
+    moveDelay: 0.46153846153846156
+  - destinationId: "mafia21"
+    direction: 3
+    time: 144.0
+    duration: 0.32
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 142.15384615384616
+    frameStartTime: 142.15384615384616
+    doorFrameStartTime: 142.6153846153846
+    hasDoor: 0
+    doorTime: 143.53846153846155
+    moveDelay: 0
+  - destinationId: "mafia22"
+    direction: 3
+    time: 147.69230769230768
+    duration: 0.32
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 145.84615384615384
+    frameStartTime: 145.84615384615384
+    doorFrameStartTime: 146.30769230769232
+    hasDoor: 0
+    doorTime: 147.23076923076923
+    moveDelay: 0
+  - destinationId: "mafia23"
+    direction: 3
+    time: 151.3846153846154
+    duration: 0.65
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 149.53846153846155
+    frameStartTime: 149.53846153846155
+    doorFrameStartTime: 150.0
+    hasDoor: 0
+    doorTime: 150.92307692307693
+    moveDelay: 0
+  - destinationId: "mafia24"
+    direction: 0
+    time: 155.07692307692307
+    duration: 0.32
+    ease: 0
+    customAppearance: 1
+    appearanceTime: 153.23076923076923
+    frameStartTime: 153.23076923076923
+    doorFrameStartTime: 153.69230769230768
+    hasDoor: 1
+    doorTime: 154.6153846153846
+    moveDelay: 0.46153846153846156
+  - destinationId: "mafia25"
+    direction: 3
+    time: 158.76923076923077
+    duration: 0.32
+    ease: 1
+    customAppearance: 1
+    appearanceTime: 156.92307692307693
+    frameStartTime: 156.92307692307693
+    doorFrameStartTime: 157.3846153846154
+    hasDoor: 0
+    doorTime: 158.30769230769232
+    moveDelay: 0
+  - destinationId: "mafia26"
+    direction: 3
+    time: 162.46153846153845
+    duration: 0.65
+    ease: 2
+    customAppearance: 1
+    appearanceTime: 160.6153846153846
+    frameStartTime: 160.6153846153846
+    doorFrameStartTime: 161.07692307692307
+    hasDoor: 0
+    doorTime: 162.0
+    moveDelay: 0
+  - destinationId: "mafia27"
+    direction: 3
+    time: 166.15384615384616
+    duration: 0.32
+    ease: 3
+    customAppearance: 1
+    appearanceTime: 164.30769230769232
+    frameStartTime: 164.30769230769232
+    doorFrameStartTime: 164.76923076923077
+    hasDoor: 0
+    doorTime: 165.69230769230768
+    moveDelay: 0
+  enemies:
+  - id: "mafia_shot_0_0"
+    roomId: "mafia0"
+    direction: 0
+    time: 67.38461538461539
+    customAppearance: 1
+    appearanceTime: 66.6923076923077
+    frameStartTime: 66.6923076923077
+  - id: "mafia_shot_0_1"
+    roomId: "mafia0"
+    direction: 2
+    time: 68.3076923076923
+    customAppearance: 1
+    appearanceTime: 67.61538461538461
+    frameStartTime: 67.61538461538461
+  - id: "mafia_shot_0_2"
+    roomId: "mafia0"
+    direction: 6
+    time: 69.23076923076923
+    customAppearance: 1
+    appearanceTime: 68.53846153846153
+    frameStartTime: 68.53846153846153
+  - id: "mafia_shot_1_0"
+    roomId: "mafia1"
+    direction: 2
+    time: 71.07692307692308
+    customAppearance: 1
+    appearanceTime: 70.38461538461539
+    frameStartTime: 70.38461538461539
+  - id: "mafia_shot_1_1"
+    roomId: "mafia1"
+    direction: 6
+    time: 72.0
+    customAppearance: 1
+    appearanceTime: 71.3076923076923
+    frameStartTime: 71.3076923076923
+  - id: "mafia_shot_1_2"
+    roomId: "mafia1"
+    direction: 0
+    time: 72.92307692307692
+    customAppearance: 1
+    appearanceTime: 72.23076923076923
+    frameStartTime: 72.23076923076923
+  - id: "mafia_shot_2_0"
+    roomId: "mafia2"
+    direction: 6
+    time: 74.76923076923077
+    customAppearance: 1
+    appearanceTime: 74.07692307692308
+    frameStartTime: 74.07692307692308
+  - id: "mafia_shot_2_1"
+    roomId: "mafia2"
+    direction: 0
+    time: 75.6923076923077
+    customAppearance: 1
+    appearanceTime: 75.0
+    frameStartTime: 75.0
+  - id: "mafia_shot_2_2"
+    roomId: "mafia2"
+    direction: 2
+    time: 76.61538461538461
+    customAppearance: 1
+    appearanceTime: 75.92307692307692
+    frameStartTime: 75.92307692307692
+  - id: "mafia_shot_3_0"
+    roomId: "mafia3"
+    direction: 0
+    time: 78.46153846153847
+    customAppearance: 1
+    appearanceTime: 77.76923076923077
+    frameStartTime: 77.76923076923077
+  - id: "mafia_shot_3_1"
+    roomId: "mafia3"
+    direction: 2
+    time: 79.38461538461539
+    customAppearance: 1
+    appearanceTime: 78.6923076923077
+    frameStartTime: 78.6923076923077
+  - id: "mafia_shot_3_2"
+    roomId: "mafia3"
+    direction: 6
+    time: 80.3076923076923
+    customAppearance: 1
+    appearanceTime: 79.61538461538461
+    frameStartTime: 79.61538461538461
+  - id: "mafia_shot_4_0"
+    roomId: "mafia4"
+    direction: 2
+    time: 82.15384615384616
+    customAppearance: 1
+    appearanceTime: 81.46153846153847
+    frameStartTime: 81.46153846153847
+  - id: "mafia_shot_4_1"
+    roomId: "mafia4"
+    direction: 6
+    time: 83.07692307692308
+    customAppearance: 1
+    appearanceTime: 82.38461538461539
+    frameStartTime: 82.38461538461539
+  - id: "mafia_shot_4_2"
+    roomId: "mafia4"
+    direction: 0
+    time: 84.0
+    customAppearance: 1
+    appearanceTime: 83.3076923076923
+    frameStartTime: 83.3076923076923
+  - id: "mafia_shot_5_0"
+    roomId: "mafia5"
+    direction: 6
+    time: 85.84615384615384
+    customAppearance: 1
+    appearanceTime: 85.15384615384616
+    frameStartTime: 85.15384615384616
+  - id: "mafia_shot_5_1"
+    roomId: "mafia5"
+    direction: 0
+    time: 86.76923076923077
+    customAppearance: 1
+    appearanceTime: 86.07692307692308
+    frameStartTime: 86.07692307692308
+  - id: "mafia_shot_5_2"
+    roomId: "mafia5"
+    direction: 2
+    time: 87.6923076923077
+    customAppearance: 1
+    appearanceTime: 87.0
+    frameStartTime: 87.0
+  - id: "mafia_shot_6_0"
+    roomId: "mafia6"
+    direction: 0
+    time: 89.53846153846153
+    customAppearance: 1
+    appearanceTime: 88.84615384615384
+    frameStartTime: 88.84615384615384
+  - id: "mafia_shot_6_1"
+    roomId: "mafia6"
+    direction: 2
+    time: 90.46153846153847
+    customAppearance: 1
+    appearanceTime: 89.76923076923077
+    frameStartTime: 89.76923076923077
+  - id: "mafia_shot_6_2"
+    roomId: "mafia6"
+    direction: 6
+    time: 91.38461538461539
+    customAppearance: 1
+    appearanceTime: 90.6923076923077
+    frameStartTime: 90.6923076923077
+  - id: "mafia_shot_7_0"
+    roomId: "mafia7"
+    direction: 2
+    time: 93.23076923076923
+    customAppearance: 1
+    appearanceTime: 92.53846153846153
+    frameStartTime: 92.53846153846153
+  - id: "mafia_shot_7_1"
+    roomId: "mafia7"
+    direction: 6
+    time: 94.15384615384616
+    customAppearance: 1
+    appearanceTime: 93.46153846153847
+    frameStartTime: 93.46153846153847
+  - id: "mafia_shot_7_2"
+    roomId: "mafia7"
+    direction: 0
+    time: 95.07692307692308
+    customAppearance: 1
+    appearanceTime: 94.38461538461539
+    frameStartTime: 94.38461538461539
+  - id: "mafia_shot_8_0"
+    roomId: "mafia8"
+    direction: 6
+    time: 96.92307692307692
+    customAppearance: 1
+    appearanceTime: 96.23076923076923
+    frameStartTime: 96.23076923076923
+  - id: "mafia_shot_8_1"
+    roomId: "mafia8"
+    direction: 0
+    time: 97.84615384615384
+    customAppearance: 1
+    appearanceTime: 97.15384615384616
+    frameStartTime: 97.15384615384616
+  - id: "mafia_shot_8_2"
+    roomId: "mafia8"
+    direction: 2
+    time: 98.76923076923077
+    customAppearance: 1
+    appearanceTime: 98.07692307692308
+    frameStartTime: 98.07692307692308
+  - id: "mafia_shot_9_0"
+    roomId: "mafia9"
+    direction: 0
+    time: 100.61538461538461
+    customAppearance: 1
+    appearanceTime: 99.92307692307692
+    frameStartTime: 99.92307692307692
+  - id: "mafia_shot_9_1"
+    roomId: "mafia9"
+    direction: 2
+    time: 101.53846153846153
+    customAppearance: 1
+    appearanceTime: 100.84615384615384
+    frameStartTime: 100.84615384615384
+  - id: "mafia_shot_9_2"
+    roomId: "mafia9"
+    direction: 6
+    time: 102.46153846153847
+    customAppearance: 1
+    appearanceTime: 101.76923076923077
+    frameStartTime: 101.76923076923077
+  - id: "mafia_shot_10_0"
+    roomId: "mafia10"
+    direction: 2
+    time: 104.3076923076923
+    customAppearance: 1
+    appearanceTime: 103.61538461538461
+    frameStartTime: 103.61538461538461
+  - id: "mafia_shot_10_1"
+    roomId: "mafia10"
+    direction: 6
+    time: 105.23076923076923
+    customAppearance: 1
+    appearanceTime: 104.53846153846153
+    frameStartTime: 104.53846153846153
+  - id: "mafia_shot_10_2"
+    roomId: "mafia10"
+    direction: 0
+    time: 106.15384615384616
+    customAppearance: 1
+    appearanceTime: 105.46153846153847
+    frameStartTime: 105.46153846153847
+  - id: "mafia_shot_11_0"
+    roomId: "mafia11"
+    direction: 6
+    time: 108.0
+    customAppearance: 1
+    appearanceTime: 107.3076923076923
+    frameStartTime: 107.3076923076923
+  - id: "mafia_shot_11_1"
+    roomId: "mafia11"
+    direction: 0
+    time: 108.92307692307692
+    customAppearance: 1
+    appearanceTime: 108.23076923076923
+    frameStartTime: 108.23076923076923
+  - id: "mafia_shot_11_2"
+    roomId: "mafia11"
+    direction: 2
+    time: 109.84615384615384
+    customAppearance: 1
+    appearanceTime: 109.15384615384616
+    frameStartTime: 109.15384615384616
+  - id: "mafia_shot_12_0"
+    roomId: "mafia12"
+    direction: 0
+    time: 111.6923076923077
+    customAppearance: 1
+    appearanceTime: 111.0
+    frameStartTime: 111.0
+  - id: "mafia_shot_12_1"
+    roomId: "mafia12"
+    direction: 2
+    time: 112.61538461538461
+    customAppearance: 1
+    appearanceTime: 111.92307692307692
+    frameStartTime: 111.92307692307692
+  - id: "mafia_shot_12_2"
+    roomId: "mafia12"
+    direction: 6
+    time: 113.53846153846153
+    customAppearance: 1
+    appearanceTime: 112.84615384615384
+    frameStartTime: 112.84615384615384
+  - id: "mafia_shot_13_0"
+    roomId: "mafia13"
+    direction: 2
+    time: 115.38461538461539
+    customAppearance: 1
+    appearanceTime: 114.6923076923077
+    frameStartTime: 114.6923076923077
+  - id: "mafia_shot_13_1"
+    roomId: "mafia13"
+    direction: 6
+    time: 116.3076923076923
+    customAppearance: 1
+    appearanceTime: 115.61538461538461
+    frameStartTime: 115.61538461538461
+  - id: "mafia_shot_13_2"
+    roomId: "mafia13"
+    direction: 0
+    time: 117.23076923076923
+    customAppearance: 1
+    appearanceTime: 116.53846153846153
+    frameStartTime: 116.53846153846153
+  - id: "mafia_shot_14_0"
+    roomId: "mafia14"
+    direction: 6
+    time: 119.07692307692308
+    customAppearance: 1
+    appearanceTime: 118.38461538461539
+    frameStartTime: 118.38461538461539
+  - id: "mafia_shot_14_1"
+    roomId: "mafia14"
+    direction: 0
+    time: 120.0
+    customAppearance: 1
+    appearanceTime: 119.3076923076923
+    frameStartTime: 119.3076923076923
+  - id: "mafia_shot_14_2"
+    roomId: "mafia14"
+    direction: 2
+    time: 120.92307692307692
+    customAppearance: 1
+    appearanceTime: 120.23076923076923
+    frameStartTime: 120.23076923076923
+  - id: "mafia_shot_15_0"
+    roomId: "mafia15"
+    direction: 0
+    time: 122.76923076923077
+    customAppearance: 1
+    appearanceTime: 122.07692307692308
+    frameStartTime: 122.07692307692308
+  - id: "mafia_shot_15_1"
+    roomId: "mafia15"
+    direction: 2
+    time: 123.6923076923077
+    customAppearance: 1
+    appearanceTime: 123.0
+    frameStartTime: 123.0
+  - id: "mafia_shot_15_2"
+    roomId: "mafia15"
+    direction: 6
+    time: 124.61538461538461
+    customAppearance: 1
+    appearanceTime: 123.92307692307692
+    frameStartTime: 123.92307692307692
+  - id: "mafia_shot_16_0"
+    roomId: "mafia16"
+    direction: 2
+    time: 126.46153846153847
+    customAppearance: 1
+    appearanceTime: 125.76923076923077
+    frameStartTime: 125.76923076923077
+  - id: "mafia_shot_16_1"
+    roomId: "mafia16"
+    direction: 6
+    time: 127.38461538461539
+    customAppearance: 1
+    appearanceTime: 126.6923076923077
+    frameStartTime: 126.6923076923077
+  - id: "mafia_shot_16_2"
+    roomId: "mafia16"
+    direction: 0
+    time: 128.30769230769232
+    customAppearance: 1
+    appearanceTime: 127.61538461538461
+    frameStartTime: 127.61538461538461
+  - id: "mafia_shot_17_0"
+    roomId: "mafia17"
+    direction: 6
+    time: 130.15384615384616
+    customAppearance: 1
+    appearanceTime: 129.46153846153845
+    frameStartTime: 129.46153846153845
+  - id: "mafia_shot_17_1"
+    roomId: "mafia17"
+    direction: 0
+    time: 131.07692307692307
+    customAppearance: 1
+    appearanceTime: 130.3846153846154
+    frameStartTime: 130.3846153846154
+  - id: "mafia_shot_17_2"
+    roomId: "mafia17"
+    direction: 2
+    time: 132.0
+    customAppearance: 1
+    appearanceTime: 131.30769230769232
+    frameStartTime: 131.30769230769232
+  - id: "mafia_shot_18_0"
+    roomId: "mafia18"
+    direction: 0
+    time: 133.84615384615384
+    customAppearance: 1
+    appearanceTime: 133.15384615384616
+    frameStartTime: 133.15384615384616
+  - id: "mafia_shot_18_1"
+    roomId: "mafia18"
+    direction: 2
+    time: 134.76923076923077
+    customAppearance: 1
+    appearanceTime: 134.07692307692307
+    frameStartTime: 134.07692307692307
+  - id: "mafia_shot_18_2"
+    roomId: "mafia18"
+    direction: 6
+    time: 135.69230769230768
+    customAppearance: 1
+    appearanceTime: 135.0
+    frameStartTime: 135.0
+  - id: "mafia_shot_19_0"
+    roomId: "mafia19"
+    direction: 2
+    time: 137.53846153846155
+    customAppearance: 1
+    appearanceTime: 136.84615384615384
+    frameStartTime: 136.84615384615384
+  - id: "mafia_shot_19_1"
+    roomId: "mafia19"
+    direction: 6
+    time: 138.46153846153845
+    customAppearance: 1
+    appearanceTime: 137.76923076923077
+    frameStartTime: 137.76923076923077
+  - id: "mafia_shot_19_2"
+    roomId: "mafia19"
+    direction: 0
+    time: 139.3846153846154
+    customAppearance: 1
+    appearanceTime: 138.69230769230768
+    frameStartTime: 138.69230769230768
+  - id: "mafia_shot_20_0"
+    roomId: "mafia20"
+    direction: 6
+    time: 141.23076923076923
+    customAppearance: 1
+    appearanceTime: 140.53846153846155
+    frameStartTime: 140.53846153846155
+  - id: "mafia_shot_20_1"
+    roomId: "mafia20"
+    direction: 0
+    time: 142.15384615384616
+    customAppearance: 1
+    appearanceTime: 141.46153846153845
+    frameStartTime: 141.46153846153845
+  - id: "mafia_shot_20_2"
+    roomId: "mafia20"
+    direction: 2
+    time: 143.07692307692307
+    customAppearance: 1
+    appearanceTime: 142.3846153846154
+    frameStartTime: 142.3846153846154
+  - id: "mafia_shot_21_0"
+    roomId: "mafia21"
+    direction: 0
+    time: 144.92307692307693
+    customAppearance: 1
+    appearanceTime: 144.23076923076923
+    frameStartTime: 144.23076923076923
+  - id: "mafia_shot_21_1"
+    roomId: "mafia21"
+    direction: 2
+    time: 145.84615384615384
+    customAppearance: 1
+    appearanceTime: 145.15384615384616
+    frameStartTime: 145.15384615384616
+  - id: "mafia_shot_21_2"
+    roomId: "mafia21"
+    direction: 6
+    time: 146.76923076923077
+    customAppearance: 1
+    appearanceTime: 146.07692307692307
+    frameStartTime: 146.07692307692307
+  - id: "mafia_shot_22_0"
+    roomId: "mafia22"
+    direction: 2
+    time: 148.6153846153846
+    customAppearance: 1
+    appearanceTime: 147.92307692307693
+    frameStartTime: 147.92307692307693
+  - id: "mafia_shot_22_1"
+    roomId: "mafia22"
+    direction: 6
+    time: 149.53846153846155
+    customAppearance: 1
+    appearanceTime: 148.84615384615384
+    frameStartTime: 148.84615384615384
+  - id: "mafia_shot_22_2"
+    roomId: "mafia22"
+    direction: 0
+    time: 150.46153846153845
+    customAppearance: 1
+    appearanceTime: 149.76923076923077
+    frameStartTime: 149.76923076923077
+  - id: "mafia_shot_23_0"
+    roomId: "mafia23"
+    direction: 6
+    time: 152.30769230769232
+    customAppearance: 1
+    appearanceTime: 151.6153846153846
+    frameStartTime: 151.6153846153846
+  - id: "mafia_shot_23_1"
+    roomId: "mafia23"
+    direction: 0
+    time: 153.23076923076923
+    customAppearance: 1
+    appearanceTime: 152.53846153846155
+    frameStartTime: 152.53846153846155
+  - id: "mafia_shot_23_2"
+    roomId: "mafia23"
+    direction: 2
+    time: 154.15384615384616
+    customAppearance: 1
+    appearanceTime: 153.46153846153845
+    frameStartTime: 153.46153846153845
+  - id: "mafia_shot_24_0"
+    roomId: "mafia24"
+    direction: 0
+    time: 156.0
+    customAppearance: 1
+    appearanceTime: 155.30769230769232
+    frameStartTime: 155.30769230769232
+  - id: "mafia_shot_24_1"
+    roomId: "mafia24"
+    direction: 2
+    time: 156.92307692307693
+    customAppearance: 1
+    appearanceTime: 156.23076923076923
+    frameStartTime: 156.23076923076923
+  - id: "mafia_shot_24_2"
+    roomId: "mafia24"
+    direction: 6
+    time: 157.84615384615384
+    customAppearance: 1
+    appearanceTime: 157.15384615384616
+    frameStartTime: 157.15384615384616
+  - id: "mafia_shot_25_0"
+    roomId: "mafia25"
+    direction: 2
+    time: 159.69230769230768
+    customAppearance: 1
+    appearanceTime: 159.0
+    frameStartTime: 159.0
+  - id: "mafia_shot_25_1"
+    roomId: "mafia25"
+    direction: 6
+    time: 160.6153846153846
+    customAppearance: 1
+    appearanceTime: 159.92307692307693
+    frameStartTime: 159.92307692307693
+  - id: "mafia_shot_25_2"
+    roomId: "mafia25"
+    direction: 0
+    time: 161.53846153846155
+    customAppearance: 1
+    appearanceTime: 160.84615384615384
+    frameStartTime: 160.84615384615384
+  - id: "mafia_shot_26_0"
+    roomId: "mafia26"
+    direction: 6
+    time: 163.3846153846154
+    customAppearance: 1
+    appearanceTime: 162.69230769230768
+    frameStartTime: 162.69230769230768
+  - id: "mafia_shot_26_1"
+    roomId: "mafia26"
+    direction: 0
+    time: 164.30769230769232
+    customAppearance: 1
+    appearanceTime: 163.6153846153846
+    frameStartTime: 163.6153846153846
+  - id: "mafia_shot_26_2"
+    roomId: "mafia26"
+    direction: 2
+    time: 165.23076923076923
+    customAppearance: 1
+    appearanceTime: 164.53846153846155
+    frameStartTime: 164.53846153846155
+  - id: "mafia_shot_27_0"
+    roomId: "mafia27"
+    direction: 0
+    time: 167.07692307692307
+    customAppearance: 1
+    appearanceTime: 166.3846153846154
+    frameStartTime: 166.3846153846154
+  - id: "mafia_shot_27_1"
+    roomId: "mafia27"
+    direction: 2
+    time: 168.0
+    customAppearance: 1
+    appearanceTime: 167.30769230769232
+    frameStartTime: 167.30769230769232
+  - id: "mafia_shot_27_2"
+    roomId: "mafia27"
+    direction: 6
+    time: 168.92307692307693
+    customAppearance: 1
+    appearanceTime: 168.23076923076923
+    frameStartTime: 168.23076923076923
+  mapDraft:
+    settings:
+      bpm: 130
+      offsetSeconds: 0
+      musicDelaySeconds: 0
+      loopMusic: 0
+      beatsPerBar: 4
+      subdivision: 2
+      roomLeadBeats: 4
+      enemyLeadBeats: 3
+      startingRoomId: "mafia0"
+      notes: []
+    roomSize: 6
+    originX: 0
+    originY: 0
+    cameraX: 72.0
+    cameraY: 18.0
+    cameraSize: 7
+    cameraTrack: 0
+    rooms:
+    - id: "mafia0"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 72.0
+      offsetY: 18.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 144
+      frameBeat: 140
+      individualAppearance: 1
+      appearBeat: 140
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 141
+    - id: "mafia1"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 78.0
+      offsetY: 18.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 152
+      frameBeat: 148
+      individualAppearance: 1
+      appearBeat: 148
+      door: 0
+      doorBeat: 151
+      doorFrameBeat: 149
+    - id: "mafia2"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 87.0
+      offsetY: 18.0
+      moveDuration: 0.65
+      moveEase: 2
+      hitBeat: 160
+      frameBeat: 156
+      individualAppearance: 1
+      appearBeat: 156
+      door: 0
+      doorBeat: 159
+      doorFrameBeat: 157
+    - id: "mafia3"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 96.0
+      offsetY: 18.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 168
+      frameBeat: 164
+      individualAppearance: 1
+      appearBeat: 164
+      door: 0
+      doorBeat: 167
+      doorFrameBeat: 165
+    - id: "mafia4"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 96.0
+      offsetY: 24.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 176
+      frameBeat: 172
+      individualAppearance: 1
+      appearBeat: 172
+      door: 1
+      doorBeat: 175
+      doorFrameBeat: 173
+    - id: "mafia5"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 102.0
+      offsetY: 24.0
+      moveDuration: 0.65
+      moveEase: 1
+      hitBeat: 184
+      frameBeat: 180
+      individualAppearance: 1
+      appearBeat: 180
+      door: 0
+      doorBeat: 183
+      doorFrameBeat: 181
+    - id: "mafia6"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 108.0
+      offsetY: 24.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 192
+      frameBeat: 188
+      individualAppearance: 1
+      appearBeat: 188
+      door: 0
+      doorBeat: 191
+      doorFrameBeat: 189
+    - id: "mafia7"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 114.0
+      offsetY: 24.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 200
+      frameBeat: 196
+      individualAppearance: 1
+      appearBeat: 196
+      door: 0
+      doorBeat: 199
+      doorFrameBeat: 197
+    - id: "mafia8"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 114.0
+      offsetY: 30.0
+      moveDuration: 0.65
+      moveEase: 0
+      hitBeat: 208
+      frameBeat: 204
+      individualAppearance: 1
+      appearBeat: 204
+      door: 1
+      doorBeat: 207
+      doorFrameBeat: 205
+    - id: "mafia9"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 123.0
+      offsetY: 30.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 216
+      frameBeat: 212
+      individualAppearance: 1
+      appearBeat: 212
+      door: 0
+      doorBeat: 215
+      doorFrameBeat: 213
+    - id: "mafia10"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 129.0
+      offsetY: 30.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 224
+      frameBeat: 220
+      individualAppearance: 1
+      appearBeat: 220
+      door: 0
+      doorBeat: 223
+      doorFrameBeat: 221
+    - id: "mafia11"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 135.0
+      offsetY: 30.0
+      moveDuration: 0.65
+      moveEase: 3
+      hitBeat: 232
+      frameBeat: 228
+      individualAppearance: 1
+      appearBeat: 228
+      door: 0
+      doorBeat: 231
+      doorFrameBeat: 229
+    - id: "mafia12"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 135.0
+      offsetY: 39.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 240
+      frameBeat: 236
+      individualAppearance: 1
+      appearBeat: 236
+      door: 1
+      doorBeat: 239
+      doorFrameBeat: 237
+    - id: "mafia13"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 141.0
+      offsetY: 39.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 248
+      frameBeat: 244
+      individualAppearance: 1
+      appearBeat: 244
+      door: 0
+      doorBeat: 247
+      doorFrameBeat: 245
+    - id: "mafia14"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 150.0
+      offsetY: 39.0
+      moveDuration: 0.65
+      moveEase: 2
+      hitBeat: 256
+      frameBeat: 252
+      individualAppearance: 1
+      appearBeat: 252
+      door: 0
+      doorBeat: 255
+      doorFrameBeat: 253
+    - id: "mafia15"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 159.0
+      offsetY: 39.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 264
+      frameBeat: 260
+      individualAppearance: 1
+      appearBeat: 260
+      door: 0
+      doorBeat: 263
+      doorFrameBeat: 261
+    - id: "mafia16"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 159.0
+      offsetY: 45.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 272
+      frameBeat: 268
+      individualAppearance: 1
+      appearBeat: 268
+      door: 1
+      doorBeat: 271
+      doorFrameBeat: 269
+    - id: "mafia17"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 165.0
+      offsetY: 45.0
+      moveDuration: 0.65
+      moveEase: 1
+      hitBeat: 280
+      frameBeat: 276
+      individualAppearance: 1
+      appearBeat: 276
+      door: 0
+      doorBeat: 279
+      doorFrameBeat: 277
+    - id: "mafia18"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 171.0
+      offsetY: 45.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 288
+      frameBeat: 284
+      individualAppearance: 1
+      appearBeat: 284
+      door: 0
+      doorBeat: 287
+      doorFrameBeat: 285
+    - id: "mafia19"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 177.0
+      offsetY: 45.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 296
+      frameBeat: 292
+      individualAppearance: 1
+      appearBeat: 292
+      door: 0
+      doorBeat: 295
+      doorFrameBeat: 293
+    - id: "mafia20"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 177.0
+      offsetY: 51.0
+      moveDuration: 0.65
+      moveEase: 0
+      hitBeat: 304
+      frameBeat: 300
+      individualAppearance: 1
+      appearBeat: 300
+      door: 1
+      doorBeat: 303
+      doorFrameBeat: 301
+    - id: "mafia21"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 186.0
+      offsetY: 51.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 312
+      frameBeat: 308
+      individualAppearance: 1
+      appearBeat: 308
+      door: 0
+      doorBeat: 311
+      doorFrameBeat: 309
+    - id: "mafia22"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 192.0
+      offsetY: 51.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 320
+      frameBeat: 316
+      individualAppearance: 1
+      appearBeat: 316
+      door: 0
+      doorBeat: 319
+      doorFrameBeat: 317
+    - id: "mafia23"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 198.0
+      offsetY: 51.0
+      moveDuration: 0.65
+      moveEase: 3
+      hitBeat: 328
+      frameBeat: 324
+      individualAppearance: 1
+      appearBeat: 324
+      door: 0
+      doorBeat: 327
+      doorFrameBeat: 325
+    - id: "mafia24"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 198.0
+      offsetY: 60.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 336
+      frameBeat: 332
+      individualAppearance: 1
+      appearBeat: 332
+      door: 1
+      doorBeat: 335
+      doorFrameBeat: 333
+    - id: "mafia25"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 204.0
+      offsetY: 60.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 344
+      frameBeat: 340
+      individualAppearance: 1
+      appearBeat: 340
+      door: 0
+      doorBeat: 343
+      doorFrameBeat: 341
+    - id: "mafia26"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 213.0
+      offsetY: 60.0
+      moveDuration: 0.65
+      moveEase: 2
+      hitBeat: 352
+      frameBeat: 348
+      individualAppearance: 1
+      appearBeat: 348
+      door: 0
+      doorBeat: 351
+      doorFrameBeat: 349
+    - id: "mafia27"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 222.0
+      offsetY: 60.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 360
+      frameBeat: 356
+      individualAppearance: 1
+      appearBeat: 356
+      door: 0
+      doorBeat: 359
+      doorFrameBeat: 357
+    enemies:
+    - id: "mafia_shot_0_0"
+      roomId: "mafia0"
+      direction: 0
+      hitBeat: 146
+      appearBeat: 144.5
+      frameBeat: 144.5
+    - id: "mafia_shot_0_1"
+      roomId: "mafia0"
+      direction: 2
+      hitBeat: 148
+      appearBeat: 146.5
+      frameBeat: 146.5
+    - id: "mafia_shot_0_2"
+      roomId: "mafia0"
+      direction: 6
+      hitBeat: 150
+      appearBeat: 148.5
+      frameBeat: 148.5
+    - id: "mafia_shot_1_0"
+      roomId: "mafia1"
+      direction: 2
+      hitBeat: 154
+      appearBeat: 152.5
+      frameBeat: 152.5
+    - id: "mafia_shot_1_1"
+      roomId: "mafia1"
+      direction: 6
+      hitBeat: 156
+      appearBeat: 154.5
+      frameBeat: 154.5
+    - id: "mafia_shot_1_2"
+      roomId: "mafia1"
+      direction: 0
+      hitBeat: 158
+      appearBeat: 156.5
+      frameBeat: 156.5
+    - id: "mafia_shot_2_0"
+      roomId: "mafia2"
+      direction: 6
+      hitBeat: 162
+      appearBeat: 160.5
+      frameBeat: 160.5
+    - id: "mafia_shot_2_1"
+      roomId: "mafia2"
+      direction: 0
+      hitBeat: 164
+      appearBeat: 162.5
+      frameBeat: 162.5
+    - id: "mafia_shot_2_2"
+      roomId: "mafia2"
+      direction: 2
+      hitBeat: 166
+      appearBeat: 164.5
+      frameBeat: 164.5
+    - id: "mafia_shot_3_0"
+      roomId: "mafia3"
+      direction: 0
+      hitBeat: 170
+      appearBeat: 168.5
+      frameBeat: 168.5
+    - id: "mafia_shot_3_1"
+      roomId: "mafia3"
+      direction: 2
+      hitBeat: 172
+      appearBeat: 170.5
+      frameBeat: 170.5
+    - id: "mafia_shot_3_2"
+      roomId: "mafia3"
+      direction: 6
+      hitBeat: 174
+      appearBeat: 172.5
+      frameBeat: 172.5
+    - id: "mafia_shot_4_0"
+      roomId: "mafia4"
+      direction: 2
+      hitBeat: 178
+      appearBeat: 176.5
+      frameBeat: 176.5
+    - id: "mafia_shot_4_1"
+      roomId: "mafia4"
+      direction: 6
+      hitBeat: 180
+      appearBeat: 178.5
+      frameBeat: 178.5
+    - id: "mafia_shot_4_2"
+      roomId: "mafia4"
+      direction: 0
+      hitBeat: 182
+      appearBeat: 180.5
+      frameBeat: 180.5
+    - id: "mafia_shot_5_0"
+      roomId: "mafia5"
+      direction: 6
+      hitBeat: 186
+      appearBeat: 184.5
+      frameBeat: 184.5
+    - id: "mafia_shot_5_1"
+      roomId: "mafia5"
+      direction: 0
+      hitBeat: 188
+      appearBeat: 186.5
+      frameBeat: 186.5
+    - id: "mafia_shot_5_2"
+      roomId: "mafia5"
+      direction: 2
+      hitBeat: 190
+      appearBeat: 188.5
+      frameBeat: 188.5
+    - id: "mafia_shot_6_0"
+      roomId: "mafia6"
+      direction: 0
+      hitBeat: 194
+      appearBeat: 192.5
+      frameBeat: 192.5
+    - id: "mafia_shot_6_1"
+      roomId: "mafia6"
+      direction: 2
+      hitBeat: 196
+      appearBeat: 194.5
+      frameBeat: 194.5
+    - id: "mafia_shot_6_2"
+      roomId: "mafia6"
+      direction: 6
+      hitBeat: 198
+      appearBeat: 196.5
+      frameBeat: 196.5
+    - id: "mafia_shot_7_0"
+      roomId: "mafia7"
+      direction: 2
+      hitBeat: 202
+      appearBeat: 200.5
+      frameBeat: 200.5
+    - id: "mafia_shot_7_1"
+      roomId: "mafia7"
+      direction: 6
+      hitBeat: 204
+      appearBeat: 202.5
+      frameBeat: 202.5
+    - id: "mafia_shot_7_2"
+      roomId: "mafia7"
+      direction: 0
+      hitBeat: 206
+      appearBeat: 204.5
+      frameBeat: 204.5
+    - id: "mafia_shot_8_0"
+      roomId: "mafia8"
+      direction: 6
+      hitBeat: 210
+      appearBeat: 208.5
+      frameBeat: 208.5
+    - id: "mafia_shot_8_1"
+      roomId: "mafia8"
+      direction: 0
+      hitBeat: 212
+      appearBeat: 210.5
+      frameBeat: 210.5
+    - id: "mafia_shot_8_2"
+      roomId: "mafia8"
+      direction: 2
+      hitBeat: 214
+      appearBeat: 212.5
+      frameBeat: 212.5
+    - id: "mafia_shot_9_0"
+      roomId: "mafia9"
+      direction: 0
+      hitBeat: 218
+      appearBeat: 216.5
+      frameBeat: 216.5
+    - id: "mafia_shot_9_1"
+      roomId: "mafia9"
+      direction: 2
+      hitBeat: 220
+      appearBeat: 218.5
+      frameBeat: 218.5
+    - id: "mafia_shot_9_2"
+      roomId: "mafia9"
+      direction: 6
+      hitBeat: 222
+      appearBeat: 220.5
+      frameBeat: 220.5
+    - id: "mafia_shot_10_0"
+      roomId: "mafia10"
+      direction: 2
+      hitBeat: 226
+      appearBeat: 224.5
+      frameBeat: 224.5
+    - id: "mafia_shot_10_1"
+      roomId: "mafia10"
+      direction: 6
+      hitBeat: 228
+      appearBeat: 226.5
+      frameBeat: 226.5
+    - id: "mafia_shot_10_2"
+      roomId: "mafia10"
+      direction: 0
+      hitBeat: 230
+      appearBeat: 228.5
+      frameBeat: 228.5
+    - id: "mafia_shot_11_0"
+      roomId: "mafia11"
+      direction: 6
+      hitBeat: 234
+      appearBeat: 232.5
+      frameBeat: 232.5
+    - id: "mafia_shot_11_1"
+      roomId: "mafia11"
+      direction: 0
+      hitBeat: 236
+      appearBeat: 234.5
+      frameBeat: 234.5
+    - id: "mafia_shot_11_2"
+      roomId: "mafia11"
+      direction: 2
+      hitBeat: 238
+      appearBeat: 236.5
+      frameBeat: 236.5
+    - id: "mafia_shot_12_0"
+      roomId: "mafia12"
+      direction: 0
+      hitBeat: 242
+      appearBeat: 240.5
+      frameBeat: 240.5
+    - id: "mafia_shot_12_1"
+      roomId: "mafia12"
+      direction: 2
+      hitBeat: 244
+      appearBeat: 242.5
+      frameBeat: 242.5
+    - id: "mafia_shot_12_2"
+      roomId: "mafia12"
+      direction: 6
+      hitBeat: 246
+      appearBeat: 244.5
+      frameBeat: 244.5
+    - id: "mafia_shot_13_0"
+      roomId: "mafia13"
+      direction: 2
+      hitBeat: 250
+      appearBeat: 248.5
+      frameBeat: 248.5
+    - id: "mafia_shot_13_1"
+      roomId: "mafia13"
+      direction: 6
+      hitBeat: 252
+      appearBeat: 250.5
+      frameBeat: 250.5
+    - id: "mafia_shot_13_2"
+      roomId: "mafia13"
+      direction: 0
+      hitBeat: 254
+      appearBeat: 252.5
+      frameBeat: 252.5
+    - id: "mafia_shot_14_0"
+      roomId: "mafia14"
+      direction: 6
+      hitBeat: 258
+      appearBeat: 256.5
+      frameBeat: 256.5
+    - id: "mafia_shot_14_1"
+      roomId: "mafia14"
+      direction: 0
+      hitBeat: 260
+      appearBeat: 258.5
+      frameBeat: 258.5
+    - id: "mafia_shot_14_2"
+      roomId: "mafia14"
+      direction: 2
+      hitBeat: 262
+      appearBeat: 260.5
+      frameBeat: 260.5
+    - id: "mafia_shot_15_0"
+      roomId: "mafia15"
+      direction: 0
+      hitBeat: 266
+      appearBeat: 264.5
+      frameBeat: 264.5
+    - id: "mafia_shot_15_1"
+      roomId: "mafia15"
+      direction: 2
+      hitBeat: 268
+      appearBeat: 266.5
+      frameBeat: 266.5
+    - id: "mafia_shot_15_2"
+      roomId: "mafia15"
+      direction: 6
+      hitBeat: 270
+      appearBeat: 268.5
+      frameBeat: 268.5
+    - id: "mafia_shot_16_0"
+      roomId: "mafia16"
+      direction: 2
+      hitBeat: 274
+      appearBeat: 272.5
+      frameBeat: 272.5
+    - id: "mafia_shot_16_1"
+      roomId: "mafia16"
+      direction: 6
+      hitBeat: 276
+      appearBeat: 274.5
+      frameBeat: 274.5
+    - id: "mafia_shot_16_2"
+      roomId: "mafia16"
+      direction: 0
+      hitBeat: 278
+      appearBeat: 276.5
+      frameBeat: 276.5
+    - id: "mafia_shot_17_0"
+      roomId: "mafia17"
+      direction: 6
+      hitBeat: 282
+      appearBeat: 280.5
+      frameBeat: 280.5
+    - id: "mafia_shot_17_1"
+      roomId: "mafia17"
+      direction: 0
+      hitBeat: 284
+      appearBeat: 282.5
+      frameBeat: 282.5
+    - id: "mafia_shot_17_2"
+      roomId: "mafia17"
+      direction: 2
+      hitBeat: 286
+      appearBeat: 284.5
+      frameBeat: 284.5
+    - id: "mafia_shot_18_0"
+      roomId: "mafia18"
+      direction: 0
+      hitBeat: 290
+      appearBeat: 288.5
+      frameBeat: 288.5
+    - id: "mafia_shot_18_1"
+      roomId: "mafia18"
+      direction: 2
+      hitBeat: 292
+      appearBeat: 290.5
+      frameBeat: 290.5
+    - id: "mafia_shot_18_2"
+      roomId: "mafia18"
+      direction: 6
+      hitBeat: 294
+      appearBeat: 292.5
+      frameBeat: 292.5
+    - id: "mafia_shot_19_0"
+      roomId: "mafia19"
+      direction: 2
+      hitBeat: 298
+      appearBeat: 296.5
+      frameBeat: 296.5
+    - id: "mafia_shot_19_1"
+      roomId: "mafia19"
+      direction: 6
+      hitBeat: 300
+      appearBeat: 298.5
+      frameBeat: 298.5
+    - id: "mafia_shot_19_2"
+      roomId: "mafia19"
+      direction: 0
+      hitBeat: 302
+      appearBeat: 300.5
+      frameBeat: 300.5
+    - id: "mafia_shot_20_0"
+      roomId: "mafia20"
+      direction: 6
+      hitBeat: 306
+      appearBeat: 304.5
+      frameBeat: 304.5
+    - id: "mafia_shot_20_1"
+      roomId: "mafia20"
+      direction: 0
+      hitBeat: 308
+      appearBeat: 306.5
+      frameBeat: 306.5
+    - id: "mafia_shot_20_2"
+      roomId: "mafia20"
+      direction: 2
+      hitBeat: 310
+      appearBeat: 308.5
+      frameBeat: 308.5
+    - id: "mafia_shot_21_0"
+      roomId: "mafia21"
+      direction: 0
+      hitBeat: 314
+      appearBeat: 312.5
+      frameBeat: 312.5
+    - id: "mafia_shot_21_1"
+      roomId: "mafia21"
+      direction: 2
+      hitBeat: 316
+      appearBeat: 314.5
+      frameBeat: 314.5
+    - id: "mafia_shot_21_2"
+      roomId: "mafia21"
+      direction: 6
+      hitBeat: 318
+      appearBeat: 316.5
+      frameBeat: 316.5
+    - id: "mafia_shot_22_0"
+      roomId: "mafia22"
+      direction: 2
+      hitBeat: 322
+      appearBeat: 320.5
+      frameBeat: 320.5
+    - id: "mafia_shot_22_1"
+      roomId: "mafia22"
+      direction: 6
+      hitBeat: 324
+      appearBeat: 322.5
+      frameBeat: 322.5
+    - id: "mafia_shot_22_2"
+      roomId: "mafia22"
+      direction: 0
+      hitBeat: 326
+      appearBeat: 324.5
+      frameBeat: 324.5
+    - id: "mafia_shot_23_0"
+      roomId: "mafia23"
+      direction: 6
+      hitBeat: 330
+      appearBeat: 328.5
+      frameBeat: 328.5
+    - id: "mafia_shot_23_1"
+      roomId: "mafia23"
+      direction: 0
+      hitBeat: 332
+      appearBeat: 330.5
+      frameBeat: 330.5
+    - id: "mafia_shot_23_2"
+      roomId: "mafia23"
+      direction: 2
+      hitBeat: 334
+      appearBeat: 332.5
+      frameBeat: 332.5
+    - id: "mafia_shot_24_0"
+      roomId: "mafia24"
+      direction: 0
+      hitBeat: 338
+      appearBeat: 336.5
+      frameBeat: 336.5
+    - id: "mafia_shot_24_1"
+      roomId: "mafia24"
+      direction: 2
+      hitBeat: 340
+      appearBeat: 338.5
+      frameBeat: 338.5
+    - id: "mafia_shot_24_2"
+      roomId: "mafia24"
+      direction: 6
+      hitBeat: 342
+      appearBeat: 340.5
+      frameBeat: 340.5
+    - id: "mafia_shot_25_0"
+      roomId: "mafia25"
+      direction: 2
+      hitBeat: 346
+      appearBeat: 344.5
+      frameBeat: 344.5
+    - id: "mafia_shot_25_1"
+      roomId: "mafia25"
+      direction: 6
+      hitBeat: 348
+      appearBeat: 346.5
+      frameBeat: 346.5
+    - id: "mafia_shot_25_2"
+      roomId: "mafia25"
+      direction: 0
+      hitBeat: 350
+      appearBeat: 348.5
+      frameBeat: 348.5
+    - id: "mafia_shot_26_0"
+      roomId: "mafia26"
+      direction: 6
+      hitBeat: 354
+      appearBeat: 352.5
+      frameBeat: 352.5
+    - id: "mafia_shot_26_1"
+      roomId: "mafia26"
+      direction: 0
+      hitBeat: 356
+      appearBeat: 354.5
+      frameBeat: 354.5
+    - id: "mafia_shot_26_2"
+      roomId: "mafia26"
+      direction: 2
+      hitBeat: 358
+      appearBeat: 356.5
+      frameBeat: 356.5
+    - id: "mafia_shot_27_0"
+      roomId: "mafia27"
+      direction: 0
+      hitBeat: 362
+      appearBeat: 360.5
+      frameBeat: 360.5
+    - id: "mafia_shot_27_1"
+      roomId: "mafia27"
+      direction: 2
+      hitBeat: 364
+      appearBeat: 362.5
+      frameBeat: 362.5
+    - id: "mafia_shot_27_2"
+      roomId: "mafia27"
+      direction: 6
+      hitBeat: 366
+      appearBeat: 364.5
+      frameBeat: 364.5
+    groups: []
+    cameras: []
+    shakes: []
+  appliedMap:
+    settings:
+      bpm: 130
+      offsetSeconds: 0
+      musicDelaySeconds: 0
+      loopMusic: 0
+      beatsPerBar: 4
+      subdivision: 2
+      roomLeadBeats: 4
+      enemyLeadBeats: 3
+      startingRoomId: "mafia0"
+      notes: []
+    roomSize: 6
+    originX: 0
+    originY: 0
+    cameraX: 72.0
+    cameraY: 18.0
+    cameraSize: 7
+    cameraTrack: 0
+    rooms:
+    - id: "mafia0"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 72.0
+      offsetY: 18.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 144
+      frameBeat: 140
+      individualAppearance: 1
+      appearBeat: 140
+      door: 0
+      doorBeat: 0
+      doorFrameBeat: 141
+    - id: "mafia1"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 78.0
+      offsetY: 18.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 152
+      frameBeat: 148
+      individualAppearance: 1
+      appearBeat: 148
+      door: 0
+      doorBeat: 151
+      doorFrameBeat: 149
+    - id: "mafia2"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 87.0
+      offsetY: 18.0
+      moveDuration: 0.65
+      moveEase: 2
+      hitBeat: 160
+      frameBeat: 156
+      individualAppearance: 1
+      appearBeat: 156
+      door: 0
+      doorBeat: 159
+      doorFrameBeat: 157
+    - id: "mafia3"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 96.0
+      offsetY: 18.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 168
+      frameBeat: 164
+      individualAppearance: 1
+      appearBeat: 164
+      door: 0
+      doorBeat: 167
+      doorFrameBeat: 165
+    - id: "mafia4"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 96.0
+      offsetY: 24.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 176
+      frameBeat: 172
+      individualAppearance: 1
+      appearBeat: 172
+      door: 1
+      doorBeat: 175
+      doorFrameBeat: 173
+    - id: "mafia5"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 102.0
+      offsetY: 24.0
+      moveDuration: 0.65
+      moveEase: 1
+      hitBeat: 184
+      frameBeat: 180
+      individualAppearance: 1
+      appearBeat: 180
+      door: 0
+      doorBeat: 183
+      doorFrameBeat: 181
+    - id: "mafia6"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 108.0
+      offsetY: 24.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 192
+      frameBeat: 188
+      individualAppearance: 1
+      appearBeat: 188
+      door: 0
+      doorBeat: 191
+      doorFrameBeat: 189
+    - id: "mafia7"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 114.0
+      offsetY: 24.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 200
+      frameBeat: 196
+      individualAppearance: 1
+      appearBeat: 196
+      door: 0
+      doorBeat: 199
+      doorFrameBeat: 197
+    - id: "mafia8"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 114.0
+      offsetY: 30.0
+      moveDuration: 0.65
+      moveEase: 0
+      hitBeat: 208
+      frameBeat: 204
+      individualAppearance: 1
+      appearBeat: 204
+      door: 1
+      doorBeat: 207
+      doorFrameBeat: 205
+    - id: "mafia9"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 123.0
+      offsetY: 30.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 216
+      frameBeat: 212
+      individualAppearance: 1
+      appearBeat: 212
+      door: 0
+      doorBeat: 215
+      doorFrameBeat: 213
+    - id: "mafia10"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 129.0
+      offsetY: 30.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 224
+      frameBeat: 220
+      individualAppearance: 1
+      appearBeat: 220
+      door: 0
+      doorBeat: 223
+      doorFrameBeat: 221
+    - id: "mafia11"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 135.0
+      offsetY: 30.0
+      moveDuration: 0.65
+      moveEase: 3
+      hitBeat: 232
+      frameBeat: 228
+      individualAppearance: 1
+      appearBeat: 228
+      door: 0
+      doorBeat: 231
+      doorFrameBeat: 229
+    - id: "mafia12"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 135.0
+      offsetY: 39.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 240
+      frameBeat: 236
+      individualAppearance: 1
+      appearBeat: 236
+      door: 1
+      doorBeat: 239
+      doorFrameBeat: 237
+    - id: "mafia13"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 141.0
+      offsetY: 39.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 248
+      frameBeat: 244
+      individualAppearance: 1
+      appearBeat: 244
+      door: 0
+      doorBeat: 247
+      doorFrameBeat: 245
+    - id: "mafia14"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 150.0
+      offsetY: 39.0
+      moveDuration: 0.65
+      moveEase: 2
+      hitBeat: 256
+      frameBeat: 252
+      individualAppearance: 1
+      appearBeat: 252
+      door: 0
+      doorBeat: 255
+      doorFrameBeat: 253
+    - id: "mafia15"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 159.0
+      offsetY: 39.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 264
+      frameBeat: 260
+      individualAppearance: 1
+      appearBeat: 260
+      door: 0
+      doorBeat: 263
+      doorFrameBeat: 261
+    - id: "mafia16"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 159.0
+      offsetY: 45.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 272
+      frameBeat: 268
+      individualAppearance: 1
+      appearBeat: 268
+      door: 1
+      doorBeat: 271
+      doorFrameBeat: 269
+    - id: "mafia17"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 165.0
+      offsetY: 45.0
+      moveDuration: 0.65
+      moveEase: 1
+      hitBeat: 280
+      frameBeat: 276
+      individualAppearance: 1
+      appearBeat: 276
+      door: 0
+      doorBeat: 279
+      doorFrameBeat: 277
+    - id: "mafia18"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 171.0
+      offsetY: 45.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 288
+      frameBeat: 284
+      individualAppearance: 1
+      appearBeat: 284
+      door: 0
+      doorBeat: 287
+      doorFrameBeat: 285
+    - id: "mafia19"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 177.0
+      offsetY: 45.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 296
+      frameBeat: 292
+      individualAppearance: 1
+      appearBeat: 292
+      door: 0
+      doorBeat: 295
+      doorFrameBeat: 293
+    - id: "mafia20"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 177.0
+      offsetY: 51.0
+      moveDuration: 0.65
+      moveEase: 0
+      hitBeat: 304
+      frameBeat: 300
+      individualAppearance: 1
+      appearBeat: 300
+      door: 1
+      doorBeat: 303
+      doorFrameBeat: 301
+    - id: "mafia21"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 186.0
+      offsetY: 51.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 312
+      frameBeat: 308
+      individualAppearance: 1
+      appearBeat: 308
+      door: 0
+      doorBeat: 311
+      doorFrameBeat: 309
+    - id: "mafia22"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 192.0
+      offsetY: 51.0
+      moveDuration: 0.32
+      moveEase: 2
+      hitBeat: 320
+      frameBeat: 316
+      individualAppearance: 1
+      appearBeat: 316
+      door: 0
+      doorBeat: 319
+      doorFrameBeat: 317
+    - id: "mafia23"
+      x: 0
+      y: 0
+      width: 6
+      height: 12
+      offsetX: 198.0
+      offsetY: 51.0
+      moveDuration: 0.65
+      moveEase: 3
+      hitBeat: 328
+      frameBeat: 324
+      individualAppearance: 1
+      appearBeat: 324
+      door: 0
+      doorBeat: 327
+      doorFrameBeat: 325
+    - id: "mafia24"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 198.0
+      offsetY: 60.0
+      moveDuration: 0.32
+      moveEase: 0
+      hitBeat: 336
+      frameBeat: 332
+      individualAppearance: 1
+      appearBeat: 332
+      door: 1
+      doorBeat: 335
+      doorFrameBeat: 333
+    - id: "mafia25"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 204.0
+      offsetY: 60.0
+      moveDuration: 0.32
+      moveEase: 1
+      hitBeat: 344
+      frameBeat: 340
+      individualAppearance: 1
+      appearBeat: 340
+      door: 0
+      doorBeat: 343
+      doorFrameBeat: 341
+    - id: "mafia26"
+      x: 0
+      y: 0
+      width: 12
+      height: 6
+      offsetX: 213.0
+      offsetY: 60.0
+      moveDuration: 0.65
+      moveEase: 2
+      hitBeat: 352
+      frameBeat: 348
+      individualAppearance: 1
+      appearBeat: 348
+      door: 0
+      doorBeat: 351
+      doorFrameBeat: 349
+    - id: "mafia27"
+      x: 0
+      y: 0
+      width: 6
+      height: 6
+      offsetX: 222.0
+      offsetY: 60.0
+      moveDuration: 0.32
+      moveEase: 3
+      hitBeat: 360
+      frameBeat: 356
+      individualAppearance: 1
+      appearBeat: 356
+      door: 0
+      doorBeat: 359
+      doorFrameBeat: 357
+    enemies:
+    - id: "mafia_shot_0_0"
+      roomId: "mafia0"
+      direction: 0
+      hitBeat: 146
+      appearBeat: 144.5
+      frameBeat: 144.5
+    - id: "mafia_shot_0_1"
+      roomId: "mafia0"
+      direction: 2
+      hitBeat: 148
+      appearBeat: 146.5
+      frameBeat: 146.5
+    - id: "mafia_shot_0_2"
+      roomId: "mafia0"
+      direction: 6
+      hitBeat: 150
+      appearBeat: 148.5
+      frameBeat: 148.5
+    - id: "mafia_shot_1_0"
+      roomId: "mafia1"
+      direction: 2
+      hitBeat: 154
+      appearBeat: 152.5
+      frameBeat: 152.5
+    - id: "mafia_shot_1_1"
+      roomId: "mafia1"
+      direction: 6
+      hitBeat: 156
+      appearBeat: 154.5
+      frameBeat: 154.5
+    - id: "mafia_shot_1_2"
+      roomId: "mafia1"
+      direction: 0
+      hitBeat: 158
+      appearBeat: 156.5
+      frameBeat: 156.5
+    - id: "mafia_shot_2_0"
+      roomId: "mafia2"
+      direction: 6
+      hitBeat: 162
+      appearBeat: 160.5
+      frameBeat: 160.5
+    - id: "mafia_shot_2_1"
+      roomId: "mafia2"
+      direction: 0
+      hitBeat: 164
+      appearBeat: 162.5
+      frameBeat: 162.5
+    - id: "mafia_shot_2_2"
+      roomId: "mafia2"
+      direction: 2
+      hitBeat: 166
+      appearBeat: 164.5
+      frameBeat: 164.5
+    - id: "mafia_shot_3_0"
+      roomId: "mafia3"
+      direction: 0
+      hitBeat: 170
+      appearBeat: 168.5
+      frameBeat: 168.5
+    - id: "mafia_shot_3_1"
+      roomId: "mafia3"
+      direction: 2
+      hitBeat: 172
+      appearBeat: 170.5
+      frameBeat: 170.5
+    - id: "mafia_shot_3_2"
+      roomId: "mafia3"
+      direction: 6
+      hitBeat: 174
+      appearBeat: 172.5
+      frameBeat: 172.5
+    - id: "mafia_shot_4_0"
+      roomId: "mafia4"
+      direction: 2
+      hitBeat: 178
+      appearBeat: 176.5
+      frameBeat: 176.5
+    - id: "mafia_shot_4_1"
+      roomId: "mafia4"
+      direction: 6
+      hitBeat: 180
+      appearBeat: 178.5
+      frameBeat: 178.5
+    - id: "mafia_shot_4_2"
+      roomId: "mafia4"
+      direction: 0
+      hitBeat: 182
+      appearBeat: 180.5
+      frameBeat: 180.5
+    - id: "mafia_shot_5_0"
+      roomId: "mafia5"
+      direction: 6
+      hitBeat: 186
+      appearBeat: 184.5
+      frameBeat: 184.5
+    - id: "mafia_shot_5_1"
+      roomId: "mafia5"
+      direction: 0
+      hitBeat: 188
+      appearBeat: 186.5
+      frameBeat: 186.5
+    - id: "mafia_shot_5_2"
+      roomId: "mafia5"
+      direction: 2
+      hitBeat: 190
+      appearBeat: 188.5
+      frameBeat: 188.5
+    - id: "mafia_shot_6_0"
+      roomId: "mafia6"
+      direction: 0
+      hitBeat: 194
+      appearBeat: 192.5
+      frameBeat: 192.5
+    - id: "mafia_shot_6_1"
+      roomId: "mafia6"
+      direction: 2
+      hitBeat: 196
+      appearBeat: 194.5
+      frameBeat: 194.5
+    - id: "mafia_shot_6_2"
+      roomId: "mafia6"
+      direction: 6
+      hitBeat: 198
+      appearBeat: 196.5
+      frameBeat: 196.5
+    - id: "mafia_shot_7_0"
+      roomId: "mafia7"
+      direction: 2
+      hitBeat: 202
+      appearBeat: 200.5
+      frameBeat: 200.5
+    - id: "mafia_shot_7_1"
+      roomId: "mafia7"
+      direction: 6
+      hitBeat: 204
+      appearBeat: 202.5
+      frameBeat: 202.5
+    - id: "mafia_shot_7_2"
+      roomId: "mafia7"
+      direction: 0
+      hitBeat: 206
+      appearBeat: 204.5
+      frameBeat: 204.5
+    - id: "mafia_shot_8_0"
+      roomId: "mafia8"
+      direction: 6
+      hitBeat: 210
+      appearBeat: 208.5
+      frameBeat: 208.5
+    - id: "mafia_shot_8_1"
+      roomId: "mafia8"
+      direction: 0
+      hitBeat: 212
+      appearBeat: 210.5
+      frameBeat: 210.5
+    - id: "mafia_shot_8_2"
+      roomId: "mafia8"
+      direction: 2
+      hitBeat: 214
+      appearBeat: 212.5
+      frameBeat: 212.5
+    - id: "mafia_shot_9_0"
+      roomId: "mafia9"
+      direction: 0
+      hitBeat: 218
+      appearBeat: 216.5
+      frameBeat: 216.5
+    - id: "mafia_shot_9_1"
+      roomId: "mafia9"
+      direction: 2
+      hitBeat: 220
+      appearBeat: 218.5
+      frameBeat: 218.5
+    - id: "mafia_shot_9_2"
+      roomId: "mafia9"
+      direction: 6
+      hitBeat: 222
+      appearBeat: 220.5
+      frameBeat: 220.5
+    - id: "mafia_shot_10_0"
+      roomId: "mafia10"
+      direction: 2
+      hitBeat: 226
+      appearBeat: 224.5
+      frameBeat: 224.5
+    - id: "mafia_shot_10_1"
+      roomId: "mafia10"
+      direction: 6
+      hitBeat: 228
+      appearBeat: 226.5
+      frameBeat: 226.5
+    - id: "mafia_shot_10_2"
+      roomId: "mafia10"
+      direction: 0
+      hitBeat: 230
+      appearBeat: 228.5
+      frameBeat: 228.5
+    - id: "mafia_shot_11_0"
+      roomId: "mafia11"
+      direction: 6
+      hitBeat: 234
+      appearBeat: 232.5
+      frameBeat: 232.5
+    - id: "mafia_shot_11_1"
+      roomId: "mafia11"
+      direction: 0
+      hitBeat: 236
+      appearBeat: 234.5
+      frameBeat: 234.5
+    - id: "mafia_shot_11_2"
+      roomId: "mafia11"
+      direction: 2
+      hitBeat: 238
+      appearBeat: 236.5
+      frameBeat: 236.5
+    - id: "mafia_shot_12_0"
+      roomId: "mafia12"
+      direction: 0
+      hitBeat: 242
+      appearBeat: 240.5
+      frameBeat: 240.5
+    - id: "mafia_shot_12_1"
+      roomId: "mafia12"
+      direction: 2
+      hitBeat: 244
+      appearBeat: 242.5
+      frameBeat: 242.5
+    - id: "mafia_shot_12_2"
+      roomId: "mafia12"
+      direction: 6
+      hitBeat: 246
+      appearBeat: 244.5
+      frameBeat: 244.5
+    - id: "mafia_shot_13_0"
+      roomId: "mafia13"
+      direction: 2
+      hitBeat: 250
+      appearBeat: 248.5
+      frameBeat: 248.5
+    - id: "mafia_shot_13_1"
+      roomId: "mafia13"
+      direction: 6
+      hitBeat: 252
+      appearBeat: 250.5
+      frameBeat: 250.5
+    - id: "mafia_shot_13_2"
+      roomId: "mafia13"
+      direction: 0
+      hitBeat: 254
+      appearBeat: 252.5
+      frameBeat: 252.5
+    - id: "mafia_shot_14_0"
+      roomId: "mafia14"
+      direction: 6
+      hitBeat: 258
+      appearBeat: 256.5
+      frameBeat: 256.5
+    - id: "mafia_shot_14_1"
+      roomId: "mafia14"
+      direction: 0
+      hitBeat: 260
+      appearBeat: 258.5
+      frameBeat: 258.5
+    - id: "mafia_shot_14_2"
+      roomId: "mafia14"
+      direction: 2
+      hitBeat: 262
+      appearBeat: 260.5
+      frameBeat: 260.5
+    - id: "mafia_shot_15_0"
+      roomId: "mafia15"
+      direction: 0
+      hitBeat: 266
+      appearBeat: 264.5
+      frameBeat: 264.5
+    - id: "mafia_shot_15_1"
+      roomId: "mafia15"
+      direction: 2
+      hitBeat: 268
+      appearBeat: 266.5
+      frameBeat: 266.5
+    - id: "mafia_shot_15_2"
+      roomId: "mafia15"
+      direction: 6
+      hitBeat: 270
+      appearBeat: 268.5
+      frameBeat: 268.5
+    - id: "mafia_shot_16_0"
+      roomId: "mafia16"
+      direction: 2
+      hitBeat: 274
+      appearBeat: 272.5
+      frameBeat: 272.5
+    - id: "mafia_shot_16_1"
+      roomId: "mafia16"
+      direction: 6
+      hitBeat: 276
+      appearBeat: 274.5
+      frameBeat: 274.5
+    - id: "mafia_shot_16_2"
+      roomId: "mafia16"
+      direction: 0
+      hitBeat: 278
+      appearBeat: 276.5
+      frameBeat: 276.5
+    - id: "mafia_shot_17_0"
+      roomId: "mafia17"
+      direction: 6
+      hitBeat: 282
+      appearBeat: 280.5
+      frameBeat: 280.5
+    - id: "mafia_shot_17_1"
+      roomId: "mafia17"
+      direction: 0
+      hitBeat: 284
+      appearBeat: 282.5
+      frameBeat: 282.5
+    - id: "mafia_shot_17_2"
+      roomId: "mafia17"
+      direction: 2
+      hitBeat: 286
+      appearBeat: 284.5
+      frameBeat: 284.5
+    - id: "mafia_shot_18_0"
+      roomId: "mafia18"
+      direction: 0
+      hitBeat: 290
+      appearBeat: 288.5
+      frameBeat: 288.5
+    - id: "mafia_shot_18_1"
+      roomId: "mafia18"
+      direction: 2
+      hitBeat: 292
+      appearBeat: 290.5
+      frameBeat: 290.5
+    - id: "mafia_shot_18_2"
+      roomId: "mafia18"
+      direction: 6
+      hitBeat: 294
+      appearBeat: 292.5
+      frameBeat: 292.5
+    - id: "mafia_shot_19_0"
+      roomId: "mafia19"
+      direction: 2
+      hitBeat: 298
+      appearBeat: 296.5
+      frameBeat: 296.5
+    - id: "mafia_shot_19_1"
+      roomId: "mafia19"
+      direction: 6
+      hitBeat: 300
+      appearBeat: 298.5
+      frameBeat: 298.5
+    - id: "mafia_shot_19_2"
+      roomId: "mafia19"
+      direction: 0
+      hitBeat: 302
+      appearBeat: 300.5
+      frameBeat: 300.5
+    - id: "mafia_shot_20_0"
+      roomId: "mafia20"
+      direction: 6
+      hitBeat: 306
+      appearBeat: 304.5
+      frameBeat: 304.5
+    - id: "mafia_shot_20_1"
+      roomId: "mafia20"
+      direction: 0
+      hitBeat: 308
+      appearBeat: 306.5
+      frameBeat: 306.5
+    - id: "mafia_shot_20_2"
+      roomId: "mafia20"
+      direction: 2
+      hitBeat: 310
+      appearBeat: 308.5
+      frameBeat: 308.5
+    - id: "mafia_shot_21_0"
+      roomId: "mafia21"
+      direction: 0
+      hitBeat: 314
+      appearBeat: 312.5
+      frameBeat: 312.5
+    - id: "mafia_shot_21_1"
+      roomId: "mafia21"
+      direction: 2
+      hitBeat: 316
+      appearBeat: 314.5
+      frameBeat: 314.5
+    - id: "mafia_shot_21_2"
+      roomId: "mafia21"
+      direction: 6
+      hitBeat: 318
+      appearBeat: 316.5
+      frameBeat: 316.5
+    - id: "mafia_shot_22_0"
+      roomId: "mafia22"
+      direction: 2
+      hitBeat: 322
+      appearBeat: 320.5
+      frameBeat: 320.5
+    - id: "mafia_shot_22_1"
+      roomId: "mafia22"
+      direction: 6
+      hitBeat: 324
+      appearBeat: 322.5
+      frameBeat: 322.5
+    - id: "mafia_shot_22_2"
+      roomId: "mafia22"
+      direction: 0
+      hitBeat: 326
+      appearBeat: 324.5
+      frameBeat: 324.5
+    - id: "mafia_shot_23_0"
+      roomId: "mafia23"
+      direction: 6
+      hitBeat: 330
+      appearBeat: 328.5
+      frameBeat: 328.5
+    - id: "mafia_shot_23_1"
+      roomId: "mafia23"
+      direction: 0
+      hitBeat: 332
+      appearBeat: 330.5
+      frameBeat: 330.5
+    - id: "mafia_shot_23_2"
+      roomId: "mafia23"
+      direction: 2
+      hitBeat: 334
+      appearBeat: 332.5
+      frameBeat: 332.5
+    - id: "mafia_shot_24_0"
+      roomId: "mafia24"
+      direction: 0
+      hitBeat: 338
+      appearBeat: 336.5
+      frameBeat: 336.5
+    - id: "mafia_shot_24_1"
+      roomId: "mafia24"
+      direction: 2
+      hitBeat: 340
+      appearBeat: 338.5
+      frameBeat: 338.5
+    - id: "mafia_shot_24_2"
+      roomId: "mafia24"
+      direction: 6
+      hitBeat: 342
+      appearBeat: 340.5
+      frameBeat: 340.5
+    - id: "mafia_shot_25_0"
+      roomId: "mafia25"
+      direction: 2
+      hitBeat: 346
+      appearBeat: 344.5
+      frameBeat: 344.5
+    - id: "mafia_shot_25_1"
+      roomId: "mafia25"
+      direction: 6
+      hitBeat: 348
+      appearBeat: 346.5
+      frameBeat: 346.5
+    - id: "mafia_shot_25_2"
+      roomId: "mafia25"
+      direction: 0
+      hitBeat: 350
+      appearBeat: 348.5
+      frameBeat: 348.5
+    - id: "mafia_shot_26_0"
+      roomId: "mafia26"
+      direction: 6
+      hitBeat: 354
+      appearBeat: 352.5
+      frameBeat: 352.5
+    - id: "mafia_shot_26_1"
+      roomId: "mafia26"
+      direction: 0
+      hitBeat: 356
+      appearBeat: 354.5
+      frameBeat: 354.5
+    - id: "mafia_shot_26_2"
+      roomId: "mafia26"
+      direction: 2
+      hitBeat: 358
+      appearBeat: 356.5
+      frameBeat: 356.5
+    - id: "mafia_shot_27_0"
+      roomId: "mafia27"
+      direction: 0
+      hitBeat: 362
+      appearBeat: 360.5
+      frameBeat: 360.5
+    - id: "mafia_shot_27_1"
+      roomId: "mafia27"
+      direction: 2
+      hitBeat: 364
+      appearBeat: 362.5
+      frameBeat: 362.5
+    - id: "mafia_shot_27_2"
+      roomId: "mafia27"
+      direction: 6
+      hitBeat: 366
+      appearBeat: 364.5
+      frameBeat: 364.5
+    groups: []
+    cameras: []
+    shakes: []
+  mapDraftMusic: {fileID: 8300000, guid: 2cc366cd6f35084498090693948939ab, type: 3}

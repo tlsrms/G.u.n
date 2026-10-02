@@ -84,8 +84,68 @@ internal static class RoomRunChecks
         Check(!run.TryDequeueResult(out _), "reset drops stale actions");
     }
 
+    private static void CheckAutomaticPlayback()
+    {
+        var moves = new[] {
+            new MoveNote { destinationId = "next", direction = MoveDirection.Right,
+                hasDoor = true, doorTime = 1, moveDelay = 1, time = 2 }
+        };
+        var enemies = new[] {
+            new EnemyNote { id = "start_enemy", roomId = "start", time = .5 },
+            new EnemyNote { id = "arrival_enemy", roomId = "next", time = 2.1 },
+            new EnemyNote { id = "last_enemy", roomId = "next", time = 3 }
+        };
+        var run = new RoomRun(moves, Window, .25, enemies);
+        run.Begin();
+        int presentations = 0;
+        run.AdvanceAutomatically(.25, _ => presentations++);
+        Check(run.JudgmentVersion == 0, "auto does not consume future notes");
+        run.AdvanceAutomatically(2.1, _ => presentations++);
+        Check(run.Phase == RunPhase.Moving && run.EnemyDefeated(1) && run.DoorBroken(0),
+            "auto shoots during movement and breaks entrance");
+        run.AdvanceAutomatically(10, _ => presentations++);
+        Check(run.Phase == RunPhase.Cleared && run.Failure == FailureReason.None,
+            "auto survives skipped frames and clears last-room enemies");
+        Check(run.JudgmentVersion == 5 && run.AccurateJudgments == 5 && presentations == 6,
+            "auto delivers every action and presentation once");
+        double previous = double.NegativeInfinity;
+        while (run.TryDequeueResult(out var action))
+        {
+            Check(action.Time >= previous && action.Kind != RoomActionKind.Failed, "auto chronological success events");
+            previous = action.Time;
+        }
+        run.AdvanceAutomatically(20, _ => presentations++);
+        Check(presentations == 6, "auto completion does not duplicate effects");
+        run.Begin();
+        run.Advance(10);
+        Check(run.Phase == RunPhase.Dead, "ordinary playback still fails without input after reset");
+        run.Begin();
+        run.AdvanceAutomatically(double.NaN);
+        run.AdvanceAutomatically(double.PositiveInfinity);
+        Check(run.JudgmentVersion == 0, "auto rejects invalid clocks");
+        run.AdvanceAutomatically(10);
+        Check(run.Phase == RunPhase.Cleared, "auto restarts without stale state");
+
+        // Valid charts can require an early input to fit consecutive moves. Debug mode
+        // must remain invincible when its exact-beat movement reaches the next note late.
+        var overlap = new RoomRun(new[] {
+            new MoveNote { destinationId = "a", time = 1 },
+            new MoveNote { destinationId = "b", time = 1.2 }
+        }, Window, .3);
+        overlap.Begin();
+        overlap.AdvanceAutomatically(10);
+        Check(overlap.Phase == RunPhase.Cleared && overlap.CompletedMoves == 2,
+            "auto completes overlapping movement windows without death");
+    }
+
     public static void Main(string[] args)
     {
+        CheckAutomaticPlayback();
+        if (args.Length > 0)
+        {
+            MafiaStageChecks.Run(args[0]);
+            MapChartMigrationChecks.Run(args[0]);
+        }
         var sectionMoves = new[] { new MoveNote { destinationId = "section_end", time = 20, hasDoor = true, doorTime = 18, moveDelay = 2 } };
         var sectionEnemies = new[] { new EnemyNote { id = "section_target", roomId = "start", time = 16 } };
         Check(SectionTiming.CanEnter(sectionMoves, sectionEnemies, 15, Window), "section accepts entry before all windows");

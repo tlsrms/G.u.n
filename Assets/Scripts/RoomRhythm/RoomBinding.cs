@@ -74,7 +74,8 @@ namespace Gun.RoomRhythm
         }
 
         public void Present(bool visible, bool current, bool future, float progress, bool showFrame,
-            double time, double target, float frameProgress = -1, bool sealExit = false, double frameStart = 0)
+            double time, double target, float frameProgress = -1, bool sealExit = false, double frameStart = 0,
+            double arrivedAt = double.NegativeInfinity)
         {
             // Keep the hierarchy alive: room surfaces and timing frames have separate lifetimes.
             visuals.SetActive(true);
@@ -101,10 +102,21 @@ namespace Gun.RoomRhythm
                     bool horizontal = wall.localScale.x > wall.localScale.y;
                     MoveDirection side = horizontal ? (p.y > 0 ? MoveDirection.Up : MoveDirection.Down)
                         : (p.x > 0 ? MoveDirection.Right : MoveDirection.Left);
-                    bool open = !sealExit && (side == exitDirection || !current && side == entranceDirection);
+                    float opening = 0;
+                    if (!sealExit)
+                    {
+                        // The next exit takes priority: a return note keeps this passage open.
+                        if (side == exitDirection) opening = 1;
+                        else if (side == entranceDirection)
+                        {
+                            float closing = current
+                                ? Mathf.Clamp01((float)((time - arrivedAt) / chart.doorCloseDuration)) : 0;
+                            opening = (1 - closing) * (1 - closing) * (1 - closing);
+                        }
+                    }
                     float half = (horizontal ? Size.x : Size.y) * .5f;
                     float boundary = (horizontal ? Size.y : Size.x) * .5f;
-                    float gap = open ? chart.passageWidth * .5f : 0;
+                    float gap = chart.passageWidth * .5f * opening;
                     float length = half - gap + chart.judgmentLineWidth * .5f;
                     float middle = (half + gap + chart.judgmentLineWidth * .5f) * .5f;
                     wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * middle, Mathf.Sign(p.y) * boundary, 0)

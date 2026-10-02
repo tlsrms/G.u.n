@@ -48,6 +48,21 @@ namespace Gun.RoomRhythm.Editor
     [CustomEditor(typeof(RoomSession))]
     public sealed class RoomSessionInspector : UnityEditor.Editor
     {
+        [MenuItem("Tools/Gun/Select Stage Session")]
+        private static void SelectStageSession()
+        {
+            var sessions = Array.FindAll(Resources.FindObjectsOfTypeAll<RoomSession>(),
+                session => session.gameObject.scene.IsValid() && session.gameObject.scene.isLoaded);
+            if (sessions.Length == 0)
+            {
+                Debug.LogWarning("현재 열린 씬에는 Room Session이 없습니다. 플레이할 스테이지 씬을 연 뒤 "
+                    + "Tools > Gun > Select Stage Session을 실행하세요. 허브·안전지대에서는 자동 전투 설정을 찾을 수 없습니다.");
+                return;
+            }
+            Selection.objects = Array.ConvertAll(sessions, session => (UnityEngine.Object)session.gameObject);
+            EditorGUIUtility.PingObject(sessions[0].gameObject);
+        }
+
         private string result;
         private MessageType resultType;
         public override void OnInspectorGUI()

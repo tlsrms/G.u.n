@@ -13,6 +13,7 @@ $rules = Join-Path $root 'Assets/Scripts/RoomRhythm/TimingRules.cs'
 $model = Join-Path $root 'Assets/Scripts/RoomRhythm/RoomRun.cs'
 $selection = Join-Path $root 'Assets/Scripts/RoomRhythm/TargetSelection.cs'
 $test = Join-Path $PSScriptRoot 'RoomRunChecks.cs'
+$stageTest = Join-Path $PSScriptRoot 'MafiaStageChecks.cs'
 $beatSource = Join-Path $root 'Assets/Scripts/RoomRhythm/BeatChart.cs'
 $beatTest = Join-Path $PSScriptRoot 'BeatChartChecks.cs'
 $mapSource = Join-Path $root 'Assets/Scripts/RoomRhythm/MapChart.cs'
@@ -25,11 +26,14 @@ $response = Join-Path $output 'checks.rsp'
 @('/nologo','/target:exe','/nostdlib+','/langversion:9',("/out:`"$testDll`""),
     ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$timelineEditingSource`""),("`"$mapTest`""),("`"$offsetSource`""),("`"$offsetTest`"")) |
     Set-Content -LiteralPath $response
+('"' + $stageTest + '"') | Add-Content -LiteralPath $response
+('"' + (Join-Path $root 'Assets/Scripts/RoomRhythm/Editor/MapChartMigration.cs') + '"') | Add-Content -LiteralPath $response
+('"' + (Join-Path $PSScriptRoot 'MapChartMigrationChecks.cs') + '"') | Add-Content -LiteralPath $response
 & $runtime $compiler "@$response"
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks did not compile.' }
 '{"runtimeOptions":{"tfm":"net9.0","framework":{"name":"Microsoft.NETCore.App","version":"9.0.0"}}}' |
     Set-Content -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json')
-& dotnet $testDll
+& dotnet $testDll $root
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks failed.' }
 
 $offsetDll = Join-Path $output 'SongOffsetChecks.dll'
@@ -49,7 +53,7 @@ Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -D
 if ($LASTEXITCODE -ne 0) { throw 'Stage record checks failed.' }
 
 # Compile against the project's configured references; never launch the Unity editor.
-$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','UnityEngine.UIModule','UnityEngine.UI','Unity.InputSystem','Unity.RenderPipelines.Universal.Runtime','Unity.RenderPipelines.Core.Runtime')
+$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.AnimationModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','UnityEngine.UIModule','UnityEngine.UI','Unity.InputSystem','Unity.RenderPipelines.Universal.Runtime','Unity.RenderPipelines.Core.Runtime')
 $lines = @('/nologo','/target:library','/nostdlib+','/langversion:9','/nowarn:0649',
     ('/out:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
 foreach ($reference in $references | Where-Object { $_.Include -in $wanted }) {
@@ -68,7 +72,7 @@ Write-Output 'PASS: gameplay compilation against Unity and Input System referenc
 $editorLines = @('/nologo','/target:library','/nostdlib+','/langversion:9',
     ('/out:"' + (Join-Path $output 'RoomRhythm.Editor.dll') + '"'),
     ('/reference:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
-$editorWanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.IMGUIModule','UnityEngine.JSONSerializeModule','UnityEngine.UIElementsModule','UnityEditor','UnityEditor.CoreModule')
+$editorWanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.AnimationModule','UnityEngine.IMGUIModule','UnityEngine.JSONSerializeModule','UnityEngine.UIElementsModule','UnityEditor','UnityEditor.CoreModule')
 foreach ($reference in $references | Where-Object { $_.Include -in $editorWanted }) {
     $editorLines += '/reference:"' + [string]$reference.HintPath + '"'
 }

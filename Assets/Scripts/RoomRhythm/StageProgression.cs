@@ -30,7 +30,8 @@ namespace Gun.RoomRhythm
             if (transitioning) return;
             if (session.IsCleared)
             {
-                StageRecordStore.SaveClear(gameObject.scene.name, session.AccuracyPercent);
+                if (!session.IsDebugRun)
+                    StageRecordStore.SaveClear(gameObject.scene.name, session.AccuracyPercent);
                 StartCoroutine(Travel(recordRun ? StageSelection.ReturnScene : nextSafeScene, clearHold));
                 return;
             }

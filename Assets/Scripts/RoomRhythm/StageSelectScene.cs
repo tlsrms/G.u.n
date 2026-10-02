@@ -68,6 +68,9 @@ namespace Gun.RoomRhythm
         [SerializeField, Min(.1f)] private float turntableSelectionScale = 1.52f;
         [SerializeField, Min(0)] private float revealDelay = 1.6f;
         [SerializeField, Min(.1f)] private float placementDuration = .7f;
+        [Header("Debug")]
+        [Tooltip("곡의 START를 누를 때 적용합니다. 입장할 스테이지를 무적 자동 진행하며 최고 기록은 저장하지 않습니다.")]
+        [SerializeField] private bool debugMode;
         private Phase phase;
         private int selected, displayed = -1;
         private bool initialized, spinning;
@@ -95,6 +98,7 @@ namespace Gun.RoomRhythm
         {
             if (!initialized) return;
             StageSelection.IsRecordRun = false;
+            StageSelection.DebugMode = false;
             StageSelection.ReturnScene = gameObject.scene.name;
             room.MovementEnabled = false;
             room.CloseExit();
@@ -225,6 +229,7 @@ namespace Gun.RoomRhythm
             if (phase != Phase.Choosing || displayed < 0) return;
             Stage stage = stages[displayed];
             if (!CanStart(stage)) return;
+            StageSelection.DebugMode = debugMode;
             phase = Phase.Placing;
             SetInput(false);
             StartCoroutine(PlaceRecord(stage));

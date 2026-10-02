@@ -48,6 +48,10 @@ namespace Gun.RoomRhythm
             : (previousAccurate + run.AccurateJudgments) * 100f / (previousJudgments + run.JudgmentVersion);
         [SerializeField] private bool restartOnClear = true;
         [SerializeField] private bool logInputTiming = true;
+        [Header("Debug")]
+        [Tooltip("시작 시 적용: 무적 자동 진행으로 이동·문 파괴·사격을 처리합니다. 최고 기록은 저장하지 않습니다.")]
+        [SerializeField] private bool debugMode;
+        public bool IsDebugRun { get; private set; }
         private readonly Color alive = Color.white;
 
         private void Start()
@@ -247,7 +251,7 @@ namespace Gun.RoomRhythm
             bool continuePressed = commands.Exists(command => command.Command == RoomCommand.Continue);
             if (run.Phase == RunPhase.Ready)
             {
-                if (continuePressed)
+                if (continuePressed || debugMode)
                 {
                     TryBeginRun();
                 }
@@ -262,6 +266,7 @@ namespace Gun.RoomRhythm
             double frameTime = run.Phase == RunPhase.Ready ? 0 : timeline.FromInputTime(keyboard.ProcessedThroughTime);
             foreach (TimedCommand command in commands)
             {
+                if (IsDebugRun) continue;
                 if (command.Command == RoomCommand.Continue) continue;
                 if (!run.IsActive) continue;
                 double time = timeline.FromInputTime(command.Time);
@@ -282,7 +287,8 @@ namespace Gun.RoomRhythm
             if (run.IsActive)
             {
                 presentationTime = frameTime;
-                run.Advance(frameTime);
+                if (IsDebugRun) run.AdvanceAutomatically(frameTime, PresentDebugAction);
+                else run.Advance(frameTime);
             }
             else if (commands.Count > 0 && lastFeedbackPhase != run.Phase)
                 presentationTime = frameTime;
@@ -313,6 +319,7 @@ namespace Gun.RoomRhythm
         {
             timeline.ResetTimeline();
             run.Reset();
+            IsDebugRun = false;
             presentationTime = 0;
             aim.ResetAim();
             feedback.ResetFeedback();
@@ -426,7 +433,8 @@ namespace Gun.RoomRhythm
                 configuredJudgmentRevision = JudgmentSettings.Revision;
                 run.Begin();
                 presentationTime = entryTime;
-                run.Advance(presentationTime);
+                if (IsDebugRun) run.AdvanceAutomatically(presentationTime, PresentDebugAction);
+                else run.Advance(presentationTime);
                 deathRooms = deathFrames = deathDoorFrames = null;
                 chartCompletionSent = false; presentedMoves = 0;
                 lastFeedbackPhase = run.Phase;
@@ -449,9 +457,15 @@ namespace Gun.RoomRhythm
             if (run == null || run.Phase != RunPhase.Ready || restartTransition != null && restartTransition.BlocksInput)
                 return false;
             timeline.Begin(chart.music, chart.MusicDelaySeconds, chart.LoopMusic, InputOffsetSettings.Milliseconds(chart));
+            IsDebugRun = debugMode || StageSelection.IsRecordRun && StageSelection.DebugMode;
             run.Begin();
             if (stageDirector != null) stageDirector.BeginStage();
             return true;
+        }
+
+        private void PresentDebugAction(RoomActionResult result)
+        {
+            combat.PresentDebugAction(result, PlayerPosition(result.Time));
         }
 
         private void Shoot(Vector2 pointer, double time)
@@ -505,7 +519,8 @@ namespace Gun.RoomRhythm
                 float progress = isCurrent || movingInto ? 1f : Progress(time, note.appearTime, note.HitTime);
                 double frameStart = note.customAppearance ? note.frameStartTime : note.appearTime;
                 path[i].Present(visible, isCurrent, future, progress, deathFrames != null ? deathFrames[i] : run.RoomFrameVisible(i, time),
-                    time, note.HitTime, Progress(time, frameStart, note.HitTime), isCurrent && run.Death == DeathPresentation.Collision, frameStart);
+                    time, note.HitTime, Progress(time, frameStart, note.HitTime), isCurrent && run.Death == DeathPresentation.Collision,
+                    frameStart, isCurrent ? run.RoomArrivedAt : double.NegativeInfinity);
                 if (path[i].Door != null)
                     path[i].Door.Present(i > current && note.hasDoor && !run.DoorBroken(i - 1)
                         && combat.FindOverride(StageTargetRole.Breakthrough, note.destinationId) == null

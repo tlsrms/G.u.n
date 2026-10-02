@@ -129,10 +129,10 @@ assert not any(re.search(r'm_Name: "Channel \d+ preview"', body) for _, body in 
 assert len([1 for kind, _ in selection.values() if kind == 223]) == 1
 assert len(scripts(selection, "76c392e42b5098c458856cdf6ecaaaa1")) == 1
 buttons = scripts(selection, "4e29b1a8efbd4b44bb3f3716e73f07ff")
-assert len(buttons) == 6
+assert len(buttons) == 7
 channel_buttons = [body for body in buttons if 'm_MethodName: "SelectStage"' in body]
-assert len(channel_buttons) == 5
-assert {int(re.search(r"m_IntArgument: (\d+)", body)[1]) for body in channel_buttons} == set(range(5))
+assert len(channel_buttons) == 6
+assert {int(re.search(r"m_IntArgument: (\d+)", body)[1]) for body in channel_buttons} == set(range(6))
 start_buttons = [body for body in buttons if 'm_MethodName: "StartSelectedStage"' in body]
 assert len(start_buttons) == 1
 assert selection[reference(controller, "startButton")][1] == start_buttons[0]
@@ -142,6 +142,8 @@ for label in ("details", "duration", "bestAccuracy", "caseDisplay"):
 for index in range(1, 6):
     assert f'sceneName: "Stage{index:02}"' in controller
     assert guid(f"Assets/RoomChart/Tutorial_{index}.asset") in controller
+assert 'sceneName: "MafiaStage01"' in controller
+assert guid("Assets/RoomChart/Stage1_Guards.asset") in controller
 for source in ("StageSelectScene.cs", "SafeRoomController.cs", "StageProgression.cs", "StageSelection.cs", "StageSelectSurface.cs"):
     assert not re.search(r"\b(Instantiate|AddComponent|CreateInstance|CloneTree)\s*[<(]|new\s+GameObject", read("Assets/Scripts/RoomRhythm/" + source)), source
 assert not any('m_Name: "Channel dial"' in body or 'm_Name: "Television cabinet"' in body for _, body in selection.values())
@@ -168,10 +170,10 @@ assert reference(controller, "recordTransport") == named_transform("Record Trans
 assert reference(controller, "recordDock") == named_transform("Record dock")[0]
 safe = scripts(selection, guid("Assets/Scripts/RoomRhythm/SafeRoomController.cs"))[0]
 assert reference(safe, "turntableInteractionPoint") == named_transform("Turntable interaction point")[0]
-assert len([name for name in names.values() if re.fullmatch(r"Record 0[1-5]", name)]) == 5
+assert len([name for name in names.values() if re.fullmatch(r"Record 0[1-6]", name)]) == 6
 assert not any(name in names.values() for name in ("Selected record", "Playing record", "Loose record"))
 record_refs = [int(id) for id in re.findall(r"^    record: \{fileID: (\d+)\}", controller, re.M)]
-assert len(record_refs) == len(set(record_refs)) == 5
+assert len(record_refs) == len(set(record_refs)) == 6
 for index, id in enumerate(record_refs, 1):
     assert id == named_transform(f"Record {index:02}")[0]
     case_id, case_body = named_transform(f"Case {index:02}")
@@ -179,14 +181,14 @@ for index, id in enumerate(record_refs, 1):
     assert reference(case_body, "m_Father") == named_transform(f"Slot {index:02}")[0]
     assert field(selection[reference(selection[id][1], "m_GameObject")][1], "m_IsActive") == "0"
     assert references(field(case_body, "m_Children"))[0] == id, "Record must slide behind the opaque case cover"
-assert len(re.findall(r"^    sleeve: \{fileID: \d+\}", controller, re.M)) == 5
+assert len(re.findall(r"^    sleeve: \{fileID: \d+\}", controller, re.M)) == 6
 assert xy(field(controller, "turntableSelectionPosition"))[0] < 0
 rack_position = xy(field(controller, "rackSelectionPosition"))
 assert rack_position[0] > 0 and rack_position[1] > 250
 assert float(field(controller, "turntableSelectionScale")) >= 1.5
 assert "Beat light" not in names.values()
 assert not any(name in controller for name in ("movingRecord:", "worldRecord:", "looseRecord:"))
-print("PASS: five cases with hidden original discs, separate Start action, song information, large left deck and upper-right rack; no beat pulse or map preview.")
+print("PASS: six cases with hidden original discs, separate Start action, song information, large left deck and upper-right rack; no beat pulse or map preview.")
 
 session_guid = guid("Assets/Scripts/RoomRhythm/RoomSession.cs")
 combat_guid = guid("Assets/Scripts/RoomRhythm/RoomCombat.cs")

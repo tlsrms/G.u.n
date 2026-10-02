@@ -41,6 +41,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Development/MainScene.unity
     guid: 8c47906821f19e7478082ec97ae83b89
+  - enabled: 1
+    path: Assets/Scenes/Stages/MafiaStage01.unity
+    guid: 44c2dfc707454887b8e2001a6c2f4422
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

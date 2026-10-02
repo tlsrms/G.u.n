@@ -6,6 +6,7 @@ namespace Gun.RoomRhythm
     {
         internal static int LastIndex { get; set; }
         internal static bool IsRecordRun { get; set; }
+        internal static bool DebugMode { get; set; }
         internal static string ReturnScene { get; set; } = "StageSelectScene";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -13,6 +14,7 @@ namespace Gun.RoomRhythm
         {
             LastIndex = 0;
             IsRecordRun = false;
+            DebugMode = false;
             ReturnScene = "StageSelectScene";
         }
     }

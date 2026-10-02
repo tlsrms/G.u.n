@@ -157,6 +157,77 @@ namespace Gun.RoomRhythm
             Phase = RunPhase.Waiting;
         }
 
+        // Debug playback consumes scheduled actions before committing the frame clock.
+        // It deliberately bypasses failure windows, including notes reached late after a long move.
+        public void AdvanceAutomatically(double time, Action<RoomActionResult> presentAction = null)
+        {
+            if (!IsActive || time < lastTime || double.IsNaN(time) || double.IsInfinity(time)) return;
+            while (IsActive)
+            {
+                int enemy = NextEnemyIndex();
+                double enemyTime = enemy >= 0 ? Math.Max(enemies[enemy].time, EnemyAppearsAt(enemy)) : double.PositiveInfinity;
+                double nextTime = Phase == RunPhase.Moving ? MoveEndsAt : double.PositiveInfinity;
+                RoomActionKind kind = RoomActionKind.MoveArrived;
+                if (Phase == RunPhase.Waiting && CompletedMoves < notes.Length)
+                {
+                    var note = notes[CompletedMoves];
+                    kind = note.hasDoor && !brokenDoors[CompletedMoves] ? RoomActionKind.DoorBroken : RoomActionKind.MoveStarted;
+                    nextTime = kind == RoomActionKind.DoorBroken ? note.doorTime : note.HitTime;
+                    // Clear the current room before leaving, even for overlapping debug timings.
+                    if (enemy >= 0) nextTime = Math.Max(nextTime, enemyTime);
+                }
+                if (enemyTime <= nextTime && enemy >= 0)
+                {
+                    nextTime = enemyTime;
+                    kind = RoomActionKind.EnemyDefeated;
+                }
+                if (double.IsPositiveInfinity(nextTime))
+                {
+                    Phase = RunPhase.Cleared;
+                    break;
+                }
+                nextTime = Math.Max(lastTime, nextTime);
+                if (nextTime > time) break;
+                lastTime = nextTime;
+                string target;
+                switch (kind)
+                {
+                    case RoomActionKind.EnemyDefeated:
+                        defeatedEnemies[enemy] = true;
+                        target = enemies[enemy].id;
+                        break;
+                    case RoomActionKind.DoorBroken:
+                        brokenDoors[CompletedMoves] = true;
+                        target = notes[CompletedMoves].destinationId;
+                        break;
+                    case RoomActionKind.MoveStarted:
+                        target = notes[CompletedMoves].destinationId;
+                        MoveStartedAt = nextTime;
+                        Phase = RunPhase.Moving;
+                        break;
+                    default:
+                        target = notes[CompletedMoves].destinationId;
+                        RoomArrivedAt = nextTime;
+                        CompletedMoves++;
+                        Phase = RunPhase.Waiting;
+                        break;
+                }
+                var grade = kind == RoomActionKind.MoveArrived ? TimingGrade.None : TimingGrade.Accurate;
+                if (grade != TimingGrade.None)
+                {
+                    LastGrade = grade;
+                    LastJudgedAt = nextTime;
+                    LastTimingErrorMs = 0;
+                    JudgmentVersion++;
+                    AccurateJudgments++;
+                }
+                var result = new RoomActionResult(kind, target, nextTime, grade);
+                results.Enqueue(result);
+                presentAction?.Invoke(result);
+            }
+            lastTime = time;
+        }
+
         public void Advance(double time)
         {
             if (!IsActive || time < lastTime || double.IsNaN(time)) return;
