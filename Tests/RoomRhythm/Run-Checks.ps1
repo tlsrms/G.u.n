@@ -27,6 +27,7 @@ $response = Join-Path $output 'checks.rsp'
     ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$timelineEditingSource`""),("`"$mapTest`""),("`"$offsetSource`""),("`"$offsetTest`"")) |
     Set-Content -LiteralPath $response
 ('"' + $stageTest + '"') | Add-Content -LiteralPath $response
+('"' + (Join-Path $root 'Assets/Scripts/RoomRhythm/MafiaIntroTiming.cs') + '"') | Add-Content -LiteralPath $response
 & $runtime $compiler "@$response"
 if ($LASTEXITCODE -ne 0) { throw 'Rule checks did not compile.' }
 '{"runtimeOptions":{"tfm":"net9.0","framework":{"name":"Microsoft.NETCore.App","version":"9.0.0"}}}' |
@@ -50,8 +51,27 @@ Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -D
 & dotnet $recordsDll
 if ($LASTEXITCODE -ne 0) { throw 'Stage record checks failed.' }
 
+$startupDll = Join-Path $output 'StageStartupChecks.dll'
+& $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 /nowarn:0649 "/out:$startupDll" "/reference:$standard" `
+    $rules $model (Join-Path $root 'Assets/Scripts/RoomRhythm/StageProgression.cs') `
+    (Join-Path $root 'Assets/Scripts/RoomRhythm/RoomKeyboard.cs') (Join-Path $root 'Assets/Scripts/RoomRhythm/SongTimeline.cs') `
+    (Join-Path $PSScriptRoot 'StageStartupChecks.cs') (Join-Path $PSScriptRoot 'StageStartupTestDoubles.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Stage startup checks did not compile.' }
+Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'StageStartupChecks.runtimeconfig.json')
+& dotnet $startupDll
+if ($LASTEXITCODE -ne 0) { throw 'Stage startup checks failed.' }
+
+$enemyRestartDll = Join-Path $output 'EnemyRestartChecks.dll'
+& $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 /nowarn:0649 "/out:$enemyRestartDll" "/reference:$standard" `
+    $rules $model $selection (Join-Path $root 'Assets/Scripts/RoomRhythm/RoomEnemy.cs') `
+    (Join-Path $root 'Assets/Scripts/RoomRhythm/RoomCombat.cs') (Join-Path $PSScriptRoot 'EnemyRestartChecks.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Enemy restart checks did not compile.' }
+Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'EnemyRestartChecks.runtimeconfig.json')
+& dotnet $enemyRestartDll
+if ($LASTEXITCODE -ne 0) { throw 'Enemy restart checks failed.' }
+
 # Compile against the project's configured references; never launch the Unity editor.
-$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','UnityEngine.UIModule','UnityEngine.UI','Unity.InputSystem','Unity.RenderPipelines.Universal.Runtime','Unity.RenderPipelines.Core.Runtime')
+$wanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AnimationModule','UnityEngine.AudioModule','UnityEngine.TextRenderingModule','UnityEngine.JSONSerializeModule','UnityEngine.IMGUIModule','UnityEngine.UIModule','UnityEngine.UI','Unity.InputSystem','Unity.RenderPipelines.Universal.Runtime','Unity.RenderPipelines.Core.Runtime')
 $lines = @('/nologo','/target:library','/nostdlib+','/langversion:9','/nowarn:0649',
     ('/out:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
 foreach ($reference in $references | Where-Object { $_.Include -in $wanted }) {
@@ -70,7 +90,7 @@ Write-Output 'PASS: gameplay compilation against Unity and Input System referenc
 $editorLines = @('/nologo','/target:library','/nostdlib+','/langversion:9',
     ('/out:"' + (Join-Path $output 'RoomRhythm.Editor.dll') + '"'),
     ('/reference:"' + (Join-Path $output 'RoomRhythm.dll') + '"'))
-$editorWanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.IMGUIModule','UnityEngine.JSONSerializeModule','UnityEngine.UIElementsModule','UnityEditor','UnityEditor.CoreModule')
+$editorWanted = @('netstandard','UnityEngine.CoreModule','UnityEngine.AudioModule','UnityEngine.UnityWebRequestModule','UnityEngine.UnityWebRequestAudioModule','UnityEngine.IMGUIModule','UnityEngine.JSONSerializeModule','UnityEngine.UIElementsModule','UnityEditor','UnityEditor.CoreModule')
 foreach ($reference in $references | Where-Object { $_.Include -in $editorWanted }) {
     $editorLines += '/reference:"' + [string]$reference.HintPath + '"'
 }
@@ -81,4 +101,3 @@ $editorLines | Set-Content -LiteralPath $editorResponse
 & $runtime $compiler "@$editorResponse"
 if ($LASTEXITCODE -ne 0) { throw 'Inspector compilation failed.' }
 Write-Output 'PASS: editor inspector compilation.'
-

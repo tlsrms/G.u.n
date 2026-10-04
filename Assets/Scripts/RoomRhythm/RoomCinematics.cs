@@ -48,7 +48,7 @@ namespace Gun.RoomRhythm
             || Death == DeathPresentation.Collision && DeathElapsed < .13f
             || Death == DeathPresentation.Departure && DeathElapsed < .28f;
         public Vector3 DeathPosition => Death == DeathPresentation.Collision
-            ? Vector3.Lerp(origin, center + direction * (side * .5f - .28f), Mathf.Clamp01(DeathElapsed / .13f))
+            ? Vector3.Lerp(origin, origin + direction * (Vector3.Dot(center - origin, direction) + side * .5f - .28f), Mathf.Clamp01(DeathElapsed / .13f))
             : Death == DeathPresentation.Departure ? origin + direction * side * Mathf.Clamp01(DeathElapsed / .28f) : origin;
 
         public void Configure(SpriteRenderer body, RoomFeedback effects)

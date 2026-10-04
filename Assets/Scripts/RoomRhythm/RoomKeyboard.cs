@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace Gun.RoomRhythm
@@ -25,13 +26,18 @@ namespace Gun.RoomRhythm
         private InputSettings.UpdateMode previousUpdateMode;
         // Conservative watermark: inputs arriving after this instant belong to a later batch.
         public double ProcessedThroughTime { get; private set; }
+        public bool HasProcessedDynamicUpdate { get; private set; }
 
         private void Awake()
         {
             map = new InputActionMap("Room play");
-            InputAction anyKey = map.AddAction("Continue", InputActionType.PassThrough, "<Keyboard>/*");
-            anyKey.performed += context => {
-                if (context.control is UnityEngine.InputSystem.Controls.KeyControl && context.ReadValue<float>() > .5f)
+            InputAction anyPress = map.AddAction("Continue", InputActionType.PassThrough, "<Keyboard>/*");
+            foreach (string button in new[] { "leftButton", "rightButton", "middleButton", "backButton", "forwardButton" })
+                anyPress.AddBinding("<Mouse>/" + button);
+            anyPress.performed += context => {
+                bool startButton = context.control is KeyControl
+                    || context.control.device is Mouse && context.control is ButtonControl;
+                if (startButton && context.ReadValue<float>() > .5f)
                     pending.Add(new TimedCommand(RoomCommand.Continue, context.time, order++, Vector2.zero));
             };
             Bind(RoomCommand.Up, "w");
@@ -57,8 +63,10 @@ namespace Gun.RoomRhythm
         {
             previousUpdateMode = InputSystem.settings.updateMode;
             InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+            HasProcessedDynamicUpdate = false;
             ProcessedThroughTime = InputState.currentTime;
             InputSystem.onBeforeUpdate += BeforeInputUpdate;
+            InputSystem.onAfterUpdate += AfterInputUpdate;
             map.Enable();
         }
         private void BeforeInputUpdate()
@@ -66,9 +74,18 @@ namespace Gun.RoomRhythm
             if (InputState.currentUpdateType == InputUpdateType.Dynamic)
                 ProcessedThroughTime = InputState.currentTime;
         }
+        private void AfterInputUpdate()
+        {
+            // The Editor-to-play time offset is established during the first dynamic update.
+            // Do not anchor the song's input clock in Awake/OnEnable/Start.
+            if (InputState.currentUpdateType == InputUpdateType.Dynamic)
+                HasProcessedDynamicUpdate = true;
+        }
         private void OnDisable()
         {
             InputSystem.onBeforeUpdate -= BeforeInputUpdate;
+            InputSystem.onAfterUpdate -= AfterInputUpdate;
+            HasProcessedDynamicUpdate = false;
             map.Disable(); pending.Clear();
             InputSystem.settings.updateMode = previousUpdateMode;
         }

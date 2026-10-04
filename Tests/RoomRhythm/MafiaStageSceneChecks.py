@@ -21,7 +21,7 @@ def rows(body, key, indent=2):
 scene = 'Assets/Scenes/Stages/MafiaStage01.unity'
 objects = blocks(read(scene))
 prefabs = {guid('Assets/Prefabs/Characters/' + name + '.prefab'): blocks(read('Assets/Prefabs/Characters/' + name + '.prefab'))
-           for name in ('GeometricPlayer', 'RegularEnemy', 'StagePropTarget', 'MafiaBoss')}
+           for name in ('GeometricPlayer', 'RegularEnemy', 'MafiaBoss')}
 parents = {}
 for id, (kind, stripped, body) in objects.items():
     for target in map(int, re.findall(r'\{fileID: (\d+)\}', body)):
@@ -47,12 +47,12 @@ assert 'sections:' not in session and reference(session, 'stageDirector') in obj
 chart_path = 'Assets/RoomChart/Stage1_Full.asset'
 assert guid(chart_path) in field(session, 'chart')
 chart = read(chart_path)
-assert field(chart, 'mapDraft').replace('mapDraft:', 'appliedMap:', 1) == field(chart, 'appliedMap')
+# A work-in-progress draft may differ; validate the applied runtime map against its scene.
 map_body = field(chart, 'appliedMap')
 map_rooms = {scalar(row, 'id'): row for row in rows(map_body, 'rooms', 4)}
 bindings = references(session, 'rooms')
 room_ids = [scalar(objects[i][2], 'roomId') for i in bindings]
-assert len(bindings) == len(set(bindings)) == len(map_rooms) == 43
+assert len(bindings) == len(set(bindings)) == len(map_rooms)
 assert set(room_ids) == set(map_rooms) and 'mafia0' not in room_ids
 # All room ancestors are identity transforms, so saved local positions equal map positions.
 for binding, room_id in zip(bindings, room_ids):
@@ -66,7 +66,7 @@ for binding, room_id in zip(bindings, room_ids):
         expected = float(scalar(map_body, 'origin' + axis.upper())) + float(scalar(room, axis)) * float(scalar(map_body, 'roomSize')) + float(scalar(room, 'offset' + axis.upper()))
         assert abs(actual - expected) < 1e-6, (room_id, 'map/scene position mismatch')
         dimension = float(re.search(axis + r': ([^,}]+)', field(body, 'dimensions'))[1])
-        assert dimension == float(scalar(room, size_key)), (room_id, 'map/scene size mismatch')
+        assert dimension == (float(scalar(room, size_key)) or float(scalar(map_body, 'roomSize'))), (room_id, 'map/scene size mismatch')
     parent = parents[transform]
     while parent:
         ancestor = objects[parent][2]
@@ -88,19 +88,65 @@ assert sum(kind == 114 and combat_guid in body for kind, _, body in objects.valu
 combat = objects[reference(session, 'combat')][2]
 enemy_ids = [prefab_value(i, 'enemyId') for i in references(combat, 'enemies')]
 targets = [(int(prefab_value(i, 'role')), prefab_value(i, 'targetId')) for i in references(combat, 'stageTargets')]
-assert len(enemy_ids) == len(set(enemy_ids)) == 48
-assert len(targets) == len(set(targets)) == 90
+assert len(enemy_ids) == len(set(enemy_ids)) == len(rows(chart, 'enemies'))
+assert len(targets) == len(set(targets)) == 0
 shot_ids = {target for role, target in targets if role == 0}
 door_ids = {target for role, target in targets if role == 1}
-assert len(shot_ids) == 84 and len(door_ids) == 6
+assert not shot_ids and not door_ids
 assert set(enemy_ids).isdisjoint(shot_ids)
 assert set(enemy_ids) | shot_ids == {scalar(row, 'id') for row in rows(chart, 'enemies')}
 assert door_ids <= {scalar(row, 'destinationId') for row in rows(chart, 'moves') if scalar(row, 'hasDoor') == '1'}
 director = objects[reference(session, 'stageDirector')][2]
-assert 'entranceRoomId:' not in director and 'entranceTimeline:' not in director and 'singleChart:' not in director
+assert 'shots:' not in director and 'entranceBeat:' not in director
+assert scalar(director, 'officeRoomId') in map_rooms and scalar(director, 'escapeRoomId') in map_rooms
+set_body = objects[reference(director, 'officeSet')][2]
+for key in ('desk', 'chair', 'window', 'glass'):
+    assert reference(set_body, key) in objects, ('missing office prop', key)
+for key, name in [('seatedSmoke', '01_SeatedSmoke'), ('drawAK', '02_DrawAK'), ('aimIdle', '03_AimIdle'), ('fireBurst', '05_FireBurst3')]:
+    assert guid('Assets/Animations/Mafia/Mafia_' + name + '.anim') in field(director, key), key
+for key, name in [('rifleSound', 'MafiaAKShot'), ('glassSound', 'MafiaGlassBreak')]:
+    assert guid('Assets/Audio/' + name + '.wav') in field(set_body, key), key
+    import wave
+    with wave.open(str(ROOT / 'Assets/Audio' / (name + '.wav'))) as audio:
+        assert audio.getnchannels() == 1 and audio.getnframes() > 4000
+assert reference(director, 'combat') == reference(session, 'combat')
+assert guid('Assets/Scripts/RoomRhythm/RoomCamera.cs') in objects[reference(director, 'stageCamera')][2]
+
 reset = objects[reference(session, 'resetState')][2]
 assert reference(director, 'boss') in references(reset, 'roots'), 'Boss hierarchy must be restored on restart'
+# The learning clip is editable on the existing boss, but must not fight its gameplay director.
+boss_instance = objects[reference(objects[reference(director, 'boss')][2], 'm_PrefabInstance')][2]
+boss_prefab = prefabs[guid('Assets/Prefabs/Characters/MafiaBoss.prefab')]
+animator_id = next(i for i, (kind, _, _) in boss_prefab.items() if kind == 95)
+def boss_override(source_id, property_name):
+    return re.search(r'- target: \{fileID: ' + str(source_id) + r',[^\n]+\n      propertyPath: '
+                     + re.escape(property_name) + r'\n      value: ([^\n]*)\n      objectReference: ([^\n]+)', boss_instance)
+assert boss_override(animator_id, 'm_Enabled')[1] == '0', 'Practice animation must not autoplay during gameplay'
+practice_root = 'Assets/Animations/Mafia/'
+controller_path = practice_root + 'Mafia_MotionPractice.controller'
+clip_path = practice_root + 'Mafia_RightArm_Practice.anim'
+assert guid(controller_path) in boss_override(animator_id, 'm_Controller')[2]
+controller = blocks(read(controller_path))
+for id, (_, _, body) in controller.items():
+    for target in map(int, re.findall(r'\{fileID: (\d+)\}', body)):
+        assert not target or target in controller, (id, 'dangling controller reference', target)
+assert guid(clip_path) in read(controller_path)
+clip = read(clip_path)
+assert 'm_Legacy: 0' in clip, 'Practice motion remains reusable as a regular AnimationClip'
+# Resolve all authored curve paths against the actual prefab hierarchy, allowing user keyframe edits.
+rig_paths = {0: ''}
+pending = {i: body for i, (kind, _, body) in boss_prefab.items() if kind == 4}
+while pending:
+    ready = [i for i, body in pending.items() if reference(body, 'm_Father') in rig_paths]
+    assert ready, 'Broken boss hierarchy'
+    for id in ready:
+        body = pending.pop(id); parent = reference(body, 'm_Father')
+        name = scalar(boss_prefab[reference(body, 'm_GameObject')][2], 'm_Name')
+        rig_paths[id] = (rig_paths[parent] + '/' + name).strip('/') if parent else ''
+for curve_path in re.findall(r'^    path: ([^\n]*)', clip, re.M):
+    assert curve_path in rig_paths.values(), ('Missing animated joint', curve_path)
+print('PASS: practice clip/controller references and animated joints; gameplay Animator stays disabled.')
 assert guid(chart_path) in read('Assets/Scenes/Hub/StageSelectScene.unity')
 assert 'sceneName: "MafiaStage01"' in read('Assets/Scenes/Hub/StageSelectScene.unity')
 assert scene in read('ProjectSettings/EditorBuildSettings.asset')
-print('PASS: MafiaStage01 references, hierarchy, 43 map/scene rooms, 48 enemies, 90 boss targets, one combat and full-chart hub wiring.')
+print(f'PASS: MafiaStage01 references, hierarchy, {len(map_rooms)} map/scene rooms, {len(enemy_ids)} enemies, office props/clips/audio, one combat and full-chart hub wiring.')

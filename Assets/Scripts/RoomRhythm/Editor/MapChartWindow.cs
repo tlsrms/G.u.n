@@ -43,8 +43,8 @@ namespace Gun.RoomRhythm.Editor
             if (chart != null) window.Select(chart); window.Show();
         }
         private void OnEnable() { tool = 0; Undo.undoRedoPerformed += Refresh; EditorApplication.update += Tick; EditorApplication.playModeStateChanged += OnPlayModeChanged; }
-        private void OnDisable() { Undo.undoRedoPerformed -= Refresh; EditorApplication.update -= Tick; EditorApplication.playModeStateChanged -= OnPlayModeChanged; StopMusic(); }
-        private void OnPlayModeChanged(PlayModeStateChange state) { StopMusic(); }
+        private void OnDisable() { Undo.undoRedoPerformed -= Refresh; EditorApplication.update -= Tick; EditorApplication.playModeStateChanged -= OnPlayModeChanged; StopMusic(); musicPreview.ClearWaveform(); CancelInteraction(); }
+        private void OnPlayModeChanged(PlayModeStateChange state) { StopMusic(); CancelInteraction(); }
         private void Refresh() { StopMusic(); serialized = null; CancelInteraction(); timelineSelection.Clear(); message = null; Repaint(); }
         private void StopMusic() { musicPreview.Stop(); playing = false; }
         private void StartMusic()
@@ -57,7 +57,9 @@ namespace Gun.RoomRhythm.Editor
         }
         private void CancelInteraction()
         {
-            dragging = null; scrubbing = false; draggedCamera = -1; movingRoom = false; draggedRoom = null; tool = (int)MapTool.Select;
+            dragging = null; scrubbing = false; draggedCamera = -1; draggedRoom = null; tool = (int)MapTool.Select;
+            draggedEnemy = -1; movingEnemy = false;
+            draggedRooms = null; roomDragDelta = Vector2.zero; roomDragMoved = false;
             pendingRoom = null; GUIUtility.hotControl = 0;
         }
         private void SetView(ViewMode mode)
@@ -74,6 +76,7 @@ namespace Gun.RoomRhythm.Editor
         private void Select(RoomChart value)
         {
             StopMusic(); importAttempted = false;
+            musicPreview.ClearWaveform();
             chart = value; selection.Clear(); selectedEnemy = selectedCamera = selectedShake = -1;
             viewMode = ViewMode.Overview; playing = false; cursor = 0; pan = Vector2.zero; Refresh();
         }
@@ -168,7 +171,7 @@ namespace Gun.RoomRhythm.Editor
             if (Map.NeedsRoomStartSynchronization) Edit("방과 판정선 시작 박 통일", () => Map.SynchronizeRoomStarts());
             SynchronizeEnemyOwnership();
             HandleDeleteKey();
-            HandleTimelineDuplicate();
+            HandleSelectionDuplicate();
             if (serialized == null) serialized = new SerializedObject(chart);
             tab = GUILayout.Toolbar(tab, new[] { "곡 · 기본 설정", "맵 · 채보 · 연출" }, GUILayout.Height(28));
             if (tab == 0) { using (new EditorGUI.DisabledScope(ReadOnly)) DrawSettings(); } else DrawMapEditor();
@@ -223,10 +226,9 @@ namespace Gun.RoomRhythm.Editor
             propertiesScroll = EditorGUILayout.BeginScrollView(propertiesScroll);
             EditorGUILayout.LabelField("곡 설정", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(serialized.FindProperty("roomFrameStartSize"), new GUIContent("방 판정선 시작 크기"));
-            float largestRoom = Map.roomSize;
-            foreach (var room in Map.rooms) largestRoom = Mathf.Max(largestRoom, Map.Width(room), Map.Height(room));
-            if (serialized.FindProperty("roomFrameStartSize").floatValue <= largestRoom)
-                EditorGUILayout.HelpBox("방 판정선 시작 크기를 방 한 변보다 크게 설정하세요.", MessageType.Error);
+            float frameStartSize = serialized.FindProperty("roomFrameStartSize").floatValue;
+            if (!(frameStartSize > 0) || float.IsInfinity(frameStartSize))
+                EditorGUILayout.HelpBox("방 판정선 시작 크기는 유한한 양수여야 합니다.", MessageType.Error);
             EditorGUILayout.PropertyField(serialized.FindProperty("roomStartBrightness"), new GUIContent("방 초기 밝기"));
             EditorGUILayout.PropertyField(serialized.FindProperty("roomRevealStart"), new GUIContent("방 급등장 시작 비율"));
             EditorGUILayout.PropertyField(serialized.FindProperty("appearanceStartAlpha"), new GUIContent("등장 초기 불투명도"));
@@ -242,6 +244,10 @@ namespace Gun.RoomRhythm.Editor
             {
                 // Retain the authored beat counts when changing tempo. Existing assets store seconds.
                 settings.FindPropertyRelative("offsetSeconds").doubleValue *= previousBpm / bpm;
+                settings.FindPropertyRelative("musicDelaySeconds").doubleValue *= previousBpm / bpm;
+                var rooms = map.FindPropertyRelative("rooms");
+                for (int i = 0; i < rooms.arraySize; i++)
+                    rooms.GetArrayElementAtIndex(i).FindPropertyRelative("moveDuration").doubleValue *= previousBpm / bpm;
             }
             GUI.SetNextControlName("MapInput:InputOffsetMs");
             EditorGUI.BeginChangeCheck();
@@ -259,8 +265,12 @@ namespace Gun.RoomRhythm.Editor
             TrackFocusedInput("MapInput:InputOffsetMs");
             Field(settings, "loopMusic", "곡 반복 재생");
             using (new EditorGUI.DisabledScope(!ValidBpm(bpm)))
+            {
                 BeatDurationField(settings, "offsetSeconds", "음원 내 첫 박 시각 (박)", bpm);
+                BeatDurationField(settings, "musicDelaySeconds", "음악 재생 전 대기 (박)", bpm);
+            }
             EditorGUILayout.HelpBox("입력 보정 오프셋은 OffsetScene에서 측정한 ms 값을 입력합니다. 현재 채보에만 저장되며 BPM과 무관합니다. 양수는 입력 시각에서 해당 시간을 빼서 보정합니다. 첫 박 시각은 음원 내 0박 위치이며 BPM 기준 박 수입니다.", MessageType.Info);
+            EditorGUILayout.HelpBox("음악 재생 전 대기 동안에는 음원 없이 채보만 진행됩니다. 0이면 즉시 음악을 재생합니다. 대기 구간은 타임라인의 음수 박에 해당하며, 이 구간에 방 등장이나 노트를 배치할 수 있습니다.", MessageType.Info);
             Field(settings, "beatsPerBar", "마디당 박 수"); Division(settings);
             Field(settings, "startingRoomId", "시작 방 ID");
             EditorGUILayout.Space(); EditorGUILayout.LabelField("새 채보 기본값", EditorStyles.boldLabel);
@@ -270,7 +280,9 @@ namespace Gun.RoomRhythm.Editor
             Field(map, "cameraTrack", "직접 만든 이동 이벤트 사용");
             Field(map, "cameraX", "초기 위치 X"); Field(map, "cameraY", "초기 위치 Y"); Field(map, "cameraSize", "초기 크기 (세로 반높이)");
             EditorGUILayout.HelpBox("이동 이벤트를 끄면 플레이어를 따라갑니다. 흔들림 이벤트는 두 모드에서 모두 적용됩니다. 모든 시각은 음악에 고정된 박 위치입니다. 첫 박은 0박입니다.", MessageType.Info);
-            if (serialized.ApplyModifiedProperties()) { StopMusic(); message = null; firstBeat = Map.settings.Beat(0); cursor = ClampBeat(cursor); }
+            // Keep the beat viewport fixed so changing the audio offset visibly moves
+            // the waveform relative to authored notes instead of panning both together.
+            if (serialized.ApplyModifiedProperties()) { StopMusic(); message = null; cursor = ClampBeat(cursor); Repaint(); }
             EditorGUILayout.EndScrollView();
             ClipFocusedInput();
         }
@@ -291,7 +303,13 @@ namespace Gun.RoomRhythm.Editor
             GUI.SetNextControlName(controlName);
             EditorGUI.BeginChangeCheck();
             double beats = EditorGUILayout.DoubleField(label, seconds.doubleValue * scale);
-            if (EditorGUI.EndChangeCheck()) seconds.doubleValue = beats / scale;
+            if (EditorGUI.EndChangeCheck())
+            {
+                double duration = beats / scale;
+                if (!double.IsNaN(duration) && !double.IsInfinity(duration) && duration >= 0)
+                    seconds.doubleValue = duration;
+                else { message = "시간은 0 이상의 유한한 박 수를 입력하세요."; error = true; }
+            }
             TrackFocusedInput(controlName);
         }
         private void TrackFocusedInput(string controlName)
@@ -319,7 +337,7 @@ namespace Gun.RoomRhythm.Editor
         }
         private void DrawMapEditor()
         {
-            EditorGUILayout.LabelField("방 클릭: 설정 · 겹친 방: 이름 클릭 · 휠: 확대 · 우클릭 드래그: 화면 이동", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField("방 클릭: 설정 · 방 드래그: 위치 이동 · Shift 클릭: 다중 선택 · 선택된 방들 드래그: 일괄 이동 · 적 드래그: 배치 · 휠: 확대 · 우클릭 드래그: 화면 이동", EditorStyles.miniLabel);
             if (ActiveTool == MapTool.MoveRoom)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -371,18 +389,21 @@ namespace Gun.RoomRhythm.Editor
             serialized.Update(); var draft = serialized.FindProperty("mapDraft");
             var data = draft.FindPropertyRelative("rooms").GetArrayElementAtIndex(Array.IndexOf(Map.rooms, room));
             EditorGUILayout.LabelField(Map.RoomLabel(room), EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
             Field(data, "width", "가로 (0: 기본값)");
             Field(data, "height", "세로 (0: 기본값)");
-            Field(data, "offsetX", "격자 기준 X 보정");
-            Field(data, "offsetY", "격자 기준 Y 보정");
+            bool sizeChanged = EditorGUI.EndChangeCheck();
+            EditorGUILayout.HelpBox("방을 드래그하면 시간순 이전 방의 면에 자동으로 붙습니다. 긴 면은 기본 방 크기 간격으로 맞춥니다.", MessageType.None);
             if (room.id != Map.settings.startingRoomId)
             {
                 Field(data, "appearBeat", "방·판정선 시작 박");
                 data.FindPropertyRelative("frameBeat").doubleValue = data.FindPropertyRelative("appearBeat").doubleValue;
 
                 Field(data, "hitBeat", "방 이동 정확 박");
-                Field(data, "moveDuration", "이동 시간/초 (0: 기본값)");
+                using (new EditorGUI.DisabledScope(!ValidBpm(Map.settings.bpm)))
+                    BeatDurationField(data, "moveDuration", "이동 시간 (박, 0: 기본값)", Map.settings.bpm);
                 Field(data, "moveEase", "이동 속도 곡선");
+                EditorGUILayout.HelpBox("이동 시간과 곡선은 이전 방에서 이 방의 다음 출구에 붙은 칸 중심까지 적용됩니다. 마지막 방은 방 중심에 도착합니다.", MessageType.None);
                 EditorGUILayout.Space(); Field(data, "door", "입구 문");
                 if (data.FindPropertyRelative("door").boolValue)
                 { Field(data, "doorFrameBeat", "문 등장 박"); Field(data, "doorBeat", "문 사격 정확 박"); }
@@ -391,13 +412,22 @@ namespace Gun.RoomRhythm.Editor
             if (serialized.ApplyModifiedProperties()) message = null;
             var route = Map.OrderedRooms();
             int roomIndex = Array.IndexOf(route, room);
+            if (sizeChanged && roomIndex > 0 && Map.Width(room) > 0 && Map.Height(room) > 0
+                && !float.IsInfinity(Map.Width(room)) && !float.IsInfinity(Map.Height(room)))
+            {
+                var position = Map.AttachedPosition(room, route[roomIndex - 1], Map.WorldX(room), Map.WorldY(room));
+                Edit("방 크기 변경 후 자동 연결", () => Map.SetPosition(room, position.x, position.y));
+            }
             if (roomIndex > 0)
             {
                 EditorGUILayout.LabelField("시간순 이전 방에 붙이기");
                 EditorGUILayout.BeginHorizontal();
                 foreach (MoveDirection direction in Enum.GetValues(typeof(MoveDirection)))
                     if (GUILayout.Button(direction.ToString()))
-                        Edit("방 경계 연결", () => Map.Attach(room, route[roomIndex - 1], direction));
+                        Edit("방 경계 연결", () => {
+                            var position = Map.AttachedPosition(room, route[roomIndex - 1], Map.WorldX(room), Map.WorldY(room), direction);
+                            Map.SetPosition(room, position.x, position.y);
+                        });
                 EditorGUILayout.EndHorizontal();
             }
             EditorGUILayout.Space(); EditorGUILayout.LabelField("이 방 옆에 방 추가", EditorStyles.boldLabel);
@@ -428,6 +458,7 @@ namespace Gun.RoomRhythm.Editor
                 return;
             }
             EditorGUILayout.Space(); EditorGUILayout.LabelField("이 방의 적", EditorStyles.boldLabel);
+            if (GUILayout.Button("좌표로 적 추가")) AddEnemy(room, EnemyDirection.Up, true);
             for (int row = 0; row < 2; row++)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -437,28 +468,22 @@ namespace Gun.RoomRhythm.Editor
                     if (GUILayout.Button(new[] { "↑", "↗", "→", "↘", "↓", "↙", "←", "↖" }[direction]))
                     {
                         timelineSelection.Clear(); selectedCamera = selectedShake = -1;
-                        int existing = Array.FindIndex(Map.enemies, e => e.roomId == room.id && (int)e.direction == direction);
+                        int existing = Array.FindIndex(Map.enemies, e => e.roomId == room.id && !e.placement.useCoordinates && (int)e.direction == direction);
                         if (existing >= 0) selectedEnemy = existing;
-                        else Edit("방에 적 추가", () => {
-                            double beat = room.id == Map.settings.startingRoomId ? 2 : room.hitBeat + 2;
-                            double arrival = room.id == Map.settings.startingRoomId ? Map.settings.Beat(0) : room.hitBeat;
-                            double appearance = Math.Max(arrival, beat - Map.settings.enemyLeadBeats);
-                            Add(ref Map.enemies, new MapEnemy { id = "enemy_" + Guid.NewGuid().ToString("N"), roomId = room.id, direction = (EnemyDirection)direction,
-                                hitBeat = beat, appearBeat = appearance, frameBeat = appearance });
-                            selectedEnemy = Map.enemies.Length - 1;
-                        });
+                        else AddEnemy(room, (EnemyDirection)direction, false);
                     }
                 }
                 EditorGUILayout.EndHorizontal();
             }
             for (int i = 0; i < Map.enemies.Length; i++)
-                if (Map.enemies[i].roomId == room.id && GUILayout.Button(Map.enemies[i].direction + " · " + Map.enemies[i].hitBeat.ToString("0.###") + "beat", EditorStyles.miniButton))
+                if (Map.enemies[i].roomId == room.id && GUILayout.Button(Map.enemies[i].PositionLabel + " · " + Map.enemies[i].hitBeat.ToString("0.###") + "beat", EditorStyles.miniButton))
                 { timelineSelection.Clear(); selectedEnemy = i; selectedCamera = selectedShake = -1; }
             if (selectedEnemy >= 0 && selectedEnemy < Map.enemies.Length && Map.enemies[selectedEnemy].roomId == room.id)
             {
                 if (serialized == null) serialized = new SerializedObject(chart);
                 serialized.Update(); var enemy = serialized.FindProperty("mapDraft").FindPropertyRelative("enemies").GetArrayElementAtIndex(selectedEnemy);
-                Field(enemy, "direction", "방향"); Field(enemy, "appearBeat", "적·판정선 시작 박");
+                DrawEnemyPlacement(enemy);
+                Field(enemy, "appearBeat", "적·판정선 시작 박");
                 enemy.FindPropertyRelative("frameBeat").doubleValue = enemy.FindPropertyRelative("appearBeat").doubleValue;
                 Field(enemy, "hitBeat", "사격 정확 박");
                 EditorGUILayout.HelpBox("소속 방은 사격 정확 박으로 결정됩니다. 시작 박이 방 이동보다 빨라도 소속은 바뀌지 않습니다.", MessageType.Info);
@@ -471,6 +496,58 @@ namespace Gun.RoomRhythm.Editor
                 if (serialized.ApplyModifiedProperties()) message = null;
             }
             DrawCameraActions(room);
+        }
+        private void AddEnemy(MapRoom room, EnemyDirection direction, bool coordinates)
+        {
+            Edit("방에 적 추가", () => {
+                timelineSelection.Clear(); selectedCamera = selectedShake = -1;
+                double beat = room.id == Map.settings.startingRoomId ? 2 : room.hitBeat + 2;
+                double arrival = room.id == Map.settings.startingRoomId ? Map.settings.Beat(0) : room.hitBeat;
+                double appearance = Math.Max(arrival, beat - Map.settings.enemyLeadBeats);
+                var offset = default(EnemyPlacement).Offset(direction, chart.aimRadius);
+                Add(ref Map.enemies, new MapEnemy { id = "enemy_" + Guid.NewGuid().ToString("N"), roomId = room.id, direction = direction,
+                    placement = new EnemyPlacement { useCoordinates = coordinates, x = offset.x, y = offset.y },
+                    hitBeat = beat, appearBeat = appearance, frameBeat = appearance });
+                selectedEnemy = Map.enemies.Length - 1;
+            });
+        }
+        private void DrawEnemyPlacement(SerializedProperty enemy)
+        {
+            var placement = enemy.FindPropertyRelative("placement");
+            var enabled = placement.FindPropertyRelative("useCoordinates");
+            bool coordinates = EditorGUILayout.Toggle("좌표 직접 지정", enabled.boolValue);
+            if (coordinates != enabled.boolValue)
+            {
+                if (coordinates)
+                {
+                    var offset = default(EnemyPlacement).Offset((EnemyDirection)enemy.FindPropertyRelative("direction").intValue, chart.aimRadius);
+                    placement.FindPropertyRelative("x").floatValue = offset.x;
+                    placement.FindPropertyRelative("y").floatValue = offset.y;
+                }
+                enabled.boolValue = coordinates;
+            }
+            if (coordinates)
+            {
+                EnemyCoordinateField(placement, "x", "방 중심 기준 X");
+                EnemyCoordinateField(placement, "y", "방 중심 기준 Y");
+                EditorGUILayout.HelpBox("X: 오른쪽 + / 왼쪽 −, Y: 위 + / 아래 −. 방을 옮기면 적도 함께 이동합니다.", MessageType.Info);
+            }
+            else Field(enemy, "direction", "방향");
+            EditorGUILayout.HelpBox("맵의 적 원을 마우스로 끌어도 자유롭게 배치할 수 있습니다. 드래그하면 좌표 직접 지정으로 전환됩니다. Esc: 취소 · Ctrl+Z: 되돌리기.", MessageType.Info);
+        }
+        private void EnemyCoordinateField(SerializedProperty placement, string axis, string label)
+        {
+            var property = placement.FindPropertyRelative(axis);
+            string controlName = "MapInput:" + property.propertyPath;
+            GUI.SetNextControlName(controlName);
+            EditorGUI.BeginChangeCheck();
+            float value = EditorGUILayout.DelayedFloatField(label, property.floatValue);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (!float.IsNaN(value) && !float.IsInfinity(value)) { property.floatValue = value; message = null; }
+                else { message = "적 좌표는 유한한 숫자로 입력하세요."; error = true; }
+            }
+            TrackFocusedInput(controlName);
         }
         private void DrawCameraActions(MapRoom room)
         {
@@ -523,7 +600,7 @@ namespace Gun.RoomRhythm.Editor
         private static void Add<T>(ref T[] array, T item) { Array.Resize(ref array, array.Length + 1); array[array.Length - 1] = item; }
         private void PickRoom(MapRoom room, bool additive, bool revealTimeline = true)
         {
-            if (revealTimeline) timelineSelection.Clear();
+            if (revealTimeline) { timelineSelection.Clear(); layoutSelectionActive = true; }
             tool = (int)MapTool.Select;
             selectedEnemy = selectedCamera = selectedShake = -1;
             if (!additive) selection.Clear();

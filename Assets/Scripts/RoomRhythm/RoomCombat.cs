@@ -87,9 +87,8 @@ namespace Gun.RoomRhythm
                 if (FindOverride(StageTargetRole.Shot, notes[i].id) != null) continue;
                 if (!lookup.TryGetValue(notes[i].id, out RoomEnemy enemy))
                     throw new InvalidOperationException("Missing enemy or stage target: " + notes[i].id);
-                float angle = (90 - 45 * (int)notes[i].direction) * Mathf.Deg2Rad;
-                Vector3 expected = path[run.EnemyRoom(i)].Center + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * chart.aimRadius;
-                if (Vector3.Distance(enemy.Target, expected) > .01f)
+                Vector3 expected = RoomEnemy.Position(path[run.EnemyRoom(i)].Center, notes[i].direction, notes[i].placement, chart.aimRadius);
+                if (Vector3.Distance(enemy.PlacementPosition, expected) > .01f)
                     throw new InvalidOperationException("Enemy scene position differs from chart: " + notes[i].id);
             }
         }
@@ -113,7 +112,7 @@ namespace Gun.RoomRhythm
                 if (shotOverrides[i] == null)
                 {
                     orderedEnemies[i] = lookup[note.id];
-                    orderedEnemies[i].Configure(path[run.EnemyRoom(i)].Center, note.direction, chart);
+                    orderedEnemies[i].Configure(path[run.EnemyRoom(i)].Center, note.direction, chart, note.placement);
                 }
             }
             for (int i = 0; i < chart.moves.Length; i++)
@@ -158,8 +157,23 @@ namespace Gun.RoomRhythm
         private Vector3 TargetPosition(int id, double time)
         {
             var target = Override(id);
-            return target != null ? target.PositionAt(time) : id < orderedEnemies.Length ? orderedEnemies[id].Target
+            return target != null ? target.PositionAt(time) : id < orderedEnemies.Length ? orderedEnemies[id].TargetAt(time)
                 : path[id - orderedEnemies.Length + 1].Door.Target;
+        }
+
+        public void SetCorridorEntrances(string roomId, Vector3 center, float height)
+        {
+            for (int i = 0; i < enemyNotes.Length; i++)
+            {
+                if (enemyNotes[i].roomId != roomId || orderedEnemies[i] == null) continue;
+                var enemy = orderedEnemies[i];
+                Vector3 rest = enemy.TargetAt(double.PositiveInfinity);
+                float side = rest.y >= center.y ? 1 : -1;
+                Vector3 offset = new Vector3(0, center.y + side * (height * .5f + .7f) - rest.y, 0);
+                double start = run.EnemyVisualAppearsAt(i);
+                double duration = Math.Min(.34, Math.Max(.01, (enemyNotes[i].time - start) * .4));
+                enemy.SetEntrance(offset, start, duration);
+            }
         }
 
         public void Shoot(Vector2 pointer, double time, Vector3 origin)
@@ -198,7 +212,11 @@ namespace Gun.RoomRhythm
                 return;
             }
             if (target < orderedEnemies.Length)
-                feedback.EnemyDeath(TargetPosition(target, time), TargetPosition(target, time) - origin);
+            {
+                Vector3 position = TargetPosition(target, time);
+                orderedEnemies[target].Defeat(time, position - origin);
+                feedback.EnemyDeath(position, position - origin);
+            }
             else
             {
                 RoomDoor door = path[target - orderedEnemies.Length + 1].Door;
@@ -223,9 +241,10 @@ namespace Gun.RoomRhythm
                     shotOverrides[i].Present(visible, deathFrames != null ? deathFrames[i] : time >= frameStart, time, i == nextEnemy);
                     continue;
                 }
-                orderedEnemies[i].AimAt(player.position);
                 orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time,
-                    deathFrames != null ? deathFrames[i] : time >= frameStart, brightness, i == nextEnemy);
+                    deathFrames != null ? deathFrames[i] : time >= frameStart, brightness, i == nextEnemy,
+                    deathVisible != null ? deathVisible[i] : DefeatedEnemyVisible(i, time));
+                orderedEnemies[i].AimAt(player.position);
             }
             for (int i = 0; i < doorOverrides.Length; i++)
             {
@@ -252,10 +271,10 @@ namespace Gun.RoomRhythm
             if (show) selectedEnemyDot.position = TargetPosition(target, displayedTime);
         }
 
-        public bool HasLivingEnemies(int room)
+        public bool HasVisibleEnemies(int room, double time)
         {
             for (int i = 0; i < orderedEnemies.Length; i++)
-                if (run.EnemyRoom(i) == room && !run.EnemyDefeated(i)) return true;
+                if (run.EnemyRoom(i) == room && EnemyVisible(i, time)) return true;
             return false;
         }
 
@@ -275,12 +294,18 @@ namespace Gun.RoomRhythm
             deathVisible = new bool[orderedEnemies.Length]; deathFrames = new bool[orderedEnemies.Length];
             for (int i = 0; i < orderedEnemies.Length; i++)
             {
-                deathVisible[i] = EnemyVisible(i, time)
+                deathVisible[i] = (EnemyVisible(i, time) || DefeatedEnemyVisible(i, time))
                     && (run.Death != DeathPresentation.Departure || run.EnemyRoom(i) == run.CompletedMoves);
             }
         }
 
         private bool EnemyVisible(int index, double time)
             => run.EnemyVisible(index, time) && previousRoomOccurrences[run.EnemyRoom(index)] < run.CompletedMoves;
+
+        private bool DefeatedEnemyVisible(int index, double time)
+        {
+            int room = run.EnemyRoom(index);
+            return run.EnemyDefeated(index) && run.RoomVisible(room, time, previousRoomOccurrences[room]);
+        }
     }
 }

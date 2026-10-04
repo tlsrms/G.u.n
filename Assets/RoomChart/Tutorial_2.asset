@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Tutorial_2
   m_EditorClassIdentifier: 
   music: {fileID: 8300000, guid: bddcaafc4ac0477409db293393b534da, type: 3}
+  songTitle: 
   inputOffsetMs: 0
   startingRoomId: start
   bpm: 121
@@ -30,7 +31,9 @@ MonoBehaviour:
   doorCloseDuration: 0.2
   appearanceStartAlpha: 0.05
   moves:
-  - destinationId: room_3f0dffbe
+  - duration: 0
+    ease: 0
+    destinationId: room_3f0dffbe
     direction: 3
     time: 2.479338842975207
     customAppearance: 1
@@ -40,7 +43,9 @@ MonoBehaviour:
     hasDoor: 1
     doorTime: 1.9834710743801653
     moveDelay: 0.49586776859504134
-  - destinationId: room_0a11c119
+  - duration: 0
+    ease: 0
+    destinationId: room_0a11c119
     direction: 1
     time: 2.975206611570248
     customAppearance: 1
@@ -50,7 +55,9 @@ MonoBehaviour:
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
-  - destinationId: room_7766820d
+  - duration: 0
+    ease: 0
+    destinationId: room_7766820d
     direction: 3
     time: 3.4710743801652892
     customAppearance: 1
@@ -60,7 +67,9 @@ MonoBehaviour:
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
-  - destinationId: room_e5f45eb1
+  - duration: 0
+    ease: 0
+    destinationId: room_e5f45eb1
     direction: 0
     time: 4.462809917355372
     customAppearance: 1
@@ -70,7 +79,9 @@ MonoBehaviour:
     hasDoor: 1
     doorTime: 3.9669421487603307
     moveDelay: 0.49586776859504134
-  - destinationId: room_131f058a
+  - duration: 0
+    ease: 0
+    destinationId: room_131f058a
     direction: 2
     time: 4.958677685950413
     customAppearance: 1
@@ -80,7 +91,9 @@ MonoBehaviour:
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
-  - destinationId: room_06de6738
+  - duration: 0
+    ease: 0
+    destinationId: room_06de6738
     direction: 0
     time: 5.454545454545455
     customAppearance: 1
@@ -109,90 +122,150 @@ MonoBehaviour:
       enemyId: 
       moveDirection: 0
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 0
       beat: 18
       roomId: east
       enemyId: 
       moveDirection: 3
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 1
       beat: 16
       roomId: east
       enemyId: 
       moveDirection: 0
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 0
       beat: 24
       roomId: south
       enemyId: 
       moveDirection: 2
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 0
       beat: 28
       roomId: far-east
       enemyId: 
       moveDirection: 3
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 1
       beat: 27
       roomId: far-east
       enemyId: 
       moveDirection: 0
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 0
       beat: 36
       roomId: far-north
       enemyId: 
       moveDirection: 0
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 1
       beat: 35
       roomId: far-north
       enemyId: 
       moveDirection: 0
       enemyDirection: 0
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 12
       roomId: north
       enemyId: north-upper-left
       moveDirection: 0
       enemyDirection: 7
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 21
       roomId: east
       enemyId: east-upper-right
       moveDirection: 0
       enemyDirection: 1
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 31
       roomId: far-east
       enemyId: far-east-lower-left
       moveDirection: 0
       enemyDirection: 5
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 32
       roomId: far-east
       enemyId: far-east-upper-left
       moveDirection: 0
       enemyDirection: 7
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 38
       roomId: far-north
       enemyId: far-north-right
       moveDirection: 0
       enemyDirection: 2
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 39
       roomId: far-north
       enemyId: far-north-upper-right
       moveDirection: 0
       enemyDirection: 1
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
     - kind: 2
       beat: 40
       roomId: far-north
       enemyId: far-north-lower-left
       moveDirection: 0
       enemyDirection: 5
+      enemyPlacement:
+        useCoordinates: 0
+        x: 0
+        y: 0
   beatChartMusic: {fileID: 8300000, guid: 408620af6c1e492b9ddd6d0c2eb00cb4, type: 3}
   mapDraft:
     settings:
@@ -212,90 +285,150 @@ MonoBehaviour:
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 18
         roomId: east
         enemyId: 
         moveDirection: 3
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 1
         beat: 16
         roomId: east
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 24
         roomId: south
         enemyId: 
         moveDirection: 2
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 28
         roomId: far-east
         enemyId: 
         moveDirection: 3
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 1
         beat: 27
         roomId: far-east
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 36
         roomId: far-north
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 1
         beat: 35
         roomId: far-north
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 12
         roomId: north
         enemyId: north-upper-left
         moveDirection: 0
         enemyDirection: 7
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 21
         roomId: east
         enemyId: east-upper-right
         moveDirection: 0
         enemyDirection: 1
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 31
         roomId: far-east
         enemyId: far-east-lower-left
         moveDirection: 0
         enemyDirection: 5
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 32
         roomId: far-east
         enemyId: far-east-upper-left
         moveDirection: 0
         enemyDirection: 7
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 38
         roomId: far-north
         enemyId: far-north-right
         moveDirection: 0
         enemyDirection: 2
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 39
         roomId: far-north
         enemyId: far-north-upper-right
         moveDirection: 0
         enemyDirection: 1
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 40
         roomId: far-north
         enemyId: far-north-lower-left
         moveDirection: 0
         enemyDirection: 5
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
     roomSize: 6
     originX: 0
     originY: 0
@@ -307,6 +440,12 @@ MonoBehaviour:
     - id: start
       x: 0
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 0
       frameBeat: 0
       groupId: 
@@ -318,6 +457,12 @@ MonoBehaviour:
     - id: room_3f0dffbe
       x: 1
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 1
       frameBeat: -0.5
       groupId: 
@@ -329,6 +474,12 @@ MonoBehaviour:
     - id: room_0a11c119
       x: 0
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 2
       frameBeat: 0.5
       groupId: 
@@ -340,6 +491,12 @@ MonoBehaviour:
     - id: room_7766820d
       x: 1
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 3
       frameBeat: 1.5
       groupId: 
@@ -351,6 +508,12 @@ MonoBehaviour:
     - id: room_e5f45eb1
       x: 1
       y: 1
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 5
       frameBeat: 3.5
       groupId: 
@@ -362,6 +525,12 @@ MonoBehaviour:
     - id: room_131f058a
       x: 1
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 6
       frameBeat: 4.5
       groupId: 
@@ -373,6 +542,12 @@ MonoBehaviour:
     - id: room_06de6738
       x: 1
       y: 1
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 7
       frameBeat: 5.5
       groupId: 
@@ -404,90 +579,150 @@ MonoBehaviour:
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 18
         roomId: east
         enemyId: 
         moveDirection: 3
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 1
         beat: 16
         roomId: east
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 24
         roomId: south
         enemyId: 
         moveDirection: 2
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 28
         roomId: far-east
         enemyId: 
         moveDirection: 3
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 1
         beat: 27
         roomId: far-east
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 0
         beat: 36
         roomId: far-north
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 1
         beat: 35
         roomId: far-north
         enemyId: 
         moveDirection: 0
         enemyDirection: 0
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 12
         roomId: north
         enemyId: north-upper-left
         moveDirection: 0
         enemyDirection: 7
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 21
         roomId: east
         enemyId: east-upper-right
         moveDirection: 0
         enemyDirection: 1
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 31
         roomId: far-east
         enemyId: far-east-lower-left
         moveDirection: 0
         enemyDirection: 5
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 32
         roomId: far-east
         enemyId: far-east-upper-left
         moveDirection: 0
         enemyDirection: 7
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 38
         roomId: far-north
         enemyId: far-north-right
         moveDirection: 0
         enemyDirection: 2
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 39
         roomId: far-north
         enemyId: far-north-upper-right
         moveDirection: 0
         enemyDirection: 1
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
       - kind: 2
         beat: 40
         roomId: far-north
         enemyId: far-north-lower-left
         moveDirection: 0
         enemyDirection: 5
+        enemyPlacement:
+          useCoordinates: 0
+          x: 0
+          y: 0
     roomSize: 6
     originX: 0
     originY: 0
@@ -499,6 +734,12 @@ MonoBehaviour:
     - id: start
       x: 0
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 0
       frameBeat: 0
       groupId: 
@@ -510,6 +751,12 @@ MonoBehaviour:
     - id: room_3f0dffbe
       x: 1
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 1
       frameBeat: -0.5
       groupId: 
@@ -521,6 +768,12 @@ MonoBehaviour:
     - id: room_0a11c119
       x: 0
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 2
       frameBeat: 0.5
       groupId: 
@@ -532,6 +785,12 @@ MonoBehaviour:
     - id: room_7766820d
       x: 1
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 3
       frameBeat: 1.5
       groupId: 
@@ -543,6 +802,12 @@ MonoBehaviour:
     - id: room_e5f45eb1
       x: 1
       y: 1
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 5
       frameBeat: 3.5
       groupId: 
@@ -554,6 +819,12 @@ MonoBehaviour:
     - id: room_131f058a
       x: 1
       y: 0
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 6
       frameBeat: 4.5
       groupId: 
@@ -565,6 +836,12 @@ MonoBehaviour:
     - id: room_06de6738
       x: 1
       y: 1
+      width: 0
+      height: 0
+      offsetX: 0
+      offsetY: 0
+      moveDuration: 0
+      moveEase: 0
       hitBeat: 7
       frameBeat: 5.5
       groupId: 

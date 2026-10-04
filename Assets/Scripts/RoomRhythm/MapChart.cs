@@ -18,12 +18,17 @@ namespace Gun.RoomRhythm
         public double appearBeat;
         public bool door;
         public double doorBeat = 6, doorFrameBeat = 4;
+        internal MapRoom Copy() => (MapRoom)MemberwiseClone();
     }
     [Serializable] public sealed class MapEnemy
     {
         public string id, roomId;
         public EnemyDirection direction;
+        public EnemyPlacement placement;
         public double hitBeat = 10, appearBeat = 8, frameBeat = 8;
+        public string PositionLabel => placement.useCoordinates
+            ? string.Format(System.Globalization.CultureInfo.InvariantCulture, "({0:0.##}, {1:0.##})", placement.x, placement.y)
+            : direction.ToString();
     }
     [Serializable] public sealed class MapGroup
     {
@@ -76,23 +81,25 @@ namespace Gun.RoomRhythm
         }
 
         public MapRoom Room(string id) => Array.Find(rooms, r => r.id == id);
-        public string EnemyRoomAt(double judgmentBeat)
+        public string EnemyRoomAt(double judgmentBeat, string preferredRoomId = null)
         {
             string result = settings.startingRoomId;
-            double latest = double.NegativeInfinity;
+            double latest = settings.Beat(0);
             foreach (var room in rooms)
             {
-                if (room.id == settings.startingRoomId || room.hitBeat > judgmentBeat || room.hitBeat <= latest) continue;
+                if (room.id == settings.startingRoomId || room.hitBeat > judgmentBeat || room.hitBeat < latest) continue;
+                // Same-beat duplicates retain their explicit owner until the author separates their timings.
+                if (room.hitBeat == latest && room.id != preferredRoomId) continue;
                 latest = room.hitBeat; result = room.id;
             }
             return result;
         }
         public bool NeedsEnemyRoomSynchronization => Array.Exists(enemies,
-            enemy => enemy != null && (enemy.roomId != EnemyRoomAt(enemy.hitBeat) || enemy.frameBeat != enemy.appearBeat));
+            enemy => enemy != null && (enemy.roomId != EnemyRoomAt(enemy.hitBeat, enemy.roomId) || enemy.frameBeat != enemy.appearBeat));
         public void SynchronizeEnemyRooms()
         {
             foreach (var enemy in enemies)
-                if (enemy != null) { enemy.roomId = EnemyRoomAt(enemy.hitBeat); enemy.frameBeat = enemy.appearBeat; }
+                if (enemy != null) { enemy.roomId = EnemyRoomAt(enemy.hitBeat, enemy.roomId); enemy.frameBeat = enemy.appearBeat; }
         }
         public double AppearanceBeat(MapRoom room)
         {
@@ -125,9 +132,145 @@ namespace Gun.RoomRhythm
         public float WorldY(MapRoom room) => originY + room.y * roomSize + room.offsetY;
         public float Width(MapRoom room) => room.width == 0 ? roomSize : room.width;
         public float Height(MapRoom room) => room.height == 0 ? roomSize : room.height;
-        public bool Connected(MapRoom a, MapRoom b) =>
-            Math.Abs(WorldY(a) - WorldY(b)) < .001f && Math.Abs(Math.Abs(WorldX(a) - WorldX(b)) - (Width(a) + Width(b)) * .5f) < .001f
-            || Math.Abs(WorldX(a) - WorldX(b)) < .001f && Math.Abs(Math.Abs(WorldY(a) - WorldY(b)) - (Height(a) + Height(b)) * .5f) < .001f;
+        public bool Connected(MapRoom a, MapRoom b) => Connection(a, b, out _);
+        public bool Connection(MapRoom previous, MapRoom room, out MoveDirection direction)
+        {
+            float dx = WorldX(room) - WorldX(previous), dy = WorldY(room) - WorldY(previous);
+            float halfWidth = (Width(previous) + Width(room)) * .5f, halfHeight = (Height(previous) + Height(room)) * .5f;
+            bool horizontal = Math.Abs(Math.Abs(dx) - halfWidth) < .001f && Math.Abs(dy) < halfHeight - .001f;
+            bool vertical = Math.Abs(Math.Abs(dy) - halfHeight) < .001f && Math.Abs(dx) < halfWidth - .001f;
+            direction = horizontal ? (dx > 0 ? MoveDirection.Right : MoveDirection.Left) : (dy > 0 ? MoveDirection.Up : MoveDirection.Down);
+            return horizontal || vertical;
+        }
+        // Snap to slots along each face. One default-size tile must share the face where sizes permit.
+        public (float x, float y) AttachedPosition(MapRoom room, MapRoom previous, float desiredX, float desiredY, MoveDirection? face = null)
+        {
+            float px = WorldX(previous), py = WorldY(previous);
+            float horizontal = (Width(previous) + Width(room)) * .5f;
+            float vertical = (Height(previous) + Height(room)) * .5f;
+            float x = px + FaceSlot(desiredX - px, Width(previous), Width(room));
+            float y = py + FaceSlot(desiredY - py, Height(previous), Height(room));
+            var best = (x: x, y: py + vertical);
+            double distance = double.PositiveInfinity;
+            void Consider(MoveDirection side, float candidateX, float candidateY)
+            {
+                if (face.HasValue && face.Value != side) return;
+                double dx = candidateX - desiredX, dy = candidateY - desiredY;
+                double next = dx * dx + dy * dy;
+                if (next < distance) { distance = next; best = (candidateX, candidateY); }
+            }
+            Consider(MoveDirection.Up, x, py + vertical); Consider(MoveDirection.Right, px + horizontal, y);
+            Consider(MoveDirection.Down, x, py - vertical); Consider(MoveDirection.Left, px - horizontal, y);
+            return best;
+        }
+        private float FaceSlot(float desired, float previousSize, float size)
+        {
+            float limit = (previousSize + size) * .5f - Math.Min(roomSize, Math.Min(previousSize, size));
+            return Math.Max(-limit, Math.Min(limit, -limit + (float)Math.Round((desired + limit) / roomSize, MidpointRounding.AwayFromZero) * roomSize));
+        }
+        public void SetPosition(MapRoom room, float x, float y)
+        {
+            room.x = (int)Math.Round((x - originX) / roomSize, MidpointRounding.AwayFromZero);
+            room.y = (int)Math.Round((y - originY) / roomSize, MidpointRounding.AwayFromZero);
+            room.offsetX = x - originX - room.x * roomSize;
+            room.offsetY = y - originY - room.y * roomSize;
+        }
+
+        // Validate a detached layout before committing: failed insertion must not move existing rooms.
+        public void InsertRoom(MapRoom candidate, double movementSeconds, bool moveFollowing = true)
+        {
+            if (candidate == null || string.IsNullOrWhiteSpace(candidate.id) || Room(candidate.id) != null
+                || double.IsNaN(candidate.hitBeat) || double.IsInfinity(candidate.hitBeat)
+                || candidate.hitBeat <= settings.Beat(0))
+                throw new ArgumentException("새 방의 ID와 이동 박자를 확인하세요.");
+            var ordered = OrderedRooms();
+            if (!(Width(candidate) > 0) || !(Height(candidate) > 0)
+                || float.IsInfinity(Width(candidate)) || float.IsInfinity(Height(candidate)))
+                throw new ArgumentException("방 크기는 유한한 양수여야 합니다.");
+            MapRoom previous = ordered[0], next = null;
+            foreach (var room in ordered)
+            {
+                if (room.id == settings.startingRoomId) continue;
+                if (Math.Abs(room.hitBeat - candidate.hitBeat) < 1e-9)
+                    throw new ArgumentException("같은 박에 두 방으로 이동할 수 없습니다.");
+                if (room.hitBeat < candidate.hitBeat) previous = room;
+                else { next = room; break; }
+            }
+            if (!Connected(previous, candidate))
+                throw new ArgumentException("새 방은 입력한 박자의 시간순 이전 방 옆에 연결해야 합니다.");
+            var trial = new MapChart { settings = settings, roomSize = roomSize, originX = originX, originY = originY,
+                groups = groups, rooms = new MapRoom[rooms.Length + 1] };
+            for (int i = 0; i < rooms.Length; i++) trial.rooms[i] = rooms[i].Copy();
+            trial.rooms[rooms.Length] = candidate.Copy();
+            if (next != null && !Connected(candidate, next))
+            {
+                if (!moveFollowing)
+                    throw new ArgumentException("다음 방과 연결되지 않습니다. '뒤쪽 방을 함께 밀어서 연결'을 켜세요.");
+                if (!Connection(previous, next, out var direction))
+                    throw new ArgumentException("기존 이전/다음 방의 연결을 먼저 확인하세요.");
+                var attached = AttachedPosition(next, candidate, WorldX(next), WorldY(next), direction);
+                float dx = attached.x - WorldX(next), dy = attached.y - WorldY(next);
+                foreach (var room in trial.rooms)
+                    if (room.id != candidate.id && room.id != settings.startingRoomId && room.hitBeat >= next.hitBeat)
+                        trial.SetPosition(room, trial.WorldX(room) + dx, trial.WorldY(room) + dy);
+            }
+            trial.ValidateRoomReuse(movementSeconds);
+            var result = new MapRoom[rooms.Length + 1];
+            for (int i = 0; i < rooms.Length; i++)
+            {
+                rooms[i].x = trial.rooms[i].x; rooms[i].y = trial.rooms[i].y;
+                rooms[i].offsetX = trial.rooms[i].offsetX; rooms[i].offsetY = trial.rooms[i].offsetY;
+                result[i] = rooms[i];
+            }
+            result[rooms.Length] = candidate;
+            rooms = result;
+        }
+        public (float x, float y) PassagePosition(MapRoom previous, MapRoom room)
+        {
+            Connection(previous, room, out var direction);
+            bool horizontal = direction == MoveDirection.Left || direction == MoveDirection.Right;
+            float x = (Math.Max(WorldX(previous) - Width(previous) * .5f, WorldX(room) - Width(room) * .5f)
+                + Math.Min(WorldX(previous) + Width(previous) * .5f, WorldX(room) + Width(room) * .5f)) * .5f;
+            float y = (Math.Max(WorldY(previous) - Height(previous) * .5f, WorldY(room) - Height(room) * .5f)
+                + Math.Min(WorldY(previous) + Height(previous) * .5f, WorldY(room) + Height(room) * .5f)) * .5f;
+            return horizontal ? (WorldX(previous) + (direction == MoveDirection.Right ? 1 : -1) * Width(previous) * .5f, y)
+                : (x, WorldY(previous) + (direction == MoveDirection.Up ? 1 : -1) * Height(previous) * .5f);
+        }
+        // A room's movement destination is the tile beside its next exit, not the rectangle's center.
+        public (float x, float y) PlayerAnchor(MapRoom room, MapRoom next)
+        {
+            float x = WorldX(room), y = WorldY(room);
+            if (next == null || !Connection(room, next, out var direction)) return (x, y);
+            var passage = PassagePosition(room, next);
+            float CellCenter(float coordinate, float center, float size)
+            {
+                float first = center - size * .5f + Math.Min(roomSize, size) * .5f;
+                float last = center + size * .5f - Math.Min(roomSize, size) * .5f;
+                return Math.Max(first, Math.Min(last, first + (float)Math.Round((coordinate - first) / roomSize,
+                    MidpointRounding.AwayFromZero) * roomSize));
+            }
+            if (direction == MoveDirection.Left || direction == MoveDirection.Right)
+                return (x + (direction == MoveDirection.Right ? 1 : -1) * (Width(room) - Math.Min(roomSize, Width(room))) * .5f,
+                    CellCenter(passage.y, y, Height(room)));
+            return (CellCenter(passage.x, x, Width(room)),
+                y + (direction == MoveDirection.Up ? 1 : -1) * (Height(room) - Math.Min(roomSize, Height(room))) * .5f);
+        }
+        public static (float x, float y) PlayerMovePosition((float x, float y) from, (float x, float y) passage,
+            (float x, float y) to, double progress)
+        {
+            double Distance((float x, float y) a, (float x, float y) b)
+            {
+                double dx = b.x - a.x, dy = b.y - a.y;
+                return Math.Sqrt(dx * dx + dy * dy);
+            }
+            double first = Distance(from, passage), second = Distance(passage, to);
+            double distance = Math.Max(0, Math.Min(1, progress)) * (first + second);
+            var start = distance <= first ? from : passage;
+            var end = distance <= first ? passage : to;
+            double length = distance <= first ? first : second;
+            double t = length > 0 ? (distance <= first ? distance : distance - first) / length : 1;
+            return ((float)(start.x + (end.x - start.x) * t), (float)(start.y + (end.y - start.y) * t));
+        }
         public bool Overlaps(MapRoom a, MapRoom b) =>
             Math.Abs(WorldX(a) - WorldX(b)) < (Width(a) + Width(b)) * .5f - .001f
             && Math.Abs(WorldY(a) - WorldY(b)) < (Height(a) + Height(b)) * .5f - .001f;
@@ -153,9 +296,9 @@ namespace Gun.RoomRhythm
         }
         public string EnemyLabel(MapEnemy enemy)
         {
-            var room = Room(EnemyRoomAt(enemy.hitBeat));
+            var room = Room(EnemyRoomAt(enemy.hitBeat, enemy.roomId));
             return (room != null ? RoomLabel(room, enemy.hitBeat) : "?/" + enemy.hitBeat.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + "beat")
-                + " · " + enemy.direction;
+                + " · " + enemy.PositionLabel;
         }
         // A distinct room occurrence can reuse a tile after its previous occupant has disappeared.
         // Authoring and preview use on-beat movement. Runtime defers reuse until actual departure.
@@ -265,11 +408,7 @@ namespace Gun.RoomRhythm
             MapRoom previous = rooms[s.startingRoomId];
             foreach (var room in moves)
             {
-                double dx = map.WorldX(room) - map.WorldX(previous), dy = map.WorldY(room) - map.WorldY(previous);
-                bool horizontal = Math.Abs(dy) < .001 && Math.Abs(Math.Abs(dx) - (map.Width(room) + map.Width(previous)) * .5) < .001;
-                bool vertical = Math.Abs(dx) < .001 && Math.Abs(Math.Abs(dy) - (map.Height(room) + map.Height(previous)) * .5) < .001;
-                Require(horizontal || vertical, "시간순 다음 방은 중심축을 맞추고 변이 맞닿아야 합니다: " + room.id);
-                var direction = horizontal ? (dx > 0 ? MoveDirection.Right : MoveDirection.Left) : (dy > 0 ? MoveDirection.Up : MoveDirection.Down);
+                Require(map.Connection(previous, room, out var direction), "시간순 다음 방은 변의 일부가 맞닿아야 합니다: " + room.id);
                 Frame(s, map.AppearanceBeat(room), map.AppearanceBeat(room), room.hitBeat, "방 " + map.RoomLabel(room));
                 notes.Add(new BeatNote { kind = BeatNoteKind.Move, roomId = room.id, beat = room.hitBeat, moveDirection = direction });
                 if (room.door)
@@ -286,8 +425,10 @@ namespace Gun.RoomRhythm
                 string label = "적 " + map.EnemyLabel(enemy);
                 Require(!string.IsNullOrWhiteSpace(enemy.id) && enemyIds.Add(enemy.id), label + ": 적 ID가 없거나 중복되었습니다.");
                 Require(Enum.IsDefined(typeof(EnemyDirection), enemy.direction), label + ": 잘못된 적 방향입니다.");
+                Require(enemy.placement.IsValid, label + ": 적 좌표는 유한한 값이어야 합니다.");
                 Frame(s, enemy.appearBeat, enemy.appearBeat, enemy.hitBeat, label);
-                notes.Add(new BeatNote { kind = BeatNoteKind.Enemy, roomId = map.EnemyRoomAt(enemy.hitBeat), enemyId = enemy.id, enemyDirection = enemy.direction, beat = enemy.hitBeat });
+                notes.Add(new BeatNote { kind = BeatNoteKind.Enemy, roomId = map.EnemyRoomAt(enemy.hitBeat), enemyId = enemy.id,
+                    enemyDirection = enemy.direction, enemyPlacement = enemy.placement, beat = enemy.hitBeat });
             }
             var beat = new BeatChart { bpm = s.bpm, offsetSeconds = s.offsetSeconds, musicDelaySeconds = s.musicDelaySeconds, loopMusic = s.loopMusic, beatsPerBar = s.beatsPerBar, subdivision = s.subdivision,
                 roomLeadBeats = s.roomLeadBeats, enemyLeadBeats = s.enemyLeadBeats, notes = notes.ToArray() };

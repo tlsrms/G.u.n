@@ -68,11 +68,29 @@ namespace Gun.RoomRhythm
     public enum EnemyDirection { Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft }
 
     [Serializable]
+    public struct EnemyPlacement
+    {
+        // Missing fields in existing charts retain their direction/radius placement.
+        public bool useCoordinates;
+        public float x, y;
+        public bool IsValid => !useCoordinates ||
+            (!float.IsNaN(x) && !float.IsInfinity(x) && !float.IsNaN(y) && !float.IsInfinity(y));
+
+        public (float x, float y) Offset(EnemyDirection direction, float radius)
+        {
+            if (useCoordinates) return (x, y);
+            double angle = (90 - 45 * (int)direction) * Math.PI / 180;
+            return ((float)Math.Cos(angle) * radius, (float)Math.Sin(angle) * radius);
+        }
+    }
+
+    [Serializable]
     public struct EnemyNote
     {
         public string id;
         public string roomId;
         public EnemyDirection direction;
+        public EnemyPlacement placement;
         public double time;
         public bool customAppearance;
         public double appearanceTime;

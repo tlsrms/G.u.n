@@ -17,7 +17,7 @@ internal static class MafiaStageChecks
         object result = new T();
         foreach (var field in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public))
         {
-            if (field.FieldType.IsArray || !field.FieldType.IsValueType && field.FieldType != typeof(string)) continue;
+            if (field.FieldType == typeof(EnemyPlacement) || field.FieldType.IsArray || !field.FieldType.IsValueType && field.FieldType != typeof(string)) continue;
             var match = Regex.Match(text, @"(?m)^ {" + indentation + "}" + field.Name + @": ([^\r\n]*)");
             if (!match.Success) continue;
             string value = match.Groups[1].Value.Trim().Trim('"');
@@ -34,7 +34,13 @@ internal static class MafiaStageChecks
         string body = Regex.Match(map, @"(?ms)^" + prefix + key + @":\r?\n(.*?)(?=^" + prefix + @"\w|\z)").Groups[1].Value;
         var rows = new List<T>();
         foreach (Match row in Regex.Matches(body, @"(?ms)^" + prefix + @"- (.*?)(?=^" + prefix + @"- |\z)"))
-            rows.Add(Fields<T>(prefix + "  " + row.Groups[1].Value, indentation + 2));
+        {
+            string data = prefix + "  " + row.Groups[1].Value;
+            object item = Fields<T>(data, indentation + 2);
+            if (item is MapEnemy enemy) enemy.placement = Fields<EnemyPlacement>(data, indentation + 4);
+            if (item is EnemyNote note) { note.placement = Fields<EnemyPlacement>(data, indentation + 4); item = note; }
+            rows.Add((T)item);
+        }
         return rows.ToArray();
     }
     private static MapChart Read(string path, string key)
@@ -52,39 +58,61 @@ internal static class MafiaStageChecks
     public static void Run(string root)
     {
         string path = Path.Combine(root, "Assets/RoomChart/Stage1_Full.asset");
+        // Unapplied map drafts may intentionally differ while the user is authoring.
         var map = Read(path, "appliedMap");
         var chart = Compile(map);
-        var draft = Compile(Read(path, "mapDraft"));
-        CompareNotes(chart.Moves, chart.Enemies, draft.Moves, draft.Enemies);
         CompareAuthoredNotes(path, chart);
-        Check(map.rooms.Length == 43 && chart.Moves.Length == 42 && chart.Enemies.Length == 132
-            && Array.FindAll(chart.Moves, n => n.hasDoor).Length == 9, "authored stage has 183 actions and one connected map");
-        Check(map.settings.startingRoomId == "guard0" && map.Room("guard15") != null
-            && !Array.Exists(map.rooms, r => r.id == "mafia0"), "duplicate start room removed");
-        Check(Array.Find(chart.Enemies, n => n.id == "mafia_shot_0_0").roomId == "guard15", "boss targets share the entrance room");
+        int doors = Array.FindAll(chart.Moves, n => n.hasDoor).Length;
+        int judgments = chart.Moves.Length + chart.Enemies.Length + doors;
+        int expectedEvents = judgments + chart.Moves.Length;
         foreach (double offset in new[] { 0.0, -.03, .03 })
         {
             var events = Replay(chart, map.settings.startingRoomId, offset);
-            Check(events.Count == 225 && !events.Exists(e => e.Kind == RoomActionKind.Failed), "all judgments and arrivals survive the entrance gap");
+            Check(events.Count == expectedEvents && !events.Exists(e => e.Kind == RoomActionKind.Failed),
+                "all judgments and arrivals survive corridor/office playback");
         }
+        string firstGuard = Array.Find(chart.Enemies, n => n.roomId == "room_fe5599bc").id;
         foreach (double delta in new[] { -.2, .2 })
         {
-            var events = Replay(chart, map.settings.startingRoomId, 0, "mafia_shot_0_0", delta);
-            Check(events.FindAll(e => e.Kind == RoomActionKind.Failed).Count == 1, "boss early/late input still fails once");
-            Check(events.FindAll(e => e.Kind == RoomActionKind.EnemyDefeated).Count == 48, "guard score survives boss failure");
+            var events = Replay(chart, map.settings.startingRoomId, 0, firstGuard, delta);
+            Check(events.FindAll(e => e.Kind == RoomActionKind.Failed).Count == 1, "corridor early/late shot fails once");
+        }
+        var entry = Array.Find(chart.Moves, n => n.destinationId == "room_5b48893d");
+        var exit = Array.Find(chart.Moves, n => n.destinationId == "mafia_office_escape");
+        var timing = new MafiaIntroTiming(entry.HitTime + entry.Duration(.28), exit.doorTime,
+            exit.HitTime, exit.HitTime + exit.Duration(.28), 60.0 / map.settings.bpm);
+        Check(exit.hasDoor && exit.direction == MoveDirection.Up, "window keeps ordinary upward Door/Move notes");
+        Check(map.Width(map.Room(entry.destinationId)) == map.roomSize * 2, "office width is two rooms");
+        Check(Math.Abs((timing.End - timing.Start) / timing.BeatSeconds - 15) < .001, "authored intro lasts 15 beats between arrivals");
+        Check(timing.ShotTime(2) < timing.Window, "all three shots precede window judgment");
+        for (int shot = 0; shot < 3; shot++)
+        {
+            double previous = 0;
+            for (double t = timing.ShotTime(shot); t < timing.Escape + .4; t += .005)
+            {
+                double progress = timing.BulletProgress(t, shot, double.NaN);
+                Check(progress >= previous - 1e-8, "bullet advances without jumping backward");
+                previous = progress;
+            }
+            Check(timing.BulletProgress(timing.Window, shot, double.NaN) < 1, "slow bullet leaves time to shoot window");
+            Check(timing.BulletProgress(timing.Escape + .3, shot, timing.Escape) > 1, "bullet passes old position after dodge");
         }
         var run = NewRun(chart, map.settings.startingRoomId);
-        run.AdvanceAutomatically(140 * 60.0 / 130);
-        Check(run.Phase == RunPhase.Waiting && run.CompletedMoves == 15 && run.JudgmentVersion == 66, "entrance gap preserves progress without clearing");
+        run.AdvanceAutomatically(timing.BurstStart);
+        Check(run.Phase == RunPhase.Waiting && run.CompletedMoves == Array.FindIndex(chart.Moves, n => n.destinationId == entry.destinationId) + 1, "intro gap keeps player in office");
+        int before = run.JudgmentVersion;
+        run.AdvanceAutomatically(timing.Window - .1);
+        Check(run.JudgmentVersion == before, "cinematic shots create no extra judgments");
+        run.Advance(timing.Window + .1);
+        Check(run.Phase == RunPhase.Dead && run.Failure == FailureReason.MissedDoor, "missing window shot retains the normal door failure");
+        run.Begin();
         run.AdvanceAutomatically(190);
-        Check(run.Phase == RunPhase.Cleared && run.JudgmentVersion == 183 && run.AccuracyPercent == 100, "debug completes every action");
-        run.Begin(); run.AdvanceAutomatically(140 * 60.0 / 130);
-        Check(run.JudgmentVersion == 66 && run.Failure == FailureReason.None, "restart resets score and playback state");
-        run.AdvanceAutomatically(190);
-        Check(run.JudgmentVersion == 183, "restart completes without accumulating previous score");
+        Check(run.Phase == RunPhase.Cleared && run.JudgmentVersion == judgments && run.AccuracyPercent == 100, "debug completes full chart");
+        run.Begin(); run.AdvanceAutomatically(190);
+        Check(run.Phase == RunPhase.Cleared && run.JudgmentVersion == judgments, "restart does not accumulate prior score");
         run.Begin(); run.Advance(190);
-        Check(run.Phase == RunPhase.Dead, "manual playback still requires input");
-        Console.WriteLine("PASS: " + checks + " full Mafia chart checks; saved map/notes, early/late inputs, failure, entrance gap, debug and restart.");
+        Check(run.Phase == RunPhase.Dead, "manual play still requires input");
+        Console.WriteLine("PASS: " + checks + " Mafia chart/intro checks; saved notes, manual/debug, 3 cosmetic shots, window, continuation and restart.");
     }
 
     private static void CompareAuthoredNotes(string path, CompiledBeatChart compiled)

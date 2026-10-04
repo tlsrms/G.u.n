@@ -10,6 +10,8 @@ namespace Gun.RoomRhythm
         [SerializeField] private Transform judgmentFrame;
         [SerializeField] private SpriteRenderer[] frameEdges;
         private RoomChart chart;
+        private bool externalPanels;
+        public void SetExternalPanels(bool value) => externalPanels = value;
         private LineRenderer outline, timingRing;
         public const float OutlineRadius = .38f;
         public Vector3 Target => transform.position;
@@ -49,7 +51,7 @@ namespace Gun.RoomRhythm
             double frameStart = double.NaN, bool? showFrame = null)
         {
             if (judgmentFrame != null) judgmentFrame.gameObject.SetActive(false);
-            leftPanel.enabled = rightPanel.enabled = visible;
+            leftPanel.enabled = rightPanel.enabled = visible && !externalPanels;
             outline.enabled = visible;
             timingRing.enabled = visible && (showFrame ?? true);
             if (!visible) return;

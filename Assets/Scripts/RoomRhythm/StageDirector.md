@@ -13,7 +13,9 @@
 5. Tick(songTime): 기본 화면 갱신 뒤 호출. 사망·스테이지 완료 상태에서는 호출하지 않습니다.
 6. CompleteStage(): 채보가 완료된 상태에서만 성공하며 중복 호출은 false를 반환합니다. RoomSession.IsCleared가 참이 되어 기존 StageProgression이 기록 저장과 씬 전환을 처리합니다.
 
-OnAction은 상태를 기록하는 데 사용하고, 기본 화면보다 우선하는 시각 효과는 Tick에서 반영하세요. RoomSession은 여전히 기본 방·플레이어 화면의 소유자입니다. 카메라 등 다른 컴포넌트와의 전용 제어권 전환은 이후 단계에서 다룹니다. 콜백에서 직접 세션을 재시작하거나 판정 모델을 변경하지 마세요.
+OnAction은 상태를 기록하는 데 사용하고, 기본 화면보다 우선하는 시각 효과는 Tick에서 반영하세요. RoomSession은 여전히 기본 방·플레이어 화면의 소유자입니다. `RoomCamera.SetStageFraming`으로 구도를 잠시 적용하고 `ReleaseStageFraming`으로 돌려줄 수 있습니다. 사망 구도는 이를 우선하며, 마피아는 창문 탈출 이동 중 일반 추적으로 복귀합니다. 콜백에서 직접 세션을 재시작하거나 판정 모델을 변경하지 마세요.
+
+일반 전투 확대는 현재 방의 적이 실제 등장한 동안만 적용하며, 숨은 적의 존재만으로 확대하지 않습니다. 적이 모두 처치되면 기본 맵 배율로 돌아갑니다. `RoomCamera`는 카메라 자식 판정 글자·판정 바의 위치와 크기를 확대 배율에 맞춰 보정하여 화면상 크기를 유지합니다. 기본 화면 밖에 놓인 판정 바는 화면 안으로 보정합니다. 보스 인트로의 의도적인 구도 전환은 별도로 유지합니다.
 
 ## 액션 결과
 
@@ -29,6 +31,14 @@ Tick의 songTime은 기존 SongTimeline.Time으로 입력 보정 전 음악 진�
 
 `RoomSession`은 초기화 때 `StageResetState.Capture()`로 지정 루트의 원래 부모·위치·회전·크기·활성·렌더러·색을 저장합니다. 재시작 때 판정·음악·피드백을 초기화하고 `StageResetState.Restore()`, Director의 `ResetStage()`, 전용 표적의 `ResetTarget()` 순서로 복원합니다. Director는 코루틴과 실행별 플래그, 자신이 제어한 자세를 정리합니다.
 
-방 크기·이동은 [MapExtensions.md](MapExtensions.md), 장애물·이동 표적은 [StageTargets.md](StageTargets.md)를 참고하세요. 마피아의 현재 연결은 `Assets/Scenes/Stages/MafiaStage01.md`에 있습니다. 범용 연출 편집기와 노트 기준 모션 연결은 `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md`의 후속 단계입니다.
+일반 적은 `RoomEnemy.PlacementPosition`에 해당하는 채보 기준 위치와 `TargetAt(time)`의 등장 연출 위치를 구분합니다. 재초기화의 `RoomCombat.ValidateConfiguration()`은 기준 위치를 검사하고, 이후 `Configure()`가 등장 이동 상태를 초기화합니다. 따라서 숨은 복도 적이나 등장 도중의 적이 이동해 있어도 재시작 검증은 통과합니다. 최초 실행과 에디터 검증에서는 실제 씬 Transform을 검사하여 잘못 배치된 적을 계속 검출합니다.
 
-Unity에서 확인할 항목: 기존 스테이지의 자동 시작·클리어·재시작, 진행 코드 연결 시 채보 종료 후 음악 유지, 전용 CompleteStage 호출 뒤 기존 클리어 이동. 이번 단계에서는 Unity를 실행하지 않았습니다.
+일반 적 명중 시 수동·디버그 사격의 공통 `RoomCombat.PresentHit()`에서 `RoomEnemy.Defeat()`를 호출합니다. 판정은 즉시 끝내고 판정선·조준을 중지하며, 스프라이트만 피격 방향으로 밀려 회전·수축한 뒤 0.9초 안에 사라집니다. 음악이 멈춰도 표시 시간은 계속 흐르지만 해당 방이 사라지면 시체도 숨깁니다. `Configure()`는 쓰러지는 도중에도 위치·회전·크기·색·판정선 상태를 복원합니다. 전용 `StageActionTarget`에는 이 일반 적 연출을 적용하지 않습니다.
+
+사망 연출이 끝나면 원형 페이드로 자동 재시작합니다. 화면이 완전히 가려진 시점에 위 복원을 실행하며, 화면이 다시 열리면 시작 방의 `Ready` 상태에서 기다립니다. 전환 중 입력은 버리고, 전환 완료 다음 프레임부터 새 키보드 입력 또는 마우스 버튼(좌·우·휠 클릭·옆 버튼)으로 음악과 채보를 시작합니다. 마우스 이동·스크롤·버튼 해제는 시작 입력이 아닙니다. 시작에 사용한 입력은 이동·사격으로 중복 처리하지 않습니다. 사망 중 입력으로 페이드를 바로 시작하는 기존 동작도 유지합니다.
+
+`StageProgression`의 자동 시작과 `RoomSession`의 Debug Mode 자동 시작은 최초 입장 때만 적용합니다. `StageProgression.Update()`에서 세션의 `HasStarted`를 확인하고, `RoomKeyboard`의 첫 Dynamic 입력 갱신이 끝난 뒤에만 `TryBeginRun()`으로 음악·판정을 함께 시작합니다. `Start()`에서 음악을 예약하면 에디터 시계와 플레이 시계가 섞일 수 있으므로 시작 호출을 옮기지 않습니다. 재시작 때에는 자동 진행 설정을 유지하되, 먼저 시작 입력을 기다립니다.
+
+방 크기·이동은 [MapExtensions.md](MapExtensions.md), 장애물·이동 표적은 [StageTargets.md](StageTargets.md)를 참고하세요. 마피아는 `MafiaIntroTiming`으로 사무실/위쪽 탈출 노트의 음악 시각을 평가하고, `MafiaOfficeSet`의 저장 소품과 재사용 효과를 제어합니다. 현재 연결은 `Assets/Scenes/Stages/MafiaStage01.md`에 있습니다. 범용 연출 편집기와 노트 기준 모션 연결은 `Docs/CHART_PRESENTATION_REFACTOR_PLAN.md`의 후속 단계입니다.
+
+Unity에서 확인할 항목: 최초 입장 자동 시작·클리어, 사망 후 원형 페이드와 시작 방 대기, 전환 중 누른 키/마우스를 유지해도 대기하고 새 입력에만 시작하는지, 진행 코드 연결 시 채보 종료 후 음악 유지, 전용 CompleteStage 호출 뒤 기존 클리어 이동. Unity 플레이 모드 검증은 별도로 진행합니다.

@@ -249,6 +249,12 @@ internal static class RoomRunChecks
             Check(R(start - 1) == 6, "Seeking before appearance does not inflate the fixed starting size");
         }
         Check(ApproachGeometry.FixedStartRadius(2, 2, 2, 6, 3) == 3, "Zero lead time resolves immediately without division by zero");
+        Check(ApproachGeometry.FixedStartRadius(1, 0, 2, 6, 9) == 7.5,
+            "A twelve-unit frame can expand toward an eighteen-unit room side");
+        Check(ApproachGeometry.FixedStartRadius(2, 0, 2, 6, 9) == 9,
+            "An expanding frame reaches the room edge on the exact beat");
+        Check(ApproachGeometry.FixedStartRadius(1, 0, 2, 6, 6) == 6,
+            "Equal starting and target sizes remain stable");
         Check(ApproachGeometry.FixedStartRadius(.1, 0, .25, 6, 3)
             < ApproachGeometry.FixedStartRadius(.1, 0, 2, 6, 3), "Short lead time shrinks faster than long lead time");
         foreach (double radius in new[] { .38, 3.0 })
@@ -350,6 +356,9 @@ internal static class RoomRunChecks
         Check(!run.LastTimingErrorMs.HasValue, "reset clears timing error");
         run.Press(MoveDirection.Up, 2);
         Check(run.Phase == RunPhase.Ready, "ready state does not process movement");
+        run.Advance(1000);
+        Check(run.Phase == RunPhase.Ready && run.CompletedMoves == 0 && run.JudgmentVersion == 0,
+            "retry can wait indefinitely in the starting room without advancing the chart");
         run.Begin();
         run.Press(MoveDirection.Up, 1.875);
         run.Advance(2);
@@ -644,4 +653,3 @@ internal static class RoomRunChecks
         OffsetCalibrationChecks.Run();
     }
 }
-

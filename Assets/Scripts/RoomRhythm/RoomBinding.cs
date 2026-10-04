@@ -18,6 +18,7 @@ namespace Gun.RoomRhythm
         private bool completed;
         private double flashAt = -10;
         private MoveDirection? exitDirection, entranceDirection;
+        private Vector2 exitOffset, entranceOffset;
         public string Id => roomId;
         public Vector3 Center => transform.position;
         public RoomDoor Door => door;
@@ -28,10 +29,24 @@ namespace Gun.RoomRhythm
             && Mathf.Abs(Center.y - other.Center.y) < (Size.y + other.Size.y) * .5f - .001f;
         public void Configure(RoomChart settings, MoveDirection? exit = null, MoveDirection? entrance = null)
         {
-            if (!(settings.roomFrameStartSize > Mathf.Max(Size.x, Size.y)))
-                throw new System.ArgumentException("방 판정선 시작 크기는 방 한 변보다 커야 합니다.");
+            if (!(settings.roomFrameStartSize > 0) || float.IsInfinity(settings.roomFrameStartSize))
+                throw new System.ArgumentException("방 판정선 시작 크기는 유한한 양수여야 합니다.");
             chart = settings;
             exitDirection = exit; entranceDirection = entrance;
+            exitOffset = entranceOffset = Vector2.zero;
+            var map = settings.appliedMap;
+            if (map != null)
+            {
+                var route = map.OrderedRooms();
+                int index = System.Array.FindIndex(route, room => room.id == roomId);
+                Vector2 Offset(MapRoom neighbor)
+                {
+                    var position = map.PassagePosition(route[index], neighbor);
+                    return new Vector2(position.x - map.WorldX(route[index]), position.y - map.WorldY(route[index]));
+                }
+                if (index >= 0 && index + 1 < route.Length) exitOffset = Offset(route[index + 1]);
+                if (index > 0) entranceOffset = Offset(route[index - 1]);
+            }
             if (baseColors == null || baseColors.Length != surfaces.Length) Awake();
             completed = false; flashAt = -10;
             surfaces[0].transform.localScale = new Vector3(Size.x, Size.y, 1);
@@ -117,10 +132,13 @@ namespace Gun.RoomRhythm
                     float half = (horizontal ? Size.x : Size.y) * .5f;
                     float boundary = (horizontal ? Size.y : Size.x) * .5f;
                     float gap = chart.passageWidth * .5f * opening;
-                    float length = half - gap + chart.judgmentLineWidth * .5f;
-                    float middle = (half + gap + chart.judgmentLineWidth * .5f) * .5f;
-                    wall.localPosition = horizontal ? new Vector3(Mathf.Sign(p.x) * middle, Mathf.Sign(p.y) * boundary, 0)
-                        : new Vector3(Mathf.Sign(p.x) * boundary, Mathf.Sign(p.y) * middle, 0);
+                    Vector2 offset = side == exitDirection ? exitOffset : side == entranceDirection ? entranceOffset : Vector2.zero;
+                    float shift = horizontal ? offset.x : offset.y;
+                    float sign = Mathf.Sign(horizontal ? p.x : p.y);
+                    float length = half - gap - sign * shift + chart.judgmentLineWidth * .5f;
+                    float middle = (shift + sign * (half + gap + chart.judgmentLineWidth * .5f)) * .5f;
+                    wall.localPosition = horizontal ? new Vector3(middle, Mathf.Sign(p.y) * boundary, 0)
+                        : new Vector3(Mathf.Sign(p.x) * boundary, middle, 0);
                     wall.localScale = horizontal ? new Vector3(length, chart.judgmentLineWidth, 1)
                         : new Vector3(chart.judgmentLineWidth, length, 1);
                 }

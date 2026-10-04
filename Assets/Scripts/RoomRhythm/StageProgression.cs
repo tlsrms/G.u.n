@@ -22,6 +22,7 @@ namespace Gun.RoomRhythm
             {
                 Debug.LogError("Stage progression needs its session and fade references.", this);
                 enabled = false;
+                return;
             }
         }
 
@@ -38,7 +39,9 @@ namespace Gun.RoomRhythm
             bool back = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame
                 || Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame;
             if (back) StartCoroutine(Travel(recordRun ? StageSelection.ReturnScene : entrySafeScene, 0));
-            else session.TryBeginRun();
+            // Start can run before the Input System switches to the play-mode clock.
+            // Retry from Update until ready, but never auto-start a reset run.
+            else if (!session.HasStarted) session.TryBeginRun();
         }
 
         private IEnumerator Travel(string destination, float delay)

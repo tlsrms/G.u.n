@@ -20,6 +20,7 @@ namespace Gun.RoomRhythm.Editor
         }
         [SerializeField] private double firstBeat;
         [SerializeField] private float visibleBeats = 16;
+        [SerializeField] private float waveformContrast = 1.8f;
         private string roomToReveal;
         private static readonly Color SelectedSpanColor = new Color(1f, .88f, .3f);
         private float panStartX;
@@ -93,6 +94,7 @@ namespace Gun.RoomRhythm.Editor
             TrackFocusedInput("TimelineVisibleBeats");
             if (GUILayout.Button("현재 시각으로", GUILayout.Width(105))) firstBeat = Math.Floor(cursor / visibleBeats) * visibleBeats;
             GUILayout.Label("우클릭 드래그: 좌우 탐색", EditorStyles.miniLabel);
+            waveformContrast = EditorGUILayout.Slider(new GUIContent("파형 대비", "높일수록 작은 에너지 차이를 강조합니다."), waveformContrast, 1, 4, GUILayout.Width(220));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField("Shift 클릭: 다중 선택 · Ctrl+D: 복제 · 가운데 드래그: 선택 항목 이동 · 양 끝 드래그: 시각 수정", EditorStyles.miniLabel);
 
@@ -108,7 +110,7 @@ namespace Gun.RoomRhythm.Editor
                 if (comparison == 0) comparison = a.lane == 2 ? a.end().CompareTo(b.end()) : a.start().CompareTo(b.start());
                 return comparison != 0 ? comparison : a.item.Index.CompareTo(b.item.Index);
             });
-            Rect ruler = GUILayoutUtility.GetRect(500, 42, GUILayout.ExpandWidth(true));
+            Rect ruler = GUILayoutUtility.GetRect(500, 108, GUILayout.ExpandWidth(true));
             // Consume the remaining window height; a fixed estimate leaves a blank strip below.
             // GUILayout also reserves the actual height of any validation message drawn afterward.
             Rect viewport = GUILayoutUtility.GetRect(500, 100000, 120, 100000,
@@ -149,6 +151,8 @@ namespace Gun.RoomRhythm.Editor
             int control = GUIUtility.GetControlID("MapTimelineDrag".GetHashCode(), FocusType.Passive);
             Event e = Event.current;
             EditorGUI.DrawRect(ruler, new Color(.11f, .12f, .15f));
+            GUI.Label(new Rect(ruler.x + 3, ruler.y + 60, left - 6, 20), "음원 파형", EditorStyles.miniLabel);
+            DrawWaveform(new Rect(ruler.x + left, ruler.y + 44, width, 60));
             EditorGUI.DrawRect(viewport, new Color(.07f, .08f, .1f));
             for (double beat = Math.Ceiling(firstBeat); beat <= firstBeat + visibleBeats; beat++)
                 GUI.Label(new Rect(ruler.x + px(beat), ruler.y, 48, 20), beat.ToString("0"), EditorStyles.miniLabel);
@@ -269,6 +273,57 @@ namespace Gun.RoomRhythm.Editor
                 if (scrubbing) { scrubbing = false; if (resumeAfterScrub && preview) StartMusic(); }
                 dragging = null; GUIUtility.hotControl = 0; e.Use(); Repaint();
             }
+        }
+        private void DrawWaveform(Rect rect)
+        {
+            EditorGUI.DrawRect(rect, new Color(.055f, .07f, .085f));
+            var clip = chart.mapDraftMusic;
+            var waveform = musicPreview.Waveform(clip);
+            if (clip == null || waveform == null || clip.length <= 0)
+            {
+                GUI.Label(rect, clip == null ? "곡 설정에서 음악을 지정하세요." : musicPreview.WaveformLoading
+                    ? "음원 파형 분석 중…" : musicPreview.WaveformError ?? "음원 파형을 불러올 수 없습니다.", EditorStyles.centeredGreyMiniLabel);
+                if (musicPreview.WaveformLoading) Repaint();
+                return;
+            }
+            var peaks = waveform.peaks;
+            if (Event.current.type != EventType.Repaint || !ValidBpm(Map.settings.bpm)) return;
+            for (double beat = Math.Ceiling(firstBeat); beat <= firstBeat + visibleBeats; beat++)
+                EditorGUI.DrawRect(new Rect(rect.x + (float)((beat - firstBeat) / visibleBeats) * rect.width, rect.y, 1, rect.height), new Color(.13f, .16f, .19f));
+            EditorGUI.DrawRect(new Rect(rect.x, rect.center.y, rect.width, 1), new Color(.2f, .25f, .28f));
+            double startSeconds = Map.settings.Seconds(firstBeat) - Map.settings.musicDelaySeconds;
+            double secondsPerPixel = visibleBeats * 60.0 / Map.settings.bpm / rect.width;
+            for (float x = 0; x < rect.width; x += 3)
+            {
+                double start = Math.Max(0, startSeconds + x * secondsPerPixel);
+                double end = startSeconds + Math.Min(x + 3, rect.width) * secondsPerPixel;
+                if (end <= 0 || !Map.settings.loopMusic && start >= clip.length) continue;
+                if (!Map.settings.loopMusic) end = Math.Min(end, clip.length);
+                double span = end - start;
+                start = Map.settings.loopMusic ? start % clip.length : start;
+                double beginBin = start / clip.length * peaks.Length;
+                double endBin = beginBin + Math.Min(span, clip.length) / clip.length * peaks.Length;
+                int first = (int)Math.Floor(beginBin), last = (int)Math.Ceiling(endBin);
+                float peak = 0;
+                double energy = 0, weight = 0;
+                for (int i = first; i < last; i++)
+                {
+                    if (!Map.settings.loopMusic && i >= peaks.Length) break;
+                    int index = i % peaks.Length;
+                    double overlap = Math.Min(endBin, i + 1) - Math.Max(beginBin, i);
+                    energy += waveform.rms[index] * waveform.rms[index] * overlap;
+                    weight += overlap;
+                    peak = Mathf.Max(peak, peaks[index]);
+                }
+                float peakHeight = Mathf.Clamp01(peak) * (rect.height - 6);
+                if (peakHeight > 0) EditorGUI.DrawRect(new Rect(rect.x + x, rect.center.y - peakHeight * .5f, Math.Min(2, rect.width - x), peakHeight), new Color(.15f, .3f, .34f));
+                float rms = weight > 0 ? (float)Math.Sqrt(energy / weight) : 0;
+                float strength = waveform.reference > 0 ? Mathf.Clamp01(rms / waveform.reference) : 0;
+                float height = Mathf.Pow(strength, waveformContrast) * (rect.height - 6);
+                if (height > 0) EditorGUI.DrawRect(new Rect(rect.x + x, rect.center.y - height * .5f, Math.Min(2, rect.width - x), height), Color.Lerp(new Color(.15f, .48f, .55f), new Color(.45f, 1f, .85f), strength));
+            }
+            if (preview && cursor >= firstBeat && cursor <= firstBeat + visibleBeats)
+                EditorGUI.DrawRect(new Rect(rect.x + (float)((cursor - firstBeat) / visibleBeats) * rect.width - 1, rect.y, 2, rect.height), Color.white);
         }
         private static void DrawHollowMarker(Rect rect, Color color)
         {

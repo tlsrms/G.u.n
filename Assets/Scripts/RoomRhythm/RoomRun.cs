@@ -113,8 +113,9 @@ namespace Gun.RoomRhythm
                 if (string.IsNullOrWhiteSpace(enemy.id) || !enemyIds.Add(enemy.id)
                     || enemy.roomId == null || !roomIds.TryGetValue(enemy.roomId, out int room)
                     || !Enum.IsDefined(typeof(EnemyDirection), enemy.direction)
+                    || !enemy.placement.IsValid
                     || enemy.time < 0 || double.IsNaN(enemy.time) || double.IsInfinity(enemy.time))
-                    throw new ArgumentException("Invalid enemy ID, room, direction or time.");
+                    throw new ArgumentException("Invalid enemy ID, room, direction, position or time.");
                 enemyRooms[i] = room;
                 if (enemy.customAppearance && (double.IsNaN(enemy.appearanceTime) || double.IsInfinity(enemy.appearanceTime) || enemy.appearanceTime < 0 || enemy.appearanceTime > enemy.time))
                     throw new ArgumentException("Invalid enemy appearance time.");

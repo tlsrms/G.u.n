@@ -83,7 +83,7 @@ namespace Gun.RoomRhythm.Editor
             foreach (var note in chart.enemies ?? Array.Empty<EnemyNote>())
             {
                 double appearance = note.customAppearance ? note.appearanceTime : Math.Max(0, note.time - chart.enemyLeadTime);
-                enemies.Add(new MapEnemy { id = note.id, roomId = note.roomId, direction = note.direction, hitBeat = map.settings.Beat(note.time),
+                enemies.Add(new MapEnemy { id = note.id, roomId = note.roomId, direction = note.direction, placement = note.placement, hitBeat = map.settings.Beat(note.time),
                     appearBeat = map.settings.Beat(appearance), frameBeat = map.settings.Beat(note.customAppearance ? note.frameStartTime : appearance) });
             }
             map.rooms = rooms.ToArray(); map.groups = groups.ToArray(); map.enemies = enemies.ToArray();
@@ -102,13 +102,15 @@ namespace Gun.RoomRhythm.Editor
             if (chart.mapDraftMusic == null) throw new ArgumentException("곡 설정 탭에서 음악을 지정하세요.");
             var map = chart.mapDraft;
             var compiled = MapChartCompiler.Compile(map, chart.moveDuration, chart.enemyReadTime, chart.mapDraftMusic.length, chart.judgmentLineWidth);
+            if (!(chart.roomFrameStartSize > 0) || float.IsInfinity(chart.roomFrameStartSize))
+                throw new ArgumentException("방 판정선 시작 크기는 유한한 양수여야 합니다.");
             foreach (var room in map.rooms)
             {
-                if (!(chart.roomFrameStartSize > Mathf.Max(map.Width(room), map.Height(room))) || float.IsInfinity(chart.roomFrameStartSize))
-                    throw new ArgumentException("방 판정선 시작 크기는 방 한 변보다 큰 유한한 값이어야 합니다.");
-                if (!(chart.passageWidth > 0 && chart.passageWidth < Mathf.Min(map.Width(room), map.Height(room)) - chart.judgmentLineWidth)
-                    || !(chart.aimRadius + .38f + chart.enemyLineWidth / 2 < Mathf.Min(map.Width(room), map.Height(room)) / 2))
-                    throw new ArgumentException("방 크기는 통로와 적 배치 반경보다 충분히 커야 합니다.");
+                if (!(chart.passageWidth > 0 && chart.passageWidth < Mathf.Min(map.Width(room), map.Height(room)) - chart.judgmentLineWidth))
+                    throw new ArgumentException("방 크기는 통로보다 충분히 커야 합니다.");
+                bool usesDirection = Array.Exists(compiled.Enemies, e => e.roomId == room.id && !e.placement.useCoordinates);
+                if (usesDirection && !(chart.aimRadius + .38f + chart.enemyLineWidth / 2 < Mathf.Min(map.Width(room), map.Height(room)) / 2))
+                    throw new ArgumentException("8방향 적이 있는 방은 적 배치 반경보다 충분히 커야 합니다.");
             }
             return compiled;
         }
@@ -200,6 +202,11 @@ namespace Gun.RoomRhythm.Editor
                     Vector2 toward = Direction(note.direction);
                     var door = binding.Door;
                     door.transform.position = binding.Center - (Vector3)(toward * binding.Extent(note.direction) * .5f);
+                    if (routeIndex > 0)
+                    {
+                        var passage = map.PassagePosition(route[routeIndex - 1], room);
+                        door.transform.position = new Vector3(passage.x, passage.y, binding.Center.z);
+                    }
                     door.transform.rotation = Quaternion.Euler(0, 0, toward.x != 0 ? 90 : 0);
                     door.Present(room.door && room.id != map.settings.startingRoomId, false, 1, chart.doorCloseDuration, note.doorTime, 0, showFrame: false);
                     newRooms.Add(binding);
@@ -211,7 +218,7 @@ namespace Gun.RoomRhythm.Editor
                     Undo.RegisterCreatedObjectUndo(clone, "적 배치"); clone.name = "Enemy - " + map.EnemyLabel(enemy); clone.SetActive(true);
                     var binding = clone.GetComponent<RoomEnemy>(); Id(binding, "enemyId", enemy.id);
                     var room = map.Room(enemy.roomId);
-                    binding.Configure(new Vector3(map.WorldX(room), map.WorldY(room), 0), enemy.direction, chart);
+                    binding.Configure(new Vector3(map.WorldX(room), map.WorldY(room), 0), enemy.direction, chart, enemy.placement);
                     binding.Present(true, 1, 0, 0, false);
                     PrefabUtility.RecordPrefabInstancePropertyModifications(clone);
                     foreach (var component in clone.GetComponentsInChildren<Component>(true))
@@ -235,7 +242,9 @@ namespace Gun.RoomRhythm.Editor
                 if (player != null)
                 {
                     Undo.RecordObject(player, "시작 위치"); var start = map.Room(map.settings.startingRoomId);
-                    player.position = new Vector3(map.WorldX(start), map.WorldY(start), player.position.z);
+                    var route = map.OrderedRooms();
+                    var anchor = map.PlayerAnchor(start, route.Length > 1 ? route[1] : null);
+                    player.position = new Vector3(anchor.x, anchor.y, player.position.z);
                 }
                 foreach (var root in scene.GetRootGameObjects())
                     foreach (var camera in root.GetComponentsInChildren<RoomCamera>(true))
@@ -285,4 +294,3 @@ namespace Gun.RoomRhythm.Editor
         }
     }
 }
-

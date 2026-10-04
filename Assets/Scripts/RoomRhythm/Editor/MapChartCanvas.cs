@@ -8,16 +8,23 @@ namespace Gun.RoomRhythm.Editor
 {
     public sealed partial class MapChartWindow
     {
-        private bool movingRoom;
         private int deathPreview;
         private float deathPreviewElapsed;
         private MoveDirection deathPreviewDirection;
 
         private string draggedRoom;
-        private Vector2Int draggedCell;
+        private MapRoom[] draggedRooms;
+        private Vector2 roomDragStart, roomDragDelta;
+        private bool roomDragMoved;
         private int draggedCamera = -1;
         private Vector2 cameraDrop;
+        private int draggedEnemy = -1;
+        private bool movingEnemy;
+        private Vector2 enemyDragStart, enemyDragOffset, enemyDrop;
         private MapRoom pendingRoom;
+        private bool moveFollowingRooms = true;
+        private string pendingPreviousId;
+        private MoveDirection pendingDirection;
         private string pendingBeat = "";
         private bool focusPending;
         private readonly List<(Rect rect, MapRoom room)> roomLabels = new List<(Rect, MapRoom)>();
@@ -31,10 +38,12 @@ namespace Gun.RoomRhythm.Editor
         private Vector2 RoomPoint(MapRoom room, Rect canvas) => ScreenPoint(new Vector2(Map.WorldX(room), Map.WorldY(room)), canvas);
         private Vector2 EnemyPoint(MapEnemy enemy, Rect canvas)
         {
+            if (draggedEnemy >= 0 && draggedEnemy < Map.enemies.Length && Map.enemies[draggedEnemy] == enemy && movingEnemy)
+                return ScreenPoint(enemyDrop, canvas);
             var room = Map.Room(enemy.roomId); if (room == null) return new Vector2(-10000, -10000);
-            float angle = (90 - 45 * (int)enemy.direction) * Mathf.Deg2Rad;
-            return ScreenPoint(new Vector2(Map.WorldX(room), Map.WorldY(room)) + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * chart.aimRadius, canvas);
+            return ScreenPoint(RoomEnemy.Position(new Vector3(Map.WorldX(room), Map.WorldY(room), 0), enemy.direction, enemy.placement, chart.aimRadius), canvas);
         }
+        private bool EnemyVisible(MapEnemy enemy) => !preview || cursor >= enemy.appearBeat && cursor < enemy.hitBeat;
         private static void Stroke(Color color, float width, params Vector3[] points)
         { Handles.color = color; Handles.DrawAAPolyLine(Mathf.Max(1, width), points); }
         private static void Square(Vector2 center, float radius, Color color, float width)
@@ -57,28 +66,33 @@ namespace Gun.RoomRhythm.Editor
         }
         private TimingWindow PreviewTiming => JudgmentSettings.Window;
         private float Fade(double start, double hit) => chart.AppearanceAlpha(hit > start ? (float)((cursor - start) / (hit - start)) : 1);
-        private MapRoom[] OrderedRooms()
-        {
-            var rooms = Array.FindAll(Map.rooms, r => r.id != Map.settings.startingRoomId);
-            Array.Sort(rooms, (a, b) => a.hitBeat.CompareTo(b.hitBeat)); return rooms;
-        }
         private Vector2 IdealPlayer(out string currentRoom)
         {
-            var start = Map.Room(Map.settings.startingRoomId) ?? Map.rooms[0];
+            var route = Map.OrderedRooms();
+            var start = route[0];
             currentRoom = start.id;
-            Vector2 point = new Vector2(Map.WorldX(start), Map.WorldY(start));
-            foreach (var room in OrderedRooms())
+            Vector2 point = PlayerAnchor(route, 0);
+            for (int i = 1; i < route.Length; i++)
             {
+                var room = route[i];
                 double duration = room.Duration(chart.moveDuration) * Map.settings.bpm / 60;
                 if (cursor < room.hitBeat) break;
-                Vector2 target = new Vector2(Map.WorldX(room), Map.WorldY(room));
+                Vector2 target = PlayerAnchor(route, i);
                 if (cursor < room.hitBeat + duration)
                 {
-                    float t = (float)((cursor - room.hitBeat) / duration); return Vector2.Lerp(point, target, (float)MovementProfile.Evaluate(t, room.moveEase));
+                    double t = MovementProfile.Evaluate((cursor - room.hitBeat) / duration, room.moveEase);
+                    var passage = Map.PassagePosition(route[i - 1], room);
+                    var position = MapChart.PlayerMovePosition((point.x, point.y), passage, (target.x, target.y), t);
+                    return new Vector2(position.x, position.y);
                 }
                 point = target; currentRoom = room.id;
             }
             return point;
+        }
+        private Vector2 PlayerAnchor(MapRoom[] route, int index)
+        {
+            var anchor = Map.PlayerAnchor(route[index], index + 1 < route.Length ? route[index + 1] : null);
+            return new Vector2(anchor.x, anchor.y);
         }
         private void DrawCanvas(Rect canvas)
         {
@@ -120,8 +134,9 @@ namespace Gun.RoomRhythm.Editor
                     if (selectedCamera == i) CameraRect(canvas, key.x, key.y, key.size, new Color(.7f, .5f, 1));
                 }
             }
-            if (movingRoom)
-                Rectangle(ScreenPoint(new Vector2(Map.originX + draggedCell.x * Map.roomSize, Map.originY + draggedCell.y * Map.roomSize), canvas), RoomHalf(Map.Room(draggedRoom)), Color.yellow, 2);
+            if (draggedRooms != null)
+                foreach (var room in draggedRooms)
+                    Rectangle(ScreenPoint(new Vector2(Map.WorldX(room), Map.WorldY(room)) + roomDragDelta, canvas), RoomHalf(room), Color.yellow, 2);
             if (draggedCamera >= 0) CameraRect(canvas, cameraDrop.x, cameraDrop.y, Map.cameras[draggedCamera].size, Color.yellow);
             if (pendingRoom != null)
             {
@@ -151,11 +166,11 @@ namespace Gun.RoomRhythm.Editor
             Vector2 direction = deathPreviewDirection == MoveDirection.Up ? Vector2.down
                 : deathPreviewDirection == MoveDirection.Down ? Vector2.up
                 : deathPreviewDirection == MoveDirection.Left ? Vector2.left : Vector2.right;
-            Vector2 p = deathPreview == 0 ? ScreenPoint(player, canvas) : center;
+            Vector2 p = ScreenPoint(player, canvas);
             bool visible = true;
             if (deathPreview == 1)
             {
-                p += direction * ((direction.x != 0 ? half.x : half.y) - .28f * zoom / Map.roomSize) * Mathf.Clamp01(deathPreviewElapsed / .13f);
+                p += direction * (Vector2.Dot(center - p, direction) + (direction.x != 0 ? half.x : half.y) - .28f * zoom / Map.roomSize) * Mathf.Clamp01(deathPreviewElapsed / .13f);
                 visible = deathPreviewElapsed < .13f;
                 if (!visible && deathPreviewElapsed < .5f)
                     for (int i = 0; i < 8; i++)
@@ -195,19 +210,25 @@ namespace Gun.RoomRhythm.Editor
             float width = chart.judgmentLineWidth * zoom / Map.roomSize;
             float passage = chart.passageWidth * zoom / Map.roomSize / 2;
             Color wall = new Color(brightness, brightness, brightness, alpha);
-            for (int sx = -1; sx <= 1; sx += 2)
-                for (int sy = -1; sy <= 1; sy += 2)
-                    Stroke(wall, width, center + new Vector2(sx * passage, sy * half.y), center + new Vector2(sx * half.x, sy * half.y), center + new Vector2(sx * half.x, sy * passage));
             var route = Map.OrderedRooms();
             int index = Array.IndexOf(route, room);
-            Vector2 exit = index + 1 < route.Length ? (RoomPoint(route[index + 1], canvas) - center).normalized : Vector2.zero;
-            Vector2 entry = index > 0 ? (RoomPoint(route[index - 1], canvas) - center).normalized : Vector2.zero;
-            foreach (Vector2 normal in new[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right })
+            foreach (MoveDirection side in Enum.GetValues(typeof(MoveDirection)))
             {
-                if (!(preview && deathPreview == 1 && room.id == current)
-                    && (normal == exit || room.id != current && normal == entry)) continue;
+                Vector2 worldNormal = MapSceneStore.Direction(side), normal = new Vector2(worldNormal.x, -worldNormal.y);
                 Vector2 tangent = new Vector2(-normal.y, normal.x), middle = center + Vector2.Scale(normal, half);
-                Stroke(wall, width, middle - tangent * passage, middle + tangent * passage);
+                float extent = normal.x == 0 ? half.x : half.y;
+                MapRoom neighbor = null;
+                if (index + 1 < route.Length && Map.Connection(room, route[index + 1], out var exit) && exit == side) neighbor = route[index + 1];
+                else if (room.id != current && index > 0 && Map.Connection(room, route[index - 1], out var entry) && entry == side) neighbor = route[index - 1];
+                if (neighbor == null || preview && deathPreview == 1 && room.id == current)
+                    Stroke(wall, width, middle - tangent * extent, middle + tangent * extent);
+                else
+                {
+                    var opening = Map.PassagePosition(room, neighbor);
+                    Vector2 gap = ScreenPoint(new Vector2(opening.x, opening.y), canvas);
+                    Stroke(wall, width, middle - tangent * extent, gap - tangent * passage);
+                    Stroke(wall, width, gap + tangent * passage, middle + tangent * extent);
+                }
             }
             if (!ReadOnly && selection.Contains(room.id)) Rectangle(center, half + Vector2.one * 4, Color.cyan, 2);
         }
@@ -221,8 +242,11 @@ namespace Gun.RoomRhythm.Editor
             if (preview)
                 for (int i = 0; i < index; i++)
                     if (Map.Overlaps(route[i], room) && cursor < Map.DepartureBeat(route[i], chart.moveDuration)) return;
-            Vector2 center = RoomPoint(room, canvas), normal = (RoomPoint(route[index - 1], canvas) - center).normalized;
-            Vector2 tangent = new Vector2(-normal.y, normal.x), entrance = center + Vector2.Scale(normal, RoomHalf(room));
+            var previous = route[index - 1];
+            if (!Map.Connection(previous, room, out var direction)) return;
+            var position = Map.PassagePosition(previous, room);
+            Vector2 entrance = ScreenPoint(new Vector2(position.x, position.y), canvas);
+            Vector2 tangent = direction == MoveDirection.Left || direction == MoveDirection.Right ? Vector2.up : Vector2.right;
             float passage = chart.passageWidth * zoom / Map.roomSize / 2, width = chart.judgmentLineWidth * zoom / Map.roomSize;
             double time = Map.settings.Seconds(cursor), start = Map.settings.Seconds(room.doorFrameBeat), target = Map.settings.Seconds(room.doorBeat);
             float close = preview ? RoomDoor.CloseProgress(chart, time, start, target) : 1;
@@ -253,10 +277,12 @@ namespace Gun.RoomRhythm.Editor
         }
         private void DrawEnemy(MapEnemy enemy, Rect canvas, string current)
         {
-            if (preview && (cursor < enemy.appearBeat || cursor >= enemy.hitBeat)) return;
+            if (!EnemyVisible(enemy)) return;
             Vector2 p = EnemyPoint(enemy, canvas); float radius = .38f * zoom / Map.roomSize, width = chart.enemyLineWidth * zoom / Map.roomSize;
             Circle(p, radius, Color.white, width);
-            if (selectedEnemy >= 0 && selectedEnemy < Map.enemies.Length && Map.enemies[selectedEnemy] == enemy && !preview) Circle(p, radius + 4, Pink, 2);
+            if (!ReadOnly && ActiveTool == MapTool.Select)
+                EditorGUIUtility.AddCursorRect(new Rect(p - Vector2.one * Mathf.Max(radius, 9), Vector2.one * Mathf.Max(radius, 9) * 2), MouseCursor.MoveArrow);
+            if (selectedEnemy >= 0 && selectedEnemy < Map.enemies.Length && Map.enemies[selectedEnemy] == enemy && !ReadOnly) Circle(p, radius + 4, Pink, 2);
             if (preview && cursor >= enemy.frameBeat)
             {
                 float r = (float)ApproachGeometry.Radius(Map.settings.Seconds(cursor), Map.settings.Seconds(enemy.hitBeat), .38, chart.enemyLineWidth, PreviewTiming) * zoom / Map.roomSize;
@@ -293,14 +319,20 @@ namespace Gun.RoomRhythm.Editor
             var repetitions = new Dictionary<string, int>();
             for (int i = 1; i < route.Length; i++)
             {
-                Vector2 a = RoomPoint(route[i - 1], canvas), b = RoomPoint(route[i], canvas);
+                Vector2 a = ScreenPoint(PlayerAnchor(route, i - 1), canvas), b = ScreenPoint(PlayerAnchor(route, i), canvas);
+                var passage = Map.PassagePosition(route[i - 1], route[i]);
+                Vector2 via = ScreenPoint(new Vector2(passage.x, passage.y), canvas);
                 Vector2 direction = (b - a).normalized; if (direction == Vector2.zero) continue;
                 string key = route[i - 1].x + ":" + route[i - 1].y + ":" + route[i].x + ":" + route[i].y;
                 repetitions.TryGetValue(key, out int n); repetitions[key] = n + 1;
                 Vector2 side = new Vector2(-direction.y, direction.x), offset = side * (4 + n * 5);
-                a += direction * zoom * .25f + offset; b -= direction * zoom * .25f; b += offset;
+                a += (via - a).normalized * zoom * .25f + offset;
+                b -= (b - via).normalized * zoom * .25f; b += offset;
                 Color color = selection.Contains(route[i].id) ? Color.yellow : new Color(.35f, .75f, .9f);
-                Stroke(color, 2, a, b); Stroke(color, 2, b - direction * 8 + side * 4, b, b - direction * 8 - side * 4);
+                Stroke(color, 2, a, via + offset, b);
+                Vector2 arrival = (b - via - offset).normalized;
+                Vector2 arrowSide = new Vector2(-arrival.y, arrival.x);
+                Stroke(color, 2, b - arrival * 8 + arrowSide * 4, b, b - arrival * 8 - arrowSide * 4);
             }
         }
         private void CanvasInput(Rect canvas)
@@ -309,6 +341,51 @@ namespace Gun.RoomRhythm.Editor
             // Splitter, playhead and timeline drags keep ownership even when crossing the map.
             if (GUIUtility.hotControl != 0 && GUIUtility.hotControl != moveControl) return;
             Event e = Event.current; Vector2 point = e.mousePosition - canvas.position;
+            if (draggedRooms != null)
+            {
+                if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
+                { CancelInteraction(); e.Use(); Repaint(); return; }
+                if ((e.type == EventType.MouseDrag || e.type == EventType.MouseUp) && e.button == 0)
+                {
+                    Vector2 delta = WorldPoint(point, canvas) - roomDragStart;
+                    if (delta.magnitude * zoom / Map.roomSize >= 3) roomDragMoved = true;
+                    if (roomDragMoved) roomDragDelta = SnappedRoomDelta(delta);
+                    if (e.type == EventType.MouseUp)
+                    {
+                        if (roomDragDelta != Vector2.zero)
+                            Edit("선택한 방 위치 이동", () => {
+                                foreach (var room in draggedRooms)
+                                    Map.SetPosition(room, Map.WorldX(room) + roomDragDelta.x, Map.WorldY(room) + roomDragDelta.y);
+                            });
+                        CancelInteraction();
+                    }
+                    e.Use(); Repaint();
+                }
+                return;
+            }
+            if (draggedEnemy >= 0)
+            {
+                // Preview the drag without modifying data. Mouse-up is one undoable edit; Escape discards it.
+                if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
+                { draggedEnemy = -1; movingEnemy = false; GUIUtility.hotControl = 0; e.Use(); Repaint(); return; }
+                if (e.type == EventType.MouseDrag && e.button == 0)
+                {
+                    if ((point - enemyDragStart).sqrMagnitude >= 9) movingEnemy = true;
+                    if (movingEnemy) enemyDrop = WorldPoint(point, canvas) + enemyDragOffset;
+                    e.Use(); Repaint();
+                }
+                if (e.type == EventType.MouseUp && e.button == 0)
+                {
+                    if (movingEnemy && draggedEnemy < Map.enemies.Length)
+                    {
+                        var enemy = Map.enemies[draggedEnemy]; var room = Map.Room(enemy.roomId);
+                        var placement = new EnemyPlacement { useCoordinates = true, x = enemyDrop.x - Map.WorldX(room), y = enemyDrop.y - Map.WorldY(room) };
+                        if (placement.IsValid) Edit("적 위치 이동", () => enemy.placement = placement);
+                    }
+                    draggedEnemy = -1; movingEnemy = false; GUIUtility.hotControl = 0; e.Use(); Repaint();
+                }
+                return;
+            }
             if (canvas.Contains(e.mousePosition) && e.type == EventType.ScrollWheel)
             {
                 Vector2 anchor = WorldPoint(point, canvas); zoom = Mathf.Clamp(zoom * Mathf.Exp(-e.delta.y * .05f), 30, 220);
@@ -317,12 +394,6 @@ namespace Gun.RoomRhythm.Editor
             if (canvas.Contains(e.mousePosition) && e.type == EventType.MouseDrag && (e.button == 1 || e.button == 2))
             { pan += e.delta; e.Use(); Repaint(); }
             if (ReadOnly) return;
-            if (e.type == EventType.MouseDrag && e.button == 0 && movingRoom)
-            {
-                var world = WorldPoint(point, canvas);
-                draggedCell = new Vector2Int(Mathf.RoundToInt((world.x - Map.originX) / Map.roomSize), Mathf.RoundToInt((world.y - Map.originY) / Map.roomSize));
-                e.Use(); Repaint();
-            }
             if (e.type == EventType.MouseDrag && draggedCamera >= 0) { cameraDrop = WorldPoint(point, canvas); e.Use(); Repaint(); }
             if (e.type == EventType.MouseUp && e.button == 0)
             {
@@ -331,13 +402,6 @@ namespace Gun.RoomRhythm.Editor
                     int index = draggedCamera;
                     Edit("카메라 위치 이동", () => { Map.cameras[index].x = cameraDrop.x; Map.cameras[index].y = cameraDrop.y; });
                     draggedCamera = -1; e.Use();
-                }
-                if (movingRoom)
-                {
-                    // Temporal overlaps are checked on save; sharing a coordinate is legal.
-                    Edit("방 위치 이동", () => { var room = Map.Room(draggedRoom); room.x = draggedCell.x; room.y = draggedCell.y; room.offsetX = room.offsetY = 0; });
-                    movingRoom = false; draggedRoom = null; tool = (int)MapTool.Select;
-                    GUIUtility.hotControl = 0; e.Use(); Repaint();
                 }
             }
             if (!canvas.Contains(e.mousePosition) || e.type != EventType.MouseDown || e.button != 0) return;
@@ -352,10 +416,8 @@ namespace Gun.RoomRhythm.Editor
                     if (label.room == target && label.rect.Contains(point)) onTarget = true;
                 if (onTarget)
                 {
-                    movingRoom = true;
-                    draggedCell = new Vector2Int(target.x, target.y);
-                    GUIUtility.hotControl = moveControl;
-                    message = null;
+                    if (!selection.Contains(target.id)) PickRoom(target, false);
+                    BeginSelectedRoomDrag(point, canvas, moveControl);
                 }
                 e.Use(); Repaint(); return;
             }
@@ -377,17 +439,82 @@ namespace Gun.RoomRhythm.Editor
                 if (Vector2.Distance(ScreenPoint(new Vector2(key.x, key.y), canvas), point) < 8)
                 { draggedCamera = selectedCamera; cameraDrop = new Vector2(key.x, key.y); e.Use(); return; }
             }
-            // Room actions are one-shot operations requested by the selected room's panel.
+            if (ActiveTool == MapTool.Select)
+            {
+                if (hit != null && e.shift)
+                { PickRoom(hit, true); e.Use(); Repaint(); return; }
+                if (hit != null && (selection.Count > 1 || timelineSelection.Count > 1) && selection.Contains(hit.id))
+                {
+                    BeginSelectedRoomDrag(point, canvas, moveControl);
+                    e.Use(); Repaint(); return;
+                }
+                int enemyIndex = EnemyAt(point, canvas);
+                if (enemyIndex >= 0)
+                {
+                    StopMusic(); timelineSelection.Clear();
+                    selection.Clear(); selection.Add(Map.enemies[enemyIndex].roomId);
+                    selectedEnemy = draggedEnemy = enemyIndex; selectedCamera = selectedShake = -1;
+                    movingEnemy = false; enemyDragStart = point;
+                    enemyDrop = WorldPoint(EnemyPoint(Map.enemies[enemyIndex], canvas), canvas);
+                    enemyDragOffset = enemyDrop - worldPoint;
+                    GUIUtility.hotControl = moveControl; message = null; e.Use(); Repaint(); return;
+                }
+            }
+            // A room press selects it and starts a possible drag; a click alone leaves its position unchanged.
             switch (ActiveTool)
             {
                 case MapTool.Select:
-                    if (hit != null) PickRoom(hit, false);
+                    if (hit != null)
+                    {
+                        PickRoom(hit, false);
+                        BeginSelectedRoomDrag(point, canvas, moveControl);
+                    }
                     else if (timelineSelection.Count > 0
                         && !Array.Exists(Map.rooms, room => RoomContains(room, point, canvas) && RoomVisible(room, currentRoom)))
                         ClearTimelineSelection();
                     break;
             }
             e.Use(); Repaint();
+        }
+        private void BeginSelectedRoomDrag(Vector2 point, Rect canvas, int control)
+        {
+            layoutSelectionActive = true;
+            StopMusic();
+            draggedRooms = Array.FindAll(Map.OrderedRooms(), room => selection.Contains(room.id));
+            roomDragStart = WorldPoint(point, canvas);
+            roomDragDelta = Vector2.zero;
+            roomDragMoved = false;
+            selectedEnemy = selectedCamera = selectedShake = -1;
+            GUIUtility.hotControl = control;
+            message = null;
+        }
+        private Vector2 SnappedRoomDelta(Vector2 delta)
+        {
+            // Keep the selected group rigid; its earliest room anchors to the preceding unselected room.
+            var anchor = draggedRooms[0];
+            var route = Map.OrderedRooms();
+            int index = Array.IndexOf(route, anchor);
+            if (index > 0)
+            {
+                var position = Map.AttachedPosition(anchor, route[index - 1], Map.WorldX(anchor) + delta.x, Map.WorldY(anchor) + delta.y);
+                return new Vector2(position.x - Map.WorldX(anchor), position.y - Map.WorldY(anchor));
+            }
+            return new Vector2(Mathf.Round(delta.x / Map.roomSize), Mathf.Round(delta.y / Map.roomSize)) * Map.roomSize;
+        }
+        private int EnemyAt(Vector2 point, Rect canvas)
+        {
+            float radius = Mathf.Max(9, .38f * zoom / Map.roomSize);
+            if (selectedEnemy >= 0 && selectedEnemy < Map.enemies.Length && EnemyVisible(Map.enemies[selectedEnemy])
+                && Vector2.Distance(EnemyPoint(Map.enemies[selectedEnemy], canvas), point) <= radius) return selectedEnemy;
+            int nearest = -1;
+            for (int i = Map.enemies.Length - 1; i >= 0; i--)
+            {
+                if (!EnemyVisible(Map.enemies[i])) continue;
+                float distance = Vector2.Distance(EnemyPoint(Map.enemies[i], canvas), point);
+                if (distance > radius) continue;
+                radius = distance; nearest = i;
+            }
+            return nearest;
         }
         private void BeginRoomPlacement(int x, int y)
         {
@@ -396,14 +523,28 @@ namespace Gun.RoomRhythm.Editor
             if (previous == null || Math.Abs(x - previous.x) + Math.Abs(y - previous.y) != 1)
             { message = "연결할 방을 선택한 뒤 바로 옆 칸을 누르세요. 이전에 방문한 좌표에도 놓을 수 있습니다."; return; }
             pendingRoom = new MapRoom { x = x, y = y };
-            Map.Attach(pendingRoom, previous, x > previous.x ? MoveDirection.Right : x < previous.x ? MoveDirection.Left
-                : y > previous.y ? MoveDirection.Up : MoveDirection.Down);
+            var direction = x > previous.x ? MoveDirection.Right : x < previous.x ? MoveDirection.Left
+                : y > previous.y ? MoveDirection.Up : MoveDirection.Down;
+            pendingPreviousId = previous.id; pendingDirection = direction;
+            var position = Map.AttachedPosition(pendingRoom, previous, Map.WorldX(previous), Map.WorldY(previous), direction);
+            Map.SetPosition(pendingRoom, position.x, position.y);
             pendingBeat = ""; focusPending = true; message = null;
         }
         private void DrawPendingRoom()
         {
             EditorGUILayout.LabelField("새 방 · 박자 지정", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("이 방으로 이동할 정확한 박자를 입력하세요. 타임라인 커서 위치는 사용하지 않습니다.", MessageType.Info);
+            pendingRoom.width = EditorGUILayout.FloatField("가로 (0: 기본값)", pendingRoom.width);
+            pendingRoom.height = EditorGUILayout.FloatField("세로 (0: 기본값)", pendingRoom.height);
+            var anchor = Map.Room(pendingPreviousId);
+            if (anchor != null && Map.Width(pendingRoom) > 0 && Map.Height(pendingRoom) > 0
+                && !float.IsInfinity(Map.Width(pendingRoom)) && !float.IsInfinity(Map.Height(pendingRoom)))
+            {
+                var preview = Map.AttachedPosition(pendingRoom, anchor, Map.WorldX(pendingRoom), Map.WorldY(pendingRoom), pendingDirection);
+                Map.SetPosition(pendingRoom, preview.x, preview.y);
+            }
+            moveFollowingRooms = EditorGUILayout.Toggle("뒤쪽 방을 함께 밀어서 연결", moveFollowingRooms);
+            EditorGUILayout.HelpBox("중간에 넣으면 다음 방부터 끝까지 위치를 함께 옮깁니다. 기존 방 ID와 박자는 유지됩니다. 새 복도의 크기도 여기서 먼저 지정하세요.", MessageType.None);
             GUI.SetNextControlName("NewRoomBeat"); pendingBeat = EditorGUILayout.TextField("정확한 이동 박", pendingBeat);
             if (focusPending) { EditorGUI.FocusTextInControl("NewRoomBeat"); focusPending = false; }
             TrackFocusedInput("NewRoomBeat");
@@ -422,25 +563,29 @@ namespace Gun.RoomRhythm.Editor
                 throw new ArgumentException("이동 박자를 숫자로 입력하세요.");
             if (double.IsNaN(beat) || double.IsInfinity(beat) || beat <= Map.settings.Beat(0) || beat > EndBeat())
                 throw new ArgumentException("음악 범위 안의 유효한 박자를 입력하세요.");
-            var ordered = Map.OrderedRooms(); MapRoom previous = ordered[0], next = null;
+            var ordered = Map.OrderedRooms(); MapRoom previous = ordered[0];
             foreach (var room in ordered)
             {
                 if (room.id == Map.settings.startingRoomId) continue;
                 if (Math.Abs(room.hitBeat - beat) < 1e-9) throw new ArgumentException("같은 박에 두 방으로 이동할 수 없습니다.");
-                if (room.hitBeat < beat) previous = room; else { next = room; break; }
+                if (room.hitBeat < beat) previous = room; else break;
             }
             var candidate = pendingRoom;
-            if (!Map.Connected(candidate, previous) || next != null && !Map.Connected(candidate, next))
-                throw new ArgumentException("입력한 박자의 이전/다음 방과 바로 옆 칸으로 연결되어야 합니다.");
+            if (previous.id != pendingPreviousId)
+                throw new ArgumentException("선택한 방의 이동 박과 그 다음 방의 이동 박 사이를 입력하세요.");
+            if (!(Map.Width(candidate) > 0) || !(Map.Height(candidate) > 0)
+                || float.IsInfinity(Map.Width(candidate)) || float.IsInfinity(Map.Height(candidate)))
+                throw new ArgumentException("방 크기는 유한한 양수여야 합니다.");
+            // Resnap after changing the pending room's dimensions.
+            var attached = Map.AttachedPosition(candidate, previous, Map.WorldX(candidate), Map.WorldY(candidate), pendingDirection);
+            Map.SetPosition(candidate, attached.x, attached.y);
             double frame = Math.Max(Map.settings.Beat(0), beat - Map.settings.roomLeadBeats);
             candidate.id = "room_" + Guid.NewGuid().ToString("N").Substring(0, 8);
             candidate.hitBeat = beat;
-            var trial = new MapChart { settings = Map.settings, roomSize = Map.roomSize, originX = Map.originX, originY = Map.originY, rooms = (MapRoom[])Map.rooms.Clone(), groups = Map.groups };
-            Add(ref trial.rooms, candidate);
             candidate.individualAppearance = true; candidate.appearBeat = frame; candidate.hitBeat = beat; candidate.frameBeat = frame;
             candidate.doorBeat = beat - 1; candidate.doorFrameBeat = frame;
-            trial.ValidateRoomReuse(chart.moveDuration);
-            Edit("방 배치", () => { Add(ref Map.rooms, candidate); PickRoom(candidate, false); pendingRoom = null; tool = (int)MapTool.Select; });
+            Edit("방 삽입 및 뒤쪽 방 연결", () => { Map.InsertRoom(candidate, chart.moveDuration, moveFollowingRooms);
+                PickRoom(candidate, false); pendingRoom = null; tool = (int)MapTool.Select; });
         }
     }
 }

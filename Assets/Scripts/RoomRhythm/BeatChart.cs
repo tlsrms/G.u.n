@@ -14,6 +14,7 @@ namespace Gun.RoomRhythm
         public string enemyId;
         public MoveDirection moveDirection;
         public EnemyDirection enemyDirection;
+        public EnemyPlacement enemyPlacement;
     }
 
     [Serializable]
@@ -89,7 +90,9 @@ namespace Gun.RoomRhythm
                     if (string.IsNullOrWhiteSpace(note.enemyId) || !enemyIds.Add(note.enemyId))
                         throw new ArgumentException("적 ID가 없거나 중복되었습니다: " + note.enemyId);
                     if (!Enum.IsDefined(typeof(EnemyDirection), note.enemyDirection)) throw new ArgumentException("잘못된 적 방향: " + note.enemyId);
-                    enemies.Add(new EnemyNote { id = note.enemyId, roomId = note.roomId, direction = note.enemyDirection, time = chart.Seconds(note.beat) });
+                    if (!note.enemyPlacement.IsValid) throw new ArgumentException("잘못된 적 좌표: " + note.enemyId);
+                    enemies.Add(new EnemyNote { id = note.enemyId, roomId = note.roomId, direction = note.enemyDirection,
+                        placement = note.enemyPlacement, time = chart.Seconds(note.beat) });
                 }
             }
             if (moves.Count == 0) throw new ArgumentException("방 이동 노트를 하나 이상 배치하세요.");
@@ -132,7 +135,8 @@ namespace Gun.RoomRhythm
                 if (move.hasDoor) notes.Add(new BeatNote { kind = BeatNoteKind.Door, beat = chart.Beat(move.doorTime), roomId = move.destinationId });
             }
             foreach (EnemyNote enemy in enemies ?? Array.Empty<EnemyNote>())
-                notes.Add(new BeatNote { kind = BeatNoteKind.Enemy, beat = chart.Beat(enemy.time), roomId = enemy.roomId, enemyId = enemy.id, enemyDirection = enemy.direction });
+                notes.Add(new BeatNote { kind = BeatNoteKind.Enemy, beat = chart.Beat(enemy.time), roomId = enemy.roomId,
+                    enemyId = enemy.id, enemyDirection = enemy.direction, enemyPlacement = enemy.placement });
             chart.notes = notes.ToArray();
             return chart;
         }

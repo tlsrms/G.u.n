@@ -68,9 +68,21 @@ namespace Gun.RoomRhythm
         private static int Append<T>(ref T[] array, T value)
         { int index = array.Length; Array.Resize(ref array, index + 1); array[index] = value; return index; }
 
-        public static List<MapTimelineItem> Duplicate(MapChart map, IEnumerable<MapTimelineItem> selection)
+        public static List<MapTimelineItem> Duplicate(MapChart map, IEnumerable<MapTimelineItem> selection, bool includeRoomEnemies = false)
         {
             var items = new List<MapTimelineItem>(new HashSet<MapTimelineItem>(selection));
+            if (includeRoomEnemies)
+            {
+                var roomIds = new HashSet<string>();
+                foreach (var item in items)
+                    if (item.Lane <= 1) roomIds.Add(map.rooms[item.Index].id);
+                for (int i = 0; i < map.enemies.Length; i++)
+                {
+                    var enemy = map.enemies[i];
+                    var item = new MapTimelineItem(2, i);
+                    if (roomIds.Contains(map.EnemyRoomAt(enemy.hitBeat, enemy.roomId)) && !items.Contains(item)) items.Add(item);
+                }
+            }
             var roomCopies = new Dictionary<string, string>();
             var roomIndices = new Dictionary<int, int>();
             var result = new List<MapTimelineItem>();
@@ -94,7 +106,7 @@ namespace Gun.RoomRhythm
                 {
                     var source = map.enemies[item.Index];
                     index = Append(ref map.enemies, new MapEnemy { id = "enemy_" + Guid.NewGuid().ToString("N"),
-                        roomId = Remap(source.roomId), direction = source.direction, appearBeat = source.appearBeat,
+                        roomId = Remap(source.roomId), direction = source.direction, placement = source.placement, appearBeat = source.appearBeat,
                         frameBeat = source.appearBeat, hitBeat = source.hitBeat });
                 }
                 else if (item.Lane == 3)

@@ -25,6 +25,8 @@ namespace Gun.RoomRhythm
         private int presentedMoves;
         private readonly List<TimedCommand> commands = new List<TimedCommand>();
         private RoomBinding[] path;
+        private Vector3[] playerStops;
+        private Vector2[] playerPassages;
         private int[] previousRoomOccurrences;
         private RoomRun run;
         private int configuredRevision;
@@ -32,6 +34,9 @@ namespace Gun.RoomRhythm
         private double presentationTime;
         private RoomCinematics cinematics;
         private RoomRestartTransition restartTransition;
+        // Survives run resets so debug auto-start only applies to the first entry.
+        private bool hasStarted;
+        public bool HasStarted => hasStarted;
         private bool[] deathRooms, deathFrames, deathDoorFrames;
         public RoomCinematics Cinematics => cinematics;
         public double PresentationTime => presentationTime;
@@ -142,6 +147,11 @@ namespace Gun.RoomRhythm
             path = new RoomBinding[chart.moves.Length + 1];
             if (lookup.Count != path.Length) throw new InvalidOperationException("Room bindings do not match chart.");
             path[0] = lookup[chart.startingRoomId];
+            var sceneLayout = new MapChart { roomSize = chart.appliedMap?.roomSize ?? path[0].SideLength };
+            MapRoom Geometry(RoomBinding binding) => new MapRoom {
+                width = binding.Size.x, height = binding.Size.y,
+                offsetX = binding.Center.x, offsetY = binding.Center.y
+            };
             var visited = new HashSet<string> { chart.startingRoomId };
             for (int i = 0; i < chart.moves.Length; i++)
             {
@@ -151,18 +161,25 @@ namespace Gun.RoomRhythm
                 bool customDoor = combat.FindOverride(StageTargetRole.Breakthrough, note.destinationId) != null;
                 if (note.hasDoor && !customDoor && path[i + 1].Door == null)
                     throw new InvalidOperationException("Door note is missing its scene door.");
-                Vector2 delta = path[i + 1].Center - path[i].Center;
-                Vector2 expected = note.direction == MoveDirection.Up ? Vector2.up
-                    : note.direction == MoveDirection.Left ? Vector2.left
-                    : note.direction == MoveDirection.Down ? Vector2.down : Vector2.right;
-                if (note.hasDoor && !customDoor && Vector3.Distance(path[i + 1].Door.Target,
-                    path[i].Center + (Vector3)expected * path[i].Extent(note.direction) * .5f) > .01f)
-                    throw new InvalidOperationException("Door must be at the shared room entrance.");
-                if (delta.sqrMagnitude < 0.01f || Vector2.Dot(delta.normalized, expected) < 0.999f)
-                    throw new InvalidOperationException("Room positions disagree with chart direction.");
-                float spacing = (path[i].Extent(note.direction) + path[i + 1].Extent(note.direction)) * 0.5f;
-                if (Mathf.Abs(delta.magnitude - spacing) > 0.01f)
+                var previous = Geometry(path[i]); var next = Geometry(path[i + 1]);
+                if (!sceneLayout.Connection(previous, next, out var direction) || direction != note.direction)
                     throw new InvalidOperationException("Next room must share an edge with the current room.");
+                var passage = sceneLayout.PassagePosition(previous, next);
+                if (note.hasDoor && !customDoor && Vector3.Distance(path[i + 1].Door.Target,
+                    new Vector3(passage.x, passage.y, path[i].Center.z)) > .01f)
+                    throw new InvalidOperationException("Door must be at the shared room entrance.");
+            }
+            playerStops = new Vector3[path.Length];
+            playerPassages = new Vector2[chart.moves.Length];
+            for (int i = 0; i < path.Length; i++)
+            {
+                var anchor = sceneLayout.PlayerAnchor(Geometry(path[i]), i + 1 < path.Length ? Geometry(path[i + 1]) : null);
+                playerStops[i] = new Vector3(anchor.x, anchor.y, path[i].Center.z);
+                if (i + 1 < path.Length)
+                {
+                    var passage = sceneLayout.PassagePosition(Geometry(path[i]), Geometry(path[i + 1]));
+                    playerPassages[i] = new Vector2(passage.x, passage.y);
+                }
             }
             if (!(chart.aimRadius > 0) || !(chart.aimHalfAngle > 0 && chart.aimHalfAngle < 90))
                 throw new InvalidOperationException("Invalid aiming geometry.");
@@ -193,14 +210,15 @@ namespace Gun.RoomRhythm
             bool continuePressed = commands.Exists(command => command.Command == RoomCommand.Continue);
             if (run.Phase == RunPhase.Ready)
             {
-                if (continuePressed || debugMode)
+                if (continuePressed || debugMode && !hasStarted)
                 {
                     TryBeginRun();
                 }
                 Present();
                 return;
             }
-            if ((run.Phase == RunPhase.Dead || IsCleared && restartOnClear) && continuePressed)
+            bool restartAfterDeath = run.Phase == RunPhase.Dead && (cinematics.Complete || continuePressed);
+            if (restartAfterDeath || IsCleared && restartOnClear && continuePressed)
             {
                 restartTransition.Begin(InitializeRun);
                 return;
@@ -243,7 +261,8 @@ namespace Gun.RoomRhythm
             }
             if (run.Phase == RunPhase.Dead)
                 presentationTime = run.DeathTime;
-            cinematics.SetCombatFocus(run.IsActive && run.Phase != RunPhase.Moving && combat.HasLivingEnemies(run.CompletedMoves));
+            cinematics.SetCombatFocus(run.IsActive && run.Phase != RunPhase.Moving
+                && combat.HasVisibleEnemies(run.CompletedMoves, presentationTime));
             lastFeedbackPhase = run.Phase;
             Present();
             if (stageDirector != null && run.Phase != RunPhase.Dead && !IsCleared)
@@ -297,11 +316,13 @@ namespace Gun.RoomRhythm
 
         public bool TryBeginRun()
         {
-            if (run == null || run.Phase != RunPhase.Ready || restartTransition != null && restartTransition.BlocksInput)
+            if (run == null || run.Phase != RunPhase.Ready || !keyboard.HasProcessedDynamicUpdate
+                || restartTransition != null && restartTransition.BlocksInput)
                 return false;
             timeline.Begin(chart.music, chart.MusicDelaySeconds, chart.LoopMusic, InputOffsetSettings.Milliseconds(chart));
             IsDebugRun = debugMode || StageSelection.IsRecordRun && StageSelection.DebugMode;
             run.Begin();
+            hasStarted = true;
             if (stageDirector != null) stageDirector.BeginStage();
             return true;
         }
@@ -336,12 +357,15 @@ namespace Gun.RoomRhythm
 
         private Vector3 PlayerPosition(double time)
         {
-            Vector3 position = path[run.CompletedMoves].Center;
+            Vector3 position = playerStops[run.CompletedMoves];
             if (run.Phase == RunPhase.Moving)
             {
                 MoveNote move = chart.moves[run.CompletedMoves];
                 float t = (float)MovementProfile.Evaluate((time - run.MoveStartedAt) / move.Duration(chart.moveDuration), move.ease);
-                position = Vector3.Lerp(position, path[run.CompletedMoves + 1].Center, t);
+                Vector3 target = playerStops[run.CompletedMoves + 1];
+                Vector2 passage = playerPassages[run.CompletedMoves];
+                var point = MapChart.PlayerMovePosition((position.x, position.y), (passage.x, passage.y), (target.x, target.y), t);
+                position = new Vector3(point.x, point.y, Mathf.Lerp(position.z, target.z, t));
             }
             return position;
         }
@@ -382,7 +406,7 @@ namespace Gun.RoomRhythm
             if (run.Phase == RunPhase.Dead && cinematics.Death == DeathPresentation.Execution)
                 aim.FadeWithPlayer(cinematics.PlayerAlpha);
             if (current > presentedMoves && run.Phase != RunPhase.Dead)
-                feedback.ArrivalDust(path[current].Center, path[current].Center - path[current - 1].Center);
+                feedback.ArrivalDust(playerStops[current], playerStops[current] - playerStops[current - 1]);
             presentedMoves = current;
             bool showGrade = run.JudgmentVersion > 0 && time - run.LastJudgedAt < 0.9;
             status.color = Color.white;

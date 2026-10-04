@@ -22,8 +22,72 @@ internal static class MapChartChecks
         enemies = new[] { new MapEnemy { id = "e", roomId = "north", direction = EnemyDirection.Right, hitBeat = 12, appearBeat = 9, frameBeat = 10 } }
     };
     private static MapChart WithLateFrame() { var map = Example(); map.rooms[1].frameBeat = 7.9; return map; }
+    private static void CheckEnemyPlacement()
+    {
+        var legacy = default(EnemyPlacement);
+        double diagonal = Math.Sqrt(2);
+        var expected = new (double x, double y)[] {
+            (0, 2), (diagonal, diagonal), (2, 0), (diagonal, -diagonal),
+            (0, -2), (-diagonal, -diagonal), (-2, 0), (-diagonal, diagonal) };
+        for (int i = 0; i < expected.Length; i++)
+        {
+            var offset = legacy.Offset((EnemyDirection)i, 2);
+            Near(offset.x, expected[i].x, "Existing direction placement X is preserved");
+            Near(offset.y, expected[i].y, "Existing direction placement Y is preserved");
+        }
+        var baseline = Compile(Example());
+        var map = Example();
+        map.enemies[0].placement = new EnemyPlacement { useCoordinates = true, x = -1.375f, y = 2.125f };
+        var compiled = Compile(map);
+        var note = compiled.Enemies[0];
+        Check(note.id == baseline.Enemies[0].id && note.roomId == baseline.Enemies[0].roomId,
+            "Coordinate editing preserves the action identity and ownership");
+        Near(note.time, baseline.Enemies[0].time, "Position editing does not retime a shot");
+        Near(note.appearanceTime, baseline.Enemies[0].appearanceTime, "Position editing does not retime appearance");
+        var position = note.placement.Offset(EnemyDirection.Down, 99);
+        Near(position.x, -1.375, "Compiled free X is not snapped to direction/radius");
+        Near(position.y, 2.125, "Compiled free Y is not snapped to direction/radius");
+        var imported = BeatChartCompiler.Import(120, compiled.Timing, compiled.RoomLeadSeconds, compiled.EnemyLeadSeconds,
+            compiled.Moves, compiled.Enemies);
+        var roundtrip = BeatChartCompiler.Compile(imported, "start").Enemies[0].placement;
+        Check(roundtrip.useCoordinates && roundtrip.x == -1.375f && roundtrip.y == 2.125f,
+            "Beat import/compile preserves coordinate mode and position");
+        var copies = MapTimelineEditing.Duplicate(map, new[] { new MapTimelineItem(2, 0) });
+        var copy = map.enemies[1];
+        Check(copy.id != map.enemies[0].id && copy.placement.useCoordinates && copy.placement.x == -1.375f,
+            "Duplicated shot gets a new identity and retains free placement");
+        copy.placement.x = .75f;
+        Near(map.enemies[0].placement.x, -1.375, "Editing duplicate placement leaves original intact");
+        new MapTimelineShift(map, copies).Apply(5, 0, 60);
+        map.SynchronizeEnemyRooms();
+        Check(copy.roomId == "east" && copy.placement.x == .75f && copy.placement.y == 2.125f,
+            "Retiming into another room keeps room-relative coordinates");
+        Check(Compile(map).Enemies[1].placement.x == .75f, "Retimed duplicate compiles with its own placement");
+        var center = new EnemyPlacement { useCoordinates = true };
+        Near(center.Offset(EnemyDirection.Up, 2).y, 0, "Authored zero coordinates do not mean legacy placement");
+        var preset = note.placement; preset.useCoordinates = false;
+        Near(preset.Offset(EnemyDirection.Right, 2).x, 2, "Disabling coordinate mode restores the direction preset");
+        Reject(m => m.enemies[0].placement = new EnemyPlacement { useCoordinates = true, x = float.NaN });
+        Reject(m => m.enemies[0].placement = new EnemyPlacement { useCoordinates = true, y = float.PositiveInfinity });
+        var invalid = (EnemyNote[])compiled.Enemies.Clone();
+        invalid[0].placement.x = float.NaN;
+        bool rejected = false;
+        try { new RoomRun(compiled.Moves, compiled.Timing, .18, invalid, "start"); }
+        catch (ArgumentException) { rejected = true; }
+        Check(rejected, "Runtime validation rejects malformed coordinates even without the map compiler");
+        var run = new RoomRun(compiled.Moves, compiled.Timing, .18, compiled.Enemies, "start");
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            run.Reset(); run.Begin(); run.ShootDoor(0, 3); run.Press(MoveDirection.Up, 4);
+            Check(run.ShootEnemy(0, 6), "Free placement retains ordinary shot judgment after restart");
+            run.Press(MoveDirection.Right, 8); run.Advance(8.2);
+            Check(run.Phase == RunPhase.Cleared, "Free placement preserves stage completion");
+        }
+    }
     private static void CheckRectangularMovement()
     {
+        CheckFaceSnapping();
+        CheckPlayerAnchors();
         var map = Example();
         Near(map.Width(map.rooms[0]), 6, "Legacy width fallback");
         Near(map.Height(map.rooms[0]), 6, "Legacy height fallback");
@@ -73,6 +137,99 @@ internal static class MapChartChecks
         Reject(m => m.rooms[1].width = 10); // Its unchanged next room no longer shares the boundary.
     }
 
+    private static void CheckFaceSnapping()
+    {
+        var map = Example();
+        var previous = map.rooms[0]; var room = map.rooms[1];
+        previous.height = 18;
+        foreach (float y in new[] { -6f, 0f, 6f })
+        {
+            var snapped = map.AttachedPosition(room, previous, 7.4f, y + .4f);
+            Near(snapped.x, 6, "Long-face snap touches the right edge");
+            Near(snapped.y, y, "Long-face snap uses each six-unit slot");
+            map.SetPosition(room, snapped.x, snapped.y);
+            Check(map.Connection(previous, room, out var direction) && direction == MoveDirection.Right,
+                "Offset connection uses its shared face, not the center displacement");
+            Check(!map.Overlaps(previous, room), "Snapped rectangles do not overlap");
+            var passage = map.PassagePosition(previous, room);
+            Near(passage.x, 3, "Passage lies on shared boundary");
+            Near(passage.y, y, "Passage follows the selected slot");
+        }
+        map.SetPosition(map.rooms[2], 12, 6);
+        Check(Compile(map).Moves[0].direction == MoveDirection.Right, "Partial-face adjacency compiles");
+        previous.height = 12;
+        var halfCell = map.AttachedPosition(room, previous, 6, 3);
+        map.SetPosition(room, halfCell.x, halfCell.y);
+        Near(map.WorldY(room), 3, "Even-length rectangles retain the half-cell correction automatically");
+        Check(map.Connected(previous, room), "Half-cell correction remains connected");
+        map.SetPosition(room, 6, 9);
+        Check(!map.Connected(previous, room), "Corner-only contact is not a passage");
+        map.SetPosition(room, 5, 3);
+        Check(!map.Connected(previous, room), "Overlapping rooms are not edge-connected");
+        previous.width = 18; previous.height = 6;
+        var top = map.AttachedPosition(room, previous, -5.8f, 7);
+        Near(top.x, -6, "Horizontal long face snaps to the left slot");
+        Near(top.y, 6, "Horizontal long face touches the upper edge");
+        var left = map.AttachedPosition(room, previous, -13, 0);
+        Near(left.x, -12, "Left face uses combined half widths");
+        var bottom = map.AttachedPosition(room, previous, 6, -7);
+        Near(bottom.x, 6, "Bottom face preserves tile slot");
+        Near(bottom.y, -6, "Bottom face touches lower edge");
+        map.originX = 13; map.originY = -7;
+        var translated = map.AttachedPosition(room, previous, 19, -14);
+        Near(translated.x, 19, "Snapping supports a translated origin");
+        Near(translated.y, -13, "Translated origin retains shared boundary");
+    }
+
+    private static void CheckPlayerAnchors()
+    {
+        var map = new MapChart();
+        var hall = new MapRoom { width = 18, height = 6 };
+        var next = new MapRoom { offsetX = 6, offsetY = -6 };
+        var anchor = map.PlayerAnchor(hall, next);
+        Near(anchor.x, 6, "Horizontal hall stops at the tile above its next room");
+        Near(anchor.y, 0, "Horizontal hall uses the tile center, not the exit boundary");
+        var square = map.PlayerAnchor(next, hall);
+        Near(square.x, 6, "Default square retains its center X");
+        Near(square.y, -6, "Default square retains its center Y");
+        hall.width = 6; hall.height = 18;
+        next.offsetX = -6; next.offsetY = -6;
+        anchor = map.PlayerAnchor(hall, next);
+        Near(anchor.x, 0, "Vertical hall anchor stays in its column");
+        Near(anchor.y, -6, "Vertical hall selects the tile beside its next room");
+        hall.height = 12; next.offsetY = 3;
+        Near(map.PlayerAnchor(hall, next).y, 3, "Two-tile hall uses a half-grid tile center");
+        Near(map.PlayerAnchor(hall, null).y, 0, "Final room without an exit retains its center");
+        hall.width = 18; hall.height = 6;
+        var previous = new MapRoom { offsetX = -6, offsetY = -6 };
+        next.offsetX = 6; next.offsetY = -6;
+        var from = map.PlayerAnchor(previous, hall);
+        var passage = map.PassagePosition(previous, hall);
+        var to = map.PlayerAnchor(hall, next);
+        foreach (MovementEase ease in Enum.GetValues(typeof(MovementEase)))
+        {
+            var start = MapChart.PlayerMovePosition(from, passage, to, MovementProfile.Evaluate(0, ease));
+            var end = MapChart.PlayerMovePosition(from, passage, to, MovementProfile.Evaluate(1, ease));
+            Near(start.x, from.x, "Every curve starts at the previous tile");
+            Near(start.y, from.y, "Every curve preserves departure height");
+            Near(end.x, to.x, "Every curve finishes at the exit tile");
+            Near(end.y, to.y, "Every curve preserves arrival height");
+            for (int sample = 0; sample <= 20; sample++)
+            {
+                var point = MapChart.PlayerMovePosition(from, passage, to, MovementProfile.Evaluate(sample / 20.0, ease));
+                bool inPrevious = Math.Abs(point.x + 6) <= 3.00001 && Math.Abs(point.y + 6) <= 3.00001;
+                bool inHall = Math.Abs(point.x) <= 9.00001 && Math.Abs(point.y) <= 3.00001;
+                Check(inPrevious || inHall, "Offset entry movement stays inside the connected rooms");
+            }
+        }
+        var linear = MapChart.PlayerMovePosition(from, passage, to, MovementProfile.Evaluate(.5, MovementEase.Linear));
+        var slow = MapChart.PlayerMovePosition(from, passage, to, MovementProfile.Evaluate(.5, MovementEase.EaseIn));
+        Check(slow.x < linear.x, "Selected easing still controls progress toward the exit tile");
+        var same = MapChart.PlayerMovePosition(to, to, to, .5);
+        Near(same.x, to.x, "Zero-length movement stays finite");
+        Near(same.y, to.y, "Zero-length movement keeps its position");
+    }
+
     private static void CheckTimelineEditing()
     {
         CheckRectangularMovement();
@@ -114,8 +271,92 @@ internal static class MapChartChecks
         var doorCopies = MapTimelineEditing.Duplicate(map, new[] { new MapTimelineItem(0, 1) });
         Check(doorCopies.Count == 2, "A duplicated door selects its new room too so they can move together");
     }
+    private static void CheckRoomDuplicateWithEnemies()
+    {
+        var map = Example(); map.MigrateAppearance();
+        map.enemies[0].placement = new EnemyPlacement { useCoordinates = true, x = 1.25f, y = -2 };
+        var copies = MapTimelineEditing.Duplicate(map, new[] { new MapTimelineItem(1, 1), new MapTimelineItem(1, 2),
+            new MapTimelineItem(2, 0) }, includeRoomEnemies: true);
+        Check(map.rooms.Length == 5 && map.enemies.Length == 2, "Layout duplicate includes owned enemies only once");
+        var enemy = map.enemies[1];
+        string roomId = map.rooms[3].id;
+        Check(enemy.roomId == roomId && enemy.id != map.enemies[0].id, "Copied enemy receives a new ID and copied room owner");
+        Check(enemy.placement.useCoordinates && enemy.placement.x == 1.25f && enemy.placement.y == -2,
+            "Layout duplicate preserves free enemy placement");
+        Check(enemy.hitBeat == 12 && enemy.appearBeat == 9, "Layout duplicate preserves shot timing");
+        Check(copies.Contains(new MapTimelineItem(2, 1)), "Copied enemy participates in subsequent group timing edits");
+        map.SynchronizeEnemyRooms();
+        Check(enemy.roomId == roomId && map.enemies[0].roomId == "north",
+            "Ownership synchronization preserves original and copy at identical beats");
+        Check(!map.NeedsEnemyRoomSynchronization, "Same-beat copies do not repeatedly dirty the chart");
+        var again = MapTimelineEditing.Duplicate(map, new[] { new MapTimelineItem(1, 3) }, includeRoomEnemies: true);
+        Check(map.enemies.Length == 3 && map.enemies[2].roomId == map.rooms[5].id,
+            "Duplicating a copied room includes its own enemy without copying the original again");
+        new MapTimelineShift(map, again).Apply(32, 0, 100);
+        map.SynchronizeEnemyRooms();
+        Check(map.enemies[2].roomId == map.rooms[5].id && map.enemies[2].hitBeat == 44,
+            "Copied room and enemy retain their association when retimed together");
+        Check(map.enemies[0].hitBeat == 12 && map.enemies[0].roomId == "north", "Original enemy remains unchanged");
+        var timeline = Example();
+        MapTimelineEditing.Duplicate(timeline, new[] { new MapTimelineItem(1, 1) });
+        Check(timeline.enemies.Length == 1, "Timeline duplication still copies only explicitly selected enemies");
+        var start = MapChart.CreateEmpty(new BeatChart { startingRoomId = "start" });
+        start.enemies = new[] { new MapEnemy { id = "intro", roomId = "start", hitBeat = 1 } };
+        MapTimelineEditing.Duplicate(start, new[] { new MapTimelineItem(1, 0) }, includeRoomEnemies: true);
+        start.SynchronizeEnemyRooms();
+        Check(start.enemies[0].roomId == "start" && start.enemies[1].roomId == start.rooms[1].id,
+            "Starting-room duplicates also preserve original and copied enemy ownership");
+    }
+    private static void CheckRoomInsertion()
+    {
+        var map = new MapChart {
+            settings = new BeatChart { bpm = 120, startingRoomId = "start" },
+            rooms = new[] {
+                new MapRoom { id = "start", offsetX = -33 },
+                new MapRoom { id = "corridor", width = 60, hitBeat = 64, moveDuration = 16 },
+                new MapRoom { id = "office", width = 12, offsetX = 36, hitBeat = 128 },
+                new MapRoom { id = "escape", offsetX = 33, offsetY = 6, hitBeat = 143, door = true, doorBeat = 142 }
+            }
+        };
+        var office = map.Room("office"); var escape = map.Room("escape");
+        var inserted = new MapRoom { id = "new_corridor", width = 60, hitBeat = 100,
+            individualAppearance = true, appearBeat = 98, frameBeat = 98 };
+        var position = map.AttachedPosition(inserted, map.Room("corridor"), 33, 0, MoveDirection.Right);
+        map.SetPosition(inserted, position.x, position.y);
+        bool rejected = false;
+        try { map.InsertRoom(inserted, .18, false); } catch (ArgumentException) { rejected = true; }
+        Check(rejected && map.rooms.Length == 4, "blocked insertion does not add a partial room");
+        Near(map.WorldX(office), 36, "failed insertion leaves office position intact");
+        map.InsertRoom(inserted, .18);
+        Check(map.rooms.Length == 5 && ReferenceEquals(office, map.Room("office")), "insertion preserves office identity and reference");
+        Near(map.WorldX(inserted), 60, "long inserted corridor stays on the selected right face");
+        Near(map.WorldX(office), 96, "office shifts to the new corridor exit");
+        Near(map.WorldX(escape), 93, "escape room translates with the office");
+        Near(map.WorldY(escape), 6, "suffix internal arrangement stays intact");
+        Near(office.hitBeat, 128, "office timing is unchanged");
+        Near(escape.doorBeat, 142, "window timing is unchanged");
+        Near(escape.hitBeat, 143, "escape timing is unchanged");
+        var route = map.OrderedRooms();
+        for (int i = 1; i < route.Length; i++) Check(map.Connected(route[i - 1], route[i]), "inserted route is connected");
+        var compiled = MapChartCompiler.Compile(map, .18, .25, 100, .2);
+        Check(compiled.Moves.Length == 4 && compiled.Moves[2].destinationId == "office", "inserted route compiles with original boss IDs");
+        var duplicate = new MapRoom { id = "duplicate", hitBeat = 100 };
+        rejected = false;
+        try { map.InsertRoom(duplicate, .18); } catch (ArgumentException) { rejected = true; }
+        Check(rejected && map.rooms.Length == 5, "duplicate movement beat is rejected without mutation");
+        var appended = new MapRoom { id = "after", hitBeat = 150 };
+        position = map.AttachedPosition(appended, escape, 93, 12, MoveDirection.Up);
+        map.SetPosition(appended, position.x, position.y);
+        map.InsertRoom(appended, .18);
+        Check(map.Connected(escape, appended), "appending at route end remains supported");
+        Near(map.WorldX(office), 96, "appending does not move earlier rooms");
+    }
+
     public static void Run()
     {
+        CheckRoomInsertion();
+        CheckRoomDuplicateWithEnemies();
+        CheckEnemyPlacement();
         CheckTimelineEditing();
         var namedError = Example();
         namedError.enemies[0].id = "enemy_internal_test";

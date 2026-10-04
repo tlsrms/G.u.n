@@ -9,6 +9,7 @@ namespace Gun.RoomRhythm.Editor
     {
         private readonly HashSet<MapTimelineItem> timelineSelection = new HashSet<MapTimelineItem>();
         private MapTimelineShift selectionDrag;
+        private bool layoutSelectionActive;
         private void ClearTimelineSelection()
         {
             timelineSelection.Clear(); selection.Clear();
@@ -19,6 +20,20 @@ namespace Gun.RoomRhythm.Editor
 
         private void SelectTimelineItem(TimelineSpan span, bool additive)
         {
+            layoutSelectionActive = false;
+            // Layout selection already highlights these spans. Materialize that same selection
+            // before handling the click so switching panels does not collapse the group.
+            if (timelineSelection.Count == 0 && selection.Count > 1)
+                foreach (var item in Events())
+                    if (!string.IsNullOrEmpty(item.roomId) && selection.Contains(item.roomId))
+                        timelineSelection.Add(item.item);
+            if (!additive && timelineSelection.Contains(span.item)
+                && (timelineSelection.Count > 1 || selection.Count > 1))
+            {
+                // Keep layout-only members such as the starting room as well.
+                pendingRoom = null;
+                return;
+            }
             if (additive)
             {
                 if (!timelineSelection.Add(span.item)) timelineSelection.Remove(span.item);
@@ -77,14 +92,23 @@ namespace Gun.RoomRhythm.Editor
                 CancelInteraction();
             });
         }
-        private void HandleTimelineDuplicate()
+        private void HandleSelectionDuplicate()
         {
             Event e = Event.current;
             if (e.type != EventType.KeyDown || e.keyCode != KeyCode.D || !(e.control || e.command)
-                || tab != 1 || ReadOnly || timelineSelection.Count == 0 || pendingRoom != null
+                || tab != 1 || ReadOnly || pendingRoom != null
                 || GUIUtility.hotControl != 0 || GUIUtility.keyboardControl != 0 || EditorGUIUtility.editingTextField) return;
+            bool duplicateRooms = layoutSelectionActive || timelineSelection.Count == 0;
+            var items = duplicateRooms ? new List<MapTimelineItem>() : new List<MapTimelineItem>(timelineSelection);
+            if (items.Count == 0)
+            {
+                if (selectedEnemy >= 0 || selectedCamera >= 0 || selectedShake >= 0) return;
+                for (int i = 0; i < Map.rooms.Length; i++)
+                    if (selection.Contains(Map.rooms[i].id)) items.Add(new MapTimelineItem(1, i));
+            }
+            if (items.Count == 0) return;
             Edit("선택 채보 복제", () => {
-                var copies = MapTimelineEditing.Duplicate(Map, timelineSelection);
+                var copies = MapTimelineEditing.Duplicate(Map, items, includeRoomEnemies: duplicateRooms);
                 timelineSelection.Clear(); timelineSelection.UnionWith(copies);
                 selection.Clear(); selectedEnemy = selectedCamera = selectedShake = -1;
                 foreach (var span in Events())
@@ -92,7 +116,9 @@ namespace Gun.RoomRhythm.Editor
                         selection.Add(span.roomId);
                 if (copies.Count == 1) Events().Find(span => timelineSelection.Contains(span.item))?.select();
             });
-            message = "같은 박에 복제했습니다. 선택된 복제본을 드래그하거나 시작 박을 바꿔 배치하세요. 문은 소속 방과 함께 복제됩니다.";
+            message = duplicateRooms
+                ? "방·문·적을 같은 위치·박에 복제했습니다. 복제본을 선택한 상태로 맵에서 위치를, 타임라인에서 타이밍을 조절하세요."
+                : "같은 위치·박에 복제했습니다. 맵에서 드래그하면 방 위치를, 타임라인에서 드래그하거나 시작 박을 바꾸면 타이밍을 조절합니다. 문은 소속 방과 함께 복제됩니다.";
             e.Use();
         }
     }
