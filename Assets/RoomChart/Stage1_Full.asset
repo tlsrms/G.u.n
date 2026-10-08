@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   music: {fileID: 8300000, guid: 2cc366cd6f35084498090693948939ab, type: 3}
   songTitle: Stage1_Bpm130
-  inputOffsetMs: 100
+  inputOffsetMs: 130
   startingRoomId: guard0
   bpm: 130
   moveDuration: 0.28
@@ -35,11 +35,11 @@ MonoBehaviour:
     ease: 0
     destinationId: room_a4793f51
     direction: 3
-    time: 1.8761538461538463
+    time: 1.8761538461538465
     customAppearance: 1
-    appearanceTime: 0.7223076923076925
-    frameStartTime: 0.7223076923076925
-    doorFrameStartTime: 1.8761538461538463
+    appearanceTime: 0.7223076923076928
+    frameStartTime: 0.7223076923076928
+    doorFrameStartTime: 1.8761538461538465
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -47,11 +47,11 @@ MonoBehaviour:
     ease: 0
     destinationId: room_51f015bc
     direction: 3
-    time: 2.3376923076923077
+    time: 2.337692307692308
     customAppearance: 1
     appearanceTime: 1.4146153846153848
     frameStartTime: 1.4146153846153848
-    doorFrameStartTime: 0.9530769230769232
+    doorFrameStartTime: 0.9530769230769234
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -61,9 +61,9 @@ MonoBehaviour:
     direction: 3
     time: 2.7992307692307694
     customAppearance: 1
-    appearanceTime: 1.8761538461538463
-    frameStartTime: 1.8761538461538463
-    doorFrameStartTime: 2.106923076923077
+    appearanceTime: 1.8761538461538465
+    frameStartTime: 1.8761538461538465
+    doorFrameStartTime: 2.1069230769230773
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -73,8 +73,8 @@ MonoBehaviour:
     direction: 3
     time: 3.260769230769231
     customAppearance: 1
-    appearanceTime: 2.3376923076923077
-    frameStartTime: 2.3376923076923077
+    appearanceTime: 2.337692307692308
+    frameStartTime: 2.337692307692308
     doorFrameStartTime: 2.5684615384615386
     hasDoor: 0
     doorTime: 0
@@ -95,7 +95,7 @@ MonoBehaviour:
     ease: 0
     destinationId: room_ef3c271c
     direction: 3
-    time: 4.1838461538461535
+    time: 4.183846153846154
     customAppearance: 1
     appearanceTime: 3.260769230769231
     frameStartTime: 3.260769230769231
@@ -107,7 +107,7 @@ MonoBehaviour:
     ease: 0
     destinationId: room_328f10da
     direction: 3
-    time: 4.645384615384615
+    time: 4.645384615384616
     customAppearance: 1
     appearanceTime: 3.7223076923076928
     frameStartTime: 3.7223076923076928
@@ -119,11 +119,11 @@ MonoBehaviour:
     ease: 0
     destinationId: room_0feae6fbaa2641289d1cb36e68fe6dcd
     direction: 3
-    time: 5.106923076923077
+    time: 5.106923076923078
     customAppearance: 1
-    appearanceTime: 4.1838461538461535
-    frameStartTime: 4.1838461538461535
-    doorFrameStartTime: 1.8761538461538463
+    appearanceTime: 4.183846153846154
+    frameStartTime: 4.183846153846154
+    doorFrameStartTime: 1.8761538461538465
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -131,11 +131,11 @@ MonoBehaviour:
     ease: 0
     destinationId: room_2e498bacb3644f1fa3bf3ede08b9cccb
     direction: 3
-    time: 5.568461538461539
+    time: 5.5684615384615395
     customAppearance: 1
-    appearanceTime: 4.645384615384615
-    frameStartTime: 4.645384615384615
-    doorFrameStartTime: 0.9530769230769232
+    appearanceTime: 4.645384615384616
+    frameStartTime: 4.645384615384616
+    doorFrameStartTime: 0.9530769230769234
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -143,11 +143,11 @@ MonoBehaviour:
     ease: 0
     destinationId: room_bc2763a315f74df9bff4060ac718aa8d
     direction: 3
-    time: 6.03
+    time: 6.030000000000001
     customAppearance: 1
-    appearanceTime: 5.106923076923077
-    frameStartTime: 5.106923076923077
-    doorFrameStartTime: 2.106923076923077
+    appearanceTime: 5.106923076923078
+    frameStartTime: 5.106923076923078
+    doorFrameStartTime: 2.1069230769230773
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -157,8 +157,8 @@ MonoBehaviour:
     direction: 3
     time: 6.491538461538461
     customAppearance: 1
-    appearanceTime: 5.568461538461539
-    frameStartTime: 5.568461538461539
+    appearanceTime: 5.5684615384615395
+    frameStartTime: 5.5684615384615395
     doorFrameStartTime: 2.5684615384615386
     hasDoor: 0
     doorTime: 0
@@ -169,8 +169,8 @@ MonoBehaviour:
     direction: 3
     time: 6.953076923076923
     customAppearance: 1
-    appearanceTime: 6.03
-    frameStartTime: 6.03
+    appearanceTime: 6.030000000000001
+    frameStartTime: 6.030000000000001
     doorFrameStartTime: 3.0300000000000002
     hasDoor: 0
     doorTime: 0
@@ -207,7 +207,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 7.414615384615384
     frameStartTime: 7.414615384615384
-    doorFrameStartTime: 0.9530769230769232
+    doorFrameStartTime: 0.9530769230769234
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -219,7 +219,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 7.876153846153846
     frameStartTime: 7.876153846153846
-    doorFrameStartTime: 2.106923076923077
+    doorFrameStartTime: 2.1069230769230773
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -279,7 +279,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 10.183846153846154
     frameStartTime: 10.183846153846154
-    doorFrameStartTime: 1.8761538461538463
+    doorFrameStartTime: 1.8761538461538465
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -291,7 +291,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 10.645384615384616
     frameStartTime: 10.645384615384616
-    doorFrameStartTime: 0.9530769230769232
+    doorFrameStartTime: 0.9530769230769234
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -303,7 +303,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 11.106923076923076
     frameStartTime: 11.106923076923076
-    doorFrameStartTime: 2.106923076923077
+    doorFrameStartTime: 2.1069230769230773
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -363,7 +363,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 13.414615384615384
     frameStartTime: 13.414615384615384
-    doorFrameStartTime: 0.9530769230769232
+    doorFrameStartTime: 0.9530769230769234
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -375,7 +375,7 @@ MonoBehaviour:
     customAppearance: 1
     appearanceTime: 13.876153846153846
     frameStartTime: 13.876153846153846
-    doorFrameStartTime: 2.106923076923077
+    doorFrameStartTime: 2.1069230769230773
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
@@ -391,7 +391,7 @@ MonoBehaviour:
     hasDoor: 0
     doorTime: 0
     moveDelay: 0
-  - duration: 0.6923076923076924
+  - duration: 0.6923076923076925
     ease: 3
     destinationId: room_1c9e8511a3fa4ee9a4e5fba7550a3287
     direction: 3
@@ -695,10 +695,10 @@ MonoBehaviour:
     ease: 1
     destinationId: room_fe5599bc
     direction: 3
-    time: 31.183846153846154
+    time: 31.414615384615388
     customAppearance: 1
-    appearanceTime: 30.26076923076923
-    frameStartTime: 30.26076923076923
+    appearanceTime: 30.491538461538465
+    frameStartTime: 30.491538461538465
     doorFrameStartTime: 29.337692307692308
     hasDoor: 0
     doorTime: 0
@@ -707,25 +707,25 @@ MonoBehaviour:
     ease: 0
     destinationId: room_5b48893d
     direction: 3
-    time: 46.41461538461539
+    time: 60.95307692307693
     customAppearance: 1
-    appearanceTime: 45.260769230769235
-    frameStartTime: 45.260769230769235
-    doorFrameStartTime: 45.722307692307695
-    hasDoor: 0
-    doorTime: 0
-    moveDelay: 0
-  - duration: 0.28
+    appearanceTime: 59.79923076923077
+    frameStartTime: 59.79923076923077
+    doorFrameStartTime: 44.56846153846154
+    hasDoor: 1
+    doorTime: 45.49153846153846
+    moveDelay: 15.461538461538462
+  - duration: 0.2800000000000001
     ease: 3
     destinationId: mafia_office_escape
     direction: 0
-    time: 53.33769230769231
+    time: 67.87615384615384
     customAppearance: 1
-    appearanceTime: 51.95307692307693
-    frameStartTime: 51.95307692307693
-    doorFrameStartTime: 51.95307692307693
+    appearanceTime: 66.49153846153845
+    frameStartTime: 66.49153846153845
+    doorFrameStartTime: 66.49153846153845
     hasDoor: 1
-    doorTime: 52.87615384615385
+    doorTime: 67.41461538461537
     moveDelay: 0.46153846153846156
   enemyReadTime: 0.25
   enemies:
@@ -775,7 +775,7 @@ MonoBehaviour:
     frameStartTime: 21.953076923076924
   - id: enemy_d419209eb0e44a65b4b7d98db771822a
     roomId: room_acdc7b19
-    direction: 6
+    direction: 1
     placement:
       useCoordinates: 0
       x: -2.2
@@ -830,7 +830,7 @@ MonoBehaviour:
     frameStartTime: 29.337692307692308
   - id: enemy_14320bfe810c42b6aff598140c16e7aa
     roomId: room_8513c86be9cc403b802f59bdcf72d8ea
-    direction: 6
+    direction: 1
     placement:
       useCoordinates: 0
       x: -2.2
@@ -846,10 +846,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: -26.027273
       y: 2.12
-    time: 32.91461538461539
+    time: 31.876153846153848
     customAppearance: 1
-    appearanceTime: 32.106923076923074
-    frameStartTime: 32.106923076923074
+    appearanceTime: 30.953076923076924
+    frameStartTime: 30.953076923076924
   - id: mafia_corridor_02
     roomId: room_fe5599bc
     direction: 4
@@ -857,10 +857,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: -21.540909
       y: -2.21
-    time: 33.83769230769231
+    time: 33.95307692307693
     customAppearance: 1
-    appearanceTime: 33.03
-    frameStartTime: 33.03
+    appearanceTime: 33.26076923076923
+    frameStartTime: 33.26076923076923
   - id: mafia_corridor_03
     roomId: room_fe5599bc
     direction: 0
@@ -868,10 +868,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: -16.086365
       y: 2.3
-    time: 35.10692307692308
+    time: 35.56846153846154
     customAppearance: 1
-    appearanceTime: 34.41461538461539
-    frameStartTime: 34.41461538461539
+    appearanceTime: 34.87615384615385
+    frameStartTime: 34.87615384615385
   - id: mafia_corridor_04
     roomId: room_fe5599bc
     direction: 4
@@ -879,10 +879,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: -11.481818
       y: -2.12
-    time: 36.49153846153846
+    time: 36.95307692307693
     customAppearance: 1
-    appearanceTime: 35.79923076923077
-    frameStartTime: 35.79923076923077
+    appearanceTime: 36.260769230769235
+    frameStartTime: 36.260769230769235
   - id: mafia_corridor_05
     roomId: room_fe5599bc
     direction: 0
@@ -890,10 +890,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: -5.177273
       y: 2.21
-    time: 37.87615384615385
+    time: 37.645384615384614
     customAppearance: 1
-    appearanceTime: 37.183846153846154
-    frameStartTime: 37.183846153846154
+    appearanceTime: 36.95307692307693
+    frameStartTime: 36.95307692307693
   - id: mafia_corridor_06
     roomId: room_fe5599bc
     direction: 4
@@ -901,10 +901,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: 0.277273
       y: -2.3
-    time: 39.260769230769235
+    time: 38.10692307692308
     customAppearance: 1
-    appearanceTime: 38.56846153846154
-    frameStartTime: 38.56846153846154
+    appearanceTime: 37.41461538461539
+    frameStartTime: 37.41461538461539
   - id: mafia_corridor_07
     roomId: room_fe5599bc
     direction: 0
@@ -912,10 +912,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: 3.063636
       y: 2.12
-    time: 40.183846153846154
+    time: 39.260769230769235
     customAppearance: 1
-    appearanceTime: 39.49153846153846
-    frameStartTime: 39.49153846153846
+    appearanceTime: 38.56846153846154
+    frameStartTime: 38.56846153846154
   - id: mafia_corridor_08
     roomId: room_fe5599bc
     direction: 4
@@ -923,10 +923,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: 9.368182
       y: -2.21
-    time: 41.56846153846154
+    time: 41.33769230769231
     customAppearance: 1
-    appearanceTime: 40.87615384615385
-    frameStartTime: 40.87615384615385
+    appearanceTime: 40.645384615384614
+    frameStartTime: 40.645384615384614
   - id: mafia_corridor_09
     roomId: room_fe5599bc
     direction: 0
@@ -956,10 +956,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: 23.913635
       y: 2.21
-    time: 45.260769230769235
+    time: 45.03
     customAppearance: 1
-    appearanceTime: 44.56846153846154
-    frameStartTime: 44.56846153846154
+    appearanceTime: 44.33769230769231
+    frameStartTime: 44.33769230769231
   - id: mafia_after_window_1
     roomId: mafia_office_escape
     direction: 6
@@ -967,10 +967,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: -2.1
       y: 1
-    time: 54.260769230769235
+    time: 68.79923076923076
     customAppearance: 1
-    appearanceTime: 53.79923076923077
-    frameStartTime: 53.79923076923077
+    appearanceTime: 68.33769230769231
+    frameStartTime: 68.33769230769231
   - id: mafia_after_window_2
     roomId: mafia_office_escape
     direction: 2
@@ -978,10 +978,10 @@ MonoBehaviour:
       useCoordinates: 1
       x: 2.1
       y: 0.6
-    time: 55.183846153846154
+    time: 69.72230769230768
     customAppearance: 1
-    appearanceTime: 54.722307692307695
-    frameStartTime: 54.722307692307695
+    appearanceTime: 69.26076923076923
+    frameStartTime: 69.26076923076923
   beatChart:
     bpm: 130
     startingRoomId: guard0
@@ -998,8 +998,8 @@ MonoBehaviour:
     settings:
       bpm: 130
       startingRoomId: guard0
-      offsetSeconds: 0.030000000000000002
-      musicDelaySeconds: 1.8461538461538463
+      offsetSeconds: 0.030000000000000006
+      musicDelaySeconds: 1.8461538461538465
       loopMusic: 0
       beatsPerBar: 8
       subdivision: 2
@@ -1021,7 +1021,7 @@ MonoBehaviour:
       height: 6
       offsetX: 0
       offsetY: 0
-      moveDuration: 0.28
+      moveDuration: 0.2800000000000001
       moveEase: 0
       hitBeat: 0
       frameBeat: 0
@@ -1531,7 +1531,7 @@ MonoBehaviour:
       height: 0
       offsetX: 0
       offsetY: 0
-      moveDuration: 0.6923076923076924
+      moveDuration: 0.6923076923076925
       moveEase: 3
       hitBeat: 30
       frameBeat: 28
@@ -2007,7 +2007,7 @@ MonoBehaviour:
       height: 6
       offsetX: 0
       offsetY: 0
-      moveDuration: 0.28
+      moveDuration: 0.2800000000000001
       moveEase: 3
       hitBeat: 143
       frameBeat: 140
@@ -2256,7 +2256,7 @@ MonoBehaviour:
     settings:
       bpm: 130
       startingRoomId: guard0
-      offsetSeconds: 0.030000000000000002
+      offsetSeconds: 0.03000000000000001
       musicDelaySeconds: 1.8461538461538465
       loopMusic: 0
       beatsPerBar: 8
@@ -2279,7 +2279,7 @@ MonoBehaviour:
       height: 6
       offsetX: 0
       offsetY: 0
-      moveDuration: 0.28
+      moveDuration: 0.2800000000000001
       moveEase: 0
       hitBeat: 0
       frameBeat: 0
@@ -2789,7 +2789,7 @@ MonoBehaviour:
       height: 0
       offsetX: 0
       offsetY: 0
-      moveDuration: 0.6923076923076924
+      moveDuration: 0.6923076923076925
       moveEase: 3
       hitBeat: 30
       frameBeat: 28
@@ -3233,11 +3233,11 @@ MonoBehaviour:
       offsetY: 0
       moveDuration: 15.230769230769232
       moveEase: 1
-      hitBeat: 63.5
-      frameBeat: 61.5
+      hitBeat: 64
+      frameBeat: 62
       groupId: 
       individualAppearance: 1
-      appearBeat: 61.5
+      appearBeat: 62
       door: 0
       doorBeat: 60.5
       doorFrameBeat: 59.5
@@ -3250,14 +3250,14 @@ MonoBehaviour:
       offsetY: 0
       moveDuration: 0
       moveEase: 0
-      hitBeat: 96.5
-      frameBeat: 94
+      hitBeat: 128
+      frameBeat: 125.5
       groupId: 
       individualAppearance: 1
-      appearBeat: 94
-      door: 0
-      doorBeat: 96
-      doorFrameBeat: 95
+      appearBeat: 125.5
+      door: 1
+      doorBeat: 94.5
+      doorFrameBeat: 92.5
     - id: mafia_office_escape
       x: 60
       y: -7
@@ -3265,16 +3265,16 @@ MonoBehaviour:
       height: 6
       offsetX: 0
       offsetY: 0
-      moveDuration: 0.28
+      moveDuration: 0.2800000000000001
       moveEase: 3
-      hitBeat: 111.5
-      frameBeat: 108.5
+      hitBeat: 143
+      frameBeat: 140
       groupId: 
       individualAppearance: 1
-      appearBeat: 108.5
+      appearBeat: 140
       door: 1
-      doorBeat: 110.5
-      doorFrameBeat: 108.5
+      doorBeat: 142
+      doorFrameBeat: 140
     enemies:
     - id: enemy_51941b63d3e44c5c8d560e79fbc29fbe
       roomId: room_e1a272c96edd4d7c86a2439e765033bc
@@ -3318,7 +3318,7 @@ MonoBehaviour:
       frameBeat: 43.5
     - id: enemy_d419209eb0e44a65b4b7d98db771822a
       roomId: room_acdc7b19
-      direction: 6
+      direction: 1
       placement:
         useCoordinates: 0
         x: -2.2
@@ -3368,7 +3368,7 @@ MonoBehaviour:
       frameBeat: 59.5
     - id: enemy_14320bfe810c42b6aff598140c16e7aa
       roomId: room_8513c86be9cc403b802f59bdcf72d8ea
-      direction: 6
+      direction: 1
       placement:
         useCoordinates: 0
         x: -2.2
@@ -3383,9 +3383,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: -26.027273
         y: 2.12
-      hitBeat: 67.25
-      appearBeat: 65.5
-      frameBeat: 65.5
+      hitBeat: 65
+      appearBeat: 63
+      frameBeat: 63
     - id: mafia_corridor_02
       roomId: room_fe5599bc
       direction: 4
@@ -3393,9 +3393,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: -21.540909
         y: -2.21
-      hitBeat: 69.25
-      appearBeat: 67.5
-      frameBeat: 67.5
+      hitBeat: 69.5
+      appearBeat: 68
+      frameBeat: 68
     - id: mafia_corridor_03
       roomId: room_fe5599bc
       direction: 0
@@ -3403,9 +3403,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: -16.086365
         y: 2.3
-      hitBeat: 72
-      appearBeat: 70.5
-      frameBeat: 70.5
+      hitBeat: 73
+      appearBeat: 71.5
+      frameBeat: 71.5
     - id: mafia_corridor_04
       roomId: room_fe5599bc
       direction: 4
@@ -3413,9 +3413,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: -11.481818
         y: -2.12
-      hitBeat: 75
-      appearBeat: 73.5
-      frameBeat: 73.5
+      hitBeat: 76
+      appearBeat: 74.5
+      frameBeat: 74.5
     - id: mafia_corridor_05
       roomId: room_fe5599bc
       direction: 0
@@ -3423,9 +3423,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: -5.177273
         y: 2.21
-      hitBeat: 78
-      appearBeat: 76.5
-      frameBeat: 76.5
+      hitBeat: 77.5
+      appearBeat: 76
+      frameBeat: 76
     - id: mafia_corridor_06
       roomId: room_fe5599bc
       direction: 4
@@ -3433,9 +3433,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: 0.277273
         y: -2.3
-      hitBeat: 81
-      appearBeat: 79.5
-      frameBeat: 79.5
+      hitBeat: 78.5
+      appearBeat: 77
+      frameBeat: 77
     - id: mafia_corridor_07
       roomId: room_fe5599bc
       direction: 0
@@ -3443,9 +3443,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: 3.063636
         y: 2.12
-      hitBeat: 83
-      appearBeat: 81.5
-      frameBeat: 81.5
+      hitBeat: 81
+      appearBeat: 79.5
+      frameBeat: 79.5
     - id: mafia_corridor_08
       roomId: room_fe5599bc
       direction: 4
@@ -3453,9 +3453,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: 9.368182
         y: -2.21
-      hitBeat: 86
-      appearBeat: 84.5
-      frameBeat: 84.5
+      hitBeat: 85.5
+      appearBeat: 84
+      frameBeat: 84
     - id: mafia_corridor_09
       roomId: room_fe5599bc
       direction: 0
@@ -3483,9 +3483,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: 23.913635
         y: 2.21
-      hitBeat: 94
-      appearBeat: 92.5
-      frameBeat: 92.5
+      hitBeat: 93.5
+      appearBeat: 92
+      frameBeat: 92
     - id: mafia_after_window_1
       roomId: mafia_office_escape
       direction: 6
@@ -3493,9 +3493,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: -2.1
         y: 1
-      hitBeat: 113.5
-      appearBeat: 112.5
-      frameBeat: 112.5
+      hitBeat: 145
+      appearBeat: 144
+      frameBeat: 144
     - id: mafia_after_window_2
       roomId: mafia_office_escape
       direction: 2
@@ -3503,9 +3503,9 @@ MonoBehaviour:
         useCoordinates: 1
         x: 2.1
         y: 0.6
-      hitBeat: 115.5
-      appearBeat: 114.5
-      frameBeat: 114.5
+      hitBeat: 147
+      appearBeat: 146
+      frameBeat: 146
     groups: []
     cameras: []
     shakes: []

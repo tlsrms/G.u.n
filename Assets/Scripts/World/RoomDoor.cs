@@ -48,7 +48,7 @@ namespace Gun.RoomRhythm
                 throw new System.InvalidOperationException("Door needs two panels.");
         }
         public void Present(bool visible, bool future, float progress, double time, double target, double appearedAt,
-            double frameStart = double.NaN, bool? showFrame = null)
+            double frameStart = double.NaN, bool? showFrame = null, int priority = 0)
         {
             if (judgmentFrame != null) judgmentFrame.gameObject.SetActive(false);
             leftPanel.enabled = rightPanel.enabled = visible && !externalPanels;
@@ -60,10 +60,11 @@ namespace Gun.RoomRhythm
             leftPanel.transform.localPosition = new Vector3(-offset, 0, 0);
             rightPanel.transform.localPosition = new Vector3(offset, 0, 0);
             float flash = Mathf.Clamp01(1 - (float)(time - appearedAt - CloseDuration(chart, appearedAt, target)) / .12f);
-            Color color = future ? Color.gray : new Color(1, .65f, .25f);
+            Color color = future ? Color.gray : ActionCueStyle.Shot(priority);
             leftPanel.color = rightPanel.color = RoomPalette.Tint(Color.Lerp(color, Color.white, close >= 1 ? flash : 0));
-            SetRadius(outline, OutlineRadius, Color.white);
-            SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target, OutlineRadius, chart.enemyLineWidth, chart.Timing), RoomPalette.Tint(color));
+            SetRadius(outline, OutlineRadius);
+            SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target, OutlineRadius, chart.enemyLineWidth, chart.Timing));
+            ActionCueStyle.ApplyShotRings(outline, timingRing, priority, chart.enemyLineWidth);
         }
         public static double CloseDuration(RoomChart chart, double appearedAt, double target)
             => System.Math.Max(.001, System.Math.Min(chart.doorCloseDuration, target - appearedAt));
@@ -72,9 +73,8 @@ namespace Gun.RoomRhythm
             float t = Mathf.Clamp01((float)((time - appearedAt) / CloseDuration(chart, appearedAt, target)));
             return 1 - (1 - t) * (1 - t) * (1 - t);
         }
-        private static void SetRadius(LineRenderer line, float radius, Color color)
+        private static void SetRadius(LineRenderer line, float radius)
         {
-            line.startColor = line.endColor = color;
             for (int i = 0; i < line.positionCount; i++)
             {
                 float angle = i * 2 * Mathf.PI / line.positionCount;

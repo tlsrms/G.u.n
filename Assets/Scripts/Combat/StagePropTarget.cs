@@ -60,18 +60,16 @@ namespace Gun.RoomRhythm
             return Vector3.LerpUnclamped(startPosition, endPosition, (float)MovementProfile.Evaluate(progress, ease));
         }
 
-        public override void Present(bool visible, bool showFrame, double time, bool next)
+        public override void Present(bool visible, bool showFrame, double time, int shotPriority)
         {
             transform.position = PositionAt(time);
             visuals.SetActive(visible);
             if (!visible) return;
             outline.enabled = true;
             SetRing(outline, radius);
-            outline.startColor = outline.endColor = Color.white;
             timingRing.enabled = showFrame;
             SetRing(timingRing, (float)ApproachGeometry.Radius(time, hitAt, radius, chart.enemyLineWidth, chart.Timing));
-            Color color = Role == StageTargetRole.Shot ? RoomEnemy.TimingColor(next) : RoomPalette.Tint(new Color(1, .65f, .25f, 1));
-            timingRing.startColor = timingRing.endColor = color;
+            ActionCueStyle.ApplyShotRings(outline, timingRing, shotPriority, chart.enemyLineWidth);
         }
 
         public override void OnHit(double time) => visuals.SetActive(false);

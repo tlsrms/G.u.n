@@ -58,7 +58,12 @@ namespace Gun.RoomRhythm
                 float radians = angle * Mathf.Deg2Rad;
                 Transform segment = arcSegments[i];
                 var renderer = segment.GetComponent<SpriteRenderer>();
-                if (renderer != null) renderer.color = RoomPalette.Tint(new Color(.2f, .6f, 1, .95f));
+                if (renderer != null)
+                {
+                    Color tint = ActionCueStyle.Shot(0);
+                    tint.a = .55f;
+                    renderer.color = tint;
+                }
                 segment.localPosition = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians)) * radius;
                 segment.localRotation = Quaternion.Euler(0, 0, angle + 90f);
                 segment.localScale = new Vector3(2f * radius * Mathf.Sin(halfAngle * Mathf.Deg2Rad / arcSegments.Length) * 1.03f, 0.035f, 1);

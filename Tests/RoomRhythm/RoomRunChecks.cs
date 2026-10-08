@@ -647,10 +647,55 @@ internal static class RoomRunChecks
         combat.Press(MoveDirection.Down, 6);
         Check(combat.ShootEnemy(2, 7) && combat.ShootEnemy(3, 7.5) && combat.ShootEnemy(4, 8)
             && combat.Phase == RunPhase.Cleared, "full scene enemy-door-movement chart clears");
+        CheckShotOrder();
         Console.WriteLine($"PASS: {checks} movement timing/state checks.");
         BeatChartChecks.Run();
         MapChartChecks.Run();
         MafiaAmbushChecks.Run();
         OffsetCalibrationChecks.Run();
+    }
+
+    private static void CheckShotOrder()
+    {
+        var moves = new[] {
+            new MoveNote { destinationId = "north", direction = MoveDirection.Up, hasDoor = true, doorTime = 2, moveDelay = 1 },
+            new MoveNote { destinationId = "east", direction = MoveDirection.Right, time = 6 },
+            new MoveNote { destinationId = "south", direction = MoveDirection.Down, time = 8 }
+        };
+        var enemies = new[] {
+            new EnemyNote { id = "first", roomId = "start", time = 1 },
+            new EnemyNote { id = "pair1", roomId = "north", time = 4 },
+            new EnemyNote { id = "pair2", roomId = "north", time = 4 + 1e-8 },
+            new EnemyNote { id = "far", roomId = "south", time = 9, customAppearance = true }
+        };
+        var run = new RoomRun(moves, Window, .2, enemies);
+        run.Begin();
+        Check(run.RoomVisible(3, 0) && run.RoomFrameVisible(3, 0) && run.EnemyVisible(3, 0),
+            "original authored visibility allows distant rooms, frames and enemies");
+        var preview = run.PreviewShots();
+        Check(preview.Priority(1) == 0 && preview.Priority(2) == 1 && preview.Priority(4) == 2,
+            "enemy and door shot order is red, orange, yellow");
+        Check(run.ShootEnemy(0, 1), "first shot succeeds");
+        preview = run.PreviewShots();
+        Check(preview.Priority(2) == 0 && preview.Priority(4) == 1 && preview.Priority(9) == 2,
+            "door becomes red and later enemies advance their colors");
+        Check(run.ShootDoor(0, 2), "door shot succeeds");
+        preview = run.PreviewShots();
+        Check(preview.Priority(4) == 0 && preview.Priority(4 + 1e-8) == 0 && preview.Priority(9) == 1,
+            "simultaneous enemies share a color and movement does not consume a shot color");
+        run.Press(MoveDirection.Up, 3);
+        Check(run.PreviewShots().Priority(4) == 0, "moving preserves the next shot color");
+        Check(run.ShootEnemy(1, 4), "first simultaneous shot succeeds");
+        Check(run.PreviewShots().Priority(4 + 1e-8) == 0, "remaining simultaneous enemy stays red");
+        Check(run.ShootEnemy(2, 4 + 1e-8), "second simultaneous shot succeeds");
+        Check(run.PreviewShots().Priority(9) == 0, "last pending shot is red");
+        run.Press(MoveDirection.Right, 6); run.Press(MoveDirection.Down, 8);
+        Check(run.ShootEnemy(3, 9) && run.Phase == RunPhase.Cleared, "full shot sequence clears normally");
+        run.Reset(); run.Begin();
+        Check(run.PreviewShots().Priority(1) == 0 && run.RoomVisible(3, 0),
+            "restart restores initial shot order and original room visibility");
+        run.Advance(1.2);
+        Check(run.Phase == RunPhase.Dead && run.PreviewShots().Priority(1) == 0,
+            "death preserves shot colors");
     }
 }

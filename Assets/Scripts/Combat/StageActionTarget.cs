@@ -21,7 +21,7 @@ namespace Gun.RoomRhythm
         public abstract void ResetTarget(RoomChart chart, double appearsAt, double hitTime);
         // Must be a side-effect-free evaluation: input can refer to an earlier frame.
         public abstract Vector3 PositionAt(double chartTime);
-        public abstract void Present(bool visible, bool showFrame, double time, bool next);
+        public abstract void Present(bool visible, bool showFrame, double time, int shotPriority);
         public virtual void OnHit(double time) { }
         public virtual void OnFailure(double time) { }
     }

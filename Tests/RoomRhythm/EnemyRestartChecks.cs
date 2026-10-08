@@ -20,6 +20,55 @@ internal static class EnemyRestartChecks
         { Check(error.Message == "Enemy scene position differs from chart: mafia_corridor_01", message); return; }
         throw new Exception("FAIL: " + message);
     }
+    private static void CheckShotColors()
+    {
+        Application.isPlaying = true;
+        var chart = new RoomChart {
+            moves = new[] { new MoveNote { destinationId = "end", direction = MoveDirection.Up, time = 5 } },
+            enemies = new[] {
+                new EnemyNote { id = "first", roomId = "start", time = 1, customAppearance = true },
+                new EnemyNote { id = "second", roomId = "start", time = 2, customAppearance = true },
+                new EnemyNote { id = "third", roomId = "start", time = 3, customAppearance = true }
+            }
+        };
+        var enemies = new RoomEnemy[3];
+        var bodies = new SpriteRenderer[3];
+        var visuals = new GameObject[3];
+        var rings = new LineRenderer[3];
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            enemies[i] = new RoomEnemy(); bodies[i] = new SpriteRenderer();
+            bodies[i].sprite = new Sprite(); visuals[i] = new GameObject(); rings[i] = new LineRenderer();
+            Set(enemies[i], "enemyId", chart.enemies[i].id);
+            Set(enemies[i], "body", bodies[i]); Set(enemies[i], "visuals", visuals[i]);
+            Set(enemies[i], "outline", new LineRenderer()); Set(enemies[i], "timingRing", rings[i]);
+            Set(enemies[i], "judgmentFrame", new Transform());
+        }
+        var run = new RoomRun(chart.moves, chart.Timing, .1, chart.enemies);
+        var combat = new RoomCombat();
+        Set(combat, "enemies", enemies); Set(combat, "player", new Transform());
+        Set(combat, "selectedEnemyDot", new Transform());
+        combat.Configure(chart, new[] { new RoomBinding(), new RoomBinding() }, run,
+            new RoomAim(), new RoomFeedback(), new[] { -1, -1 });
+        run.Begin(); combat.Present(0);
+        Check(visuals[0].activeSelf && visuals[1].activeSelf && visuals[2].activeSelf,
+            "all authored enemies remain visible regardless of pending order");
+        Check(rings[0].enabled && rings[1].enabled && rings[2].enabled
+            && bodies[0].color.r == 1 && bodies[1].color.r == 1 && bodies[2].color.r == 1,
+            "later enemies retain original body brightness and timing rings");
+        Check(rings[0].startColor.g < rings[1].startColor.g && rings[1].startColor.g < rings[2].startColor.g,
+            "pending enemies use red then orange then yellow");
+        Check(run.ShootEnemy(0, 1), "first colored enemy is defeated");
+        combat.Present(1);
+        Check(rings[1].startColor.g == ActionCueStyle.Shot(0).g
+            && rings[2].startColor.g == ActionCueStyle.Shot(1).g,
+            "remaining targets advance their colors without hiding or dimming");
+        run.Reset(); combat.Present(0);
+        Check(!visuals[0].activeSelf && !visuals[1].activeSelf && !visuals[2].activeSelf, "ready hides enemies");
+        run.Begin(); combat.Present(0);
+        Check(visuals[2].activeSelf && rings[0].startColor.g == ActionCueStyle.Shot(0).g
+            && rings[2].startColor.g == ActionCueStyle.Shot(2).g, "retry restores all authored targets and their initial colors");
+    }
     public static void Main()
     {
         Application.isPlaying = true;
@@ -177,6 +226,18 @@ internal static class EnemyRestartChecks
         Check(!visuals.activeSelf && body.color.a == 1 && body.transform.localRotation.zDegrees == 0,
             "quick retry returns to ready with an intact hidden enemy");
 
+        enemy.Present(true, 1, 5, 5, false, 2);
+        Check(visuals.activeSelf && body.color.r == 1 && outline.enabled && !ring.enabled,
+            "authored frame delay hides only the approach ring, preserving the body and fixed outline");
+        enemy.Present(true, 1, 5, 5, true, 2);
+        Check(frame.gameObject.activeSelf && ring.enabled && ring.startColor.g == ActionCueStyle.Shot(2).g,
+            "later targets retain visible yellow timing rings");
+        Check(outline.startColor.r == 1 && outline.startColor.g == 1 && outline.startColor.b == 1,
+            "fixed reference ring stays white");
+        float width = ring.startWidth;
+        enemy.Present(true, 1, 5.05, 5, true, 0);
+        Check(ring.startWidth == width && ring.startColor.g == ActionCueStyle.Shot(0).g,
+            "next shot remains red with original constant line width");
         var changedNote = chart.enemies[0];
         changedNote.placement.x += 1;
         chart.enemies[0] = changedNote;
@@ -190,6 +251,7 @@ internal static class EnemyRestartChecks
         enemy.transform.position = placed;
         combat.ValidateConfiguration(chart, path, run);
         Check(true, "corrected editor placement validates");
+        CheckShotColors();
         Console.WriteLine($"PASS: {checks} enemy entrance/fall/death/restart checks (engine test doubles; no Unity play mode).");
     }
 }
@@ -351,6 +413,6 @@ namespace Gun.RoomRhythm
         public Vector3 PositionAt(double time) => default;
         public void OnHit(double time) { }
         public void OnFailure(double time) { }
-        public void Present(bool visible, bool frame, double time, bool next) { }
+        public void Present(bool visible, bool frame, double time, int shotPriority) { }
     }
 }

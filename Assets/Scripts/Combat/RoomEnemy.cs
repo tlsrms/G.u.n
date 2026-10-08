@@ -154,9 +154,7 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public static Color TimingColor(bool next) => next ? Color.red : RoomPalette.Tint(new Color(1f, .3f, .6f, 1f));
-
-        public void Present(bool visible, float progress, double time = 0, double target = 0, bool showFrame = true, float brightness = 1, bool next = false, bool showDefeat = false)
+        public void Present(bool visible, float progress, double time = 0, double target = 0, bool showFrame = true, int shotPriority = 2, bool showDefeat = false)
         {
             if (defeated) { PresentDefeat(showDefeat); return; }
             visuals.SetActive(visible);
@@ -164,11 +162,11 @@ namespace Gun.RoomRhythm
             if (!visible) return;
             judgmentFrame.gameObject.SetActive(showFrame);
             body.color = Color.white;
-            // Appearance timing controls visibility, never opacity or brightness.
-            outline.startColor = outline.endColor = Color.white;
+            outline.enabled = true;
+            timingRing.enabled = showFrame;
             SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target,
                 OutlineRadius, chart.enemyLineWidth, chart.Timing));
-            timingRing.startColor = timingRing.endColor = TimingColor(next);
+            ActionCueStyle.ApplyShotRings(outline, timingRing, shotPriority, chart.enemyLineWidth);
         }
     }
 }

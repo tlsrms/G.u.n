@@ -387,6 +387,7 @@ namespace Gun.RoomRhythm
         {
             int current = run.CompletedMoves;
             double time = presentationTime;
+            ShotPreview preview = run.PreviewShots();
             for (int i = 0; i < path.Length; i++)
             {
                 bool isCurrent = i == current;
@@ -407,10 +408,10 @@ namespace Gun.RoomRhythm
                         && run.Phase != RunPhase.Ready && time >= note.DoorAppearsAt && previousRoomOccurrences[i] < current,
                         future, Progress(time, note.DoorAppearsAt, note.doorTime), time, note.doorTime, note.DoorAppearsAt,
                         note.DoorAppearsAt,
-                        deathDoorFrames != null ? deathDoorFrames[i] : run.RoomFrameVisible(i, time, true));
+                        deathDoorFrames != null ? deathDoorFrames[i] : run.RoomFrameVisible(i, time, true), preview.Priority(note.doorTime));
             }
             player.position = run.Phase == RunPhase.Dead ? cinematics.DeathPosition : PlayerPosition(time);
-            combat.Present(time);
+            combat.Present(time, preview);
             Color playerColor = RoomPalette.Tint(alive);
             playerColor.a *= cinematics.PlayerAlpha;
             playerSprite.color = playerColor;

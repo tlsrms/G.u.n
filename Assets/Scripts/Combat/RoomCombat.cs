@@ -128,7 +128,8 @@ namespace Gun.RoomRhythm
         {
             candidates.Clear();
             for (int i = 0; i < orderedEnemies.Length; i++)
-                if (run.EnemyAvailable(i)) AddCandidate(i, TargetPosition(i, time) - origin, enemyNotes[i].time);
+                if (run.EnemyAvailable(i))
+                    AddCandidate(i, TargetPosition(i, time) - origin, enemyNotes[i].time);
             for (int i = run.CompletedMoves; i < chart.moves.Length; i++)
             {
                 MoveNote note = chart.moves[i];
@@ -224,25 +225,27 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public void Present(double time)
+        public void Present(double time) => Present(time, run.PreviewShots());
+
+        public void Present(double time, ShotPreview preview)
         {
             displayedTime = time;
-            int nextEnemy = run.NextPendingEnemyIndex();
             for (int i = 0; i < orderedEnemies.Length; i++)
             {
+                int priority = preview.Priority(enemyNotes[i].time);
                 bool visible = deathVisible != null ? deathVisible[i] : EnemyVisible(i, time);
                 double appearedAt = run.EnemyVisualAppearsAt(i);
                 double duration = enemyNotes[i].time - appearedAt;
                 float progress = duration > 0 ? Mathf.Clamp01((float)((time - appearedAt) / duration)) : 1f;
                 double frameStart = enemyNotes[i].customAppearance ? enemyNotes[i].frameStartTime : appearedAt;
-                float brightness = run.EnemyRoomEntered(i) ? 1 : RoomChart.UpcomingEnemyBrightness;
+                bool showFrame = deathFrames != null ? deathFrames[i] : time >= frameStart;
                 if (shotOverrides[i] != null)
                 {
-                    shotOverrides[i].Present(visible, deathFrames != null ? deathFrames[i] : time >= frameStart, time, i == nextEnemy);
+                    shotOverrides[i].Present(visible, showFrame, time, priority);
                     continue;
                 }
                 orderedEnemies[i].Present(visible, progress, time, enemyNotes[i].time,
-                    deathFrames != null ? deathFrames[i] : time >= frameStart, brightness, i == nextEnemy,
+                    showFrame, priority,
                     deathVisible != null ? deathVisible[i] : DefeatedEnemyVisible(i, time));
                 orderedEnemies[i].AimAt(player.position);
             }
@@ -253,7 +256,8 @@ namespace Gun.RoomRhythm
                 bool visible = run.Phase != RunPhase.Ready && i >= run.CompletedMoves && !run.DoorBroken(i)
                     && time >= (note.customAppearance ? note.DoorAppearsAt : chart.RoomAppearsAt(note))
                     && previousRoomOccurrences[i + 1] < run.CompletedMoves;
-                doorOverrides[i].Present(visible, run.Phase != RunPhase.Dead, time, false);
+                int priority = preview.Priority(note.doorTime);
+                doorOverrides[i].Present(visible, run.Phase != RunPhase.Dead, time, priority);
             }
             if (!run.IsActive) selectedEnemyDot.gameObject.SetActive(false);
         }

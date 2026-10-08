@@ -66,6 +66,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Stage startup checks failed.' }
 $enemyRestartDll = Join-Path $output 'EnemyRestartChecks.dll'
 & $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 /nowarn:0649 "/out:$enemyRestartDll" "/reference:$standard" `
     $rules $model $selection (Join-Path $root 'Assets/Scripts/Combat/RoomEnemy.cs') `
+    (Join-Path $root 'Assets/Scripts/Presentation/ActionCueStyle.cs') `
     (Join-Path $root 'Assets/Scripts/Combat/RoomCombat.cs') (Join-Path $PSScriptRoot 'EnemyRestartChecks.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Enemy restart checks did not compile.' }
 Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'EnemyRestartChecks.runtimeconfig.json')

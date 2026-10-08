@@ -15,6 +15,7 @@ namespace Gun.RoomRhythm
         private Color[] baseColors;
         private RoomChart chart;
         private Vector3[] frameDirections;
+        private SpriteRenderer[] directionArrow;
         private bool completed;
         private double flashAt = -10;
         private MoveDirection? exitDirection, entranceDirection;
@@ -66,6 +67,7 @@ namespace Gun.RoomRhythm
             }
             if (door != null) door.Configure(chart, sideLength);
             RefreshFrameDirections();
+            if (Application.isPlaying) PrepareFrameVisuals();
         }
         public void ValidateReferences(bool needsFrame)
         {
@@ -150,17 +152,61 @@ namespace Gun.RoomRhythm
             float radiusY = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
                 chart.roomFrameStartSize * .5f, Size.y * .5f);
             if (frameDirections == null || frameDirections.Length != frameEdges.Length) RefreshFrameDirections();
+            float frameAlpha = frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress);
+            Color cue = future ? new Color(.6f, .6f, .6f, frameAlpha) : new Color(.3f, 1f, .8f, frameAlpha);
+            cue = RoomPalette.Tint(Color.Lerp(cue, Color.white, flash));
             for (int i = 0; i < frameEdges.Length; i++)
             {
                 SpriteRenderer edge = frameEdges[i];
+                edge.enabled = true;
                 Transform line = edge.transform;
                 bool horizontal = Mathf.Abs(frameDirections[i].y) > 0.5f;
                 line.localPosition = frameDirections[i] * (horizontal ? radiusY : radiusX);
                 line.localScale = horizontal ? new Vector3(radiusX * 2 + chart.judgmentLineWidth, chart.judgmentLineWidth, 1)
                     : new Vector3(chart.judgmentLineWidth, radiusY * 2 + chart.judgmentLineWidth, 1);
-                float frameAlpha = frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress);
-                edge.color = future ? new Color(0.6f, 0.6f, 0.6f, frameAlpha) : new Color(0.3f, 1f, 0.8f, frameAlpha);
-                edge.color = RoomPalette.Tint(Color.Lerp(edge.color, Color.white, flash));
+                edge.color = cue;
+            }
+            if (directionArrow != null) PresentDirection(cue);
+        }
+
+        private void PrepareFrameVisuals()
+        {
+            if (judgmentFrame == null || frameEdges == null || frameEdges.Length == 0 || directionArrow != null) return;
+            directionArrow = new[] { CreateFramePart("Direction left", frameEdges[0]), CreateFramePart("Direction right", frameEdges[0]) };
+        }
+
+        private SpriteRenderer CreateFramePart(string label, SpriteRenderer source)
+        {
+            var renderer = new GameObject(label).AddComponent<SpriteRenderer>();
+            renderer.transform.SetParent(judgmentFrame, false);
+            renderer.sprite = source.sprite;
+            renderer.sharedMaterial = source.sharedMaterial;
+            renderer.sortingLayerID = source.sortingLayerID;
+            renderer.sortingOrder = source.sortingOrder;
+            return renderer;
+        }
+
+        private void PresentDirection(Color color)
+        {
+            foreach (var edge in directionArrow) edge.enabled = entranceDirection.HasValue;
+            if (!entranceDirection.HasValue) return;
+            Vector3 direction = entranceDirection == MoveDirection.Up ? Vector3.down
+                : entranceDirection == MoveDirection.Right ? Vector3.left
+                : entranceDirection == MoveDirection.Down ? Vector3.up : Vector3.right;
+            float boundary = (Mathf.Abs(direction.x) > .5f ? Size.x : Size.y) * .5f;
+            // Passage offsets include the boundary coordinate; retain only the along-wall offset.
+            Vector3 passageOffset = Mathf.Abs(direction.x) > .5f
+                ? new Vector3(0, entranceOffset.y, 0) : new Vector3(entranceOffset.x, 0, 0);
+            Vector3 tip = passageOffset - direction * (boundary - .7f);
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            for (int i = 0; i < directionArrow.Length; i++)
+            {
+                var edge = directionArrow[i];
+                Quaternion rotation = Quaternion.Euler(0, 0, angle + (i == 0 ? 40 : -40));
+                edge.transform.localPosition = tip - rotation * Vector3.right * .2f;
+                edge.transform.localRotation = rotation;
+                edge.transform.localScale = new Vector3(.4f, chart.judgmentLineWidth, 1);
+                edge.color = color;
             }
         }
 
