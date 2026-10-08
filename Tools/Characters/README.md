@@ -4,6 +4,8 @@
 
 - `BuildGeometricPlayer.py`: 플레이어 파츠·월드/UI 프리팹 제작
 - `BuildRegularEnemy.py`: 일반 적 파츠·프리팹·미리보기 제작
+
+  `--fallen-only`로 실행하면 기존 서 있는 그림을 덮어쓰지 않고 `Assets/Resources/RegularEnemyFallen.png`의 누운 전신 자세만 생성합니다. `FALLEN_SHAPES`가 원본이며 `RoomEnemy`가 사망 연출에 사용합니다.
 - `BuildLegPrefabs.py`: 플레이어에 저장된 다리 관절을 독립 월드/UI 보행 프리팹으로 추출
 - `BuildRockBoss.py`: 바위 보스 파츠·프리팹·미리보기 제작
 - `BuildMafiaBoss.py`: 1스테이지 마피아 보스 파츠·프리팹·미리보기 제작 (공통 보스 제작 함수 재사용)

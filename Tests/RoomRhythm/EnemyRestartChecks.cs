@@ -38,6 +38,8 @@ internal static class EnemyRestartChecks
         Set(enemy, "enemyId", "mafia_corridor_01");
         var visuals = new GameObject();
         var body = new SpriteRenderer();
+        var standing = new Sprite();
+        body.sprite = standing;
         var outline = new LineRenderer();
         var frame = new Transform();
         var ring = new LineRenderer();
@@ -112,8 +114,9 @@ internal static class EnemyRestartChecks
             Time.unscaledTime = 10.2f;
             combat.Present(5);
             Check(Vector3.Distance(body.transform.position, hitBodyPosition) > .2f, "body is knocked back along the shot");
-            Check(body.transform.localScale.y < .85f && Math.Abs(body.transform.localRotation.zDegrees) > 30,
-                "sprite turns and collapses while chart time is frozen");
+            Check(body.transform.localScale.y < .85f && Math.Abs(body.transform.localRotation.zDegrees) <= 8,
+                "body unfolds onto floor without a large planar spin while chart time is frozen");
+            Check(body.sprite == Resources.Fallen && body.sprite != standing, "death uses the full-body lying silhouette");
             Near(enemy.Target, hitPosition, "fall moves the body without moving the target root");
             combat.ValidateConfiguration(chart, path, run);
             float fallenAngle = body.transform.localRotation.zDegrees;
@@ -121,12 +124,16 @@ internal static class EnemyRestartChecks
             Check(body.transform.localRotation.zDegrees == fallenAngle, "corpse never aims at the player");
             run.Advance(20);
             combat.FreezeAtDeath(run.DeathTime);
-            Time.unscaledTime = 10.75f;
+            Time.unscaledTime = 10.7f;
+            combat.Present(run.DeathTime);
+            Check(visuals.activeSelf && body.color.a == 1 && body.transform.localScale.y == 1,
+                "settled full-body pose stays readable before fading");
+            Time.unscaledTime = 11.2f;
             combat.Present(run.DeathTime);
             Check(visuals.activeSelf && body.color.a > 0 && body.color.a < 1,
                 "corpse fades even if the player dies and music stops");
             enemy.Defeat(5, new Vector3(-1, 0, 0));
-            Time.unscaledTime = 10.95f;
+            Time.unscaledTime = 11.5f;
             combat.Present(run.DeathTime);
             Check(!visuals.activeSelf, "corpse expires and duplicate death calls cannot restart it");
             run = NewRun();
@@ -134,6 +141,7 @@ internal static class EnemyRestartChecks
             combat.Configure(chart, path, run, new RoomAim(), new RoomFeedback(), new[] { -1, -1, -1 });
             Near(body.transform.localPosition, Vector3.zero, "retry restores the sprite position");
             Near(body.transform.localScale, Vector3.one, "retry restores sprite size");
+            Check(body.sprite == standing, "retry restores standing art instead of leaving a corpse");
             Check(Math.Abs(body.transform.localRotation.zDegrees) < .001f && body.color.a == 1 && outline.enabled && ring.enabled,
                 "retry restores rotation, opacity and judgment renderers");
             combat.Present(0);
@@ -213,7 +221,17 @@ namespace UnityEngine
         public readonly Transform transform = new Transform();
         public GameObject gameObject => transform.gameObject;
     }
-    public sealed class SpriteRenderer : MonoBehaviour { public Color color = Color.white; }
+    public sealed class Sprite { }
+    public static class Resources
+    {
+        public static readonly Sprite Fallen = new Sprite();
+        public static T Load<T>(string path) where T : class
+        {
+            if (path != "RegularEnemyFallen") throw new Exception("Unexpected resource path: " + path);
+            return Fallen as T;
+        }
+    }
+    public sealed class SpriteRenderer : MonoBehaviour { public Color color = Color.white; public Sprite sprite; }
     public sealed class LineRenderer : MonoBehaviour
     {
         public bool useWorldSpace, loop;

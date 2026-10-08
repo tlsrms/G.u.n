@@ -115,7 +115,7 @@ selection = load("Assets/Scenes/Hub/StageSelectScene.unity")
 graphic_count = check_graphic_components(selection, "StageSelectScene")
 assert graphic_count > 0
 print(f"PASS: all {graphic_count} hub UI Graphics have an attached RectTransform and CanvasRenderer.")
-controller = scripts(selection, guid("Assets/Scripts/RoomRhythm/StageSelectScene.cs"))
+controller = scripts(selection, guid("Assets/Scripts/UI/StageSelectScene.cs"))
 assert len(controller) == 1
 controller = controller[0]
 assert "preview:" not in controller
@@ -144,14 +144,14 @@ for index in range(1, 6):
     assert guid(f"Assets/RoomChart/Tutorial_{index}.asset") in controller
 assert 'sceneName: "MafiaStage01"' in controller
 assert guid("Assets/RoomChart/Stage1_Full.asset") in controller
-for source in ("StageSelectScene.cs", "SafeRoomController.cs", "StageProgression.cs", "StageSelection.cs", "StageSelectSurface.cs"):
-    assert not re.search(r"\b(Instantiate|AddComponent|CreateInstance|CloneTree)\s*[<(]|new\s+GameObject", read("Assets/Scripts/RoomRhythm/" + source)), source
+for source in ("UI/StageSelectScene.cs", "Stages/SafeRoomController.cs", "Stages/StageProgression.cs", "Stages/StageSelection.cs", "UI/StageSelectSurface.cs"):
+    assert not re.search(r"\b(Instantiate|AddComponent|CreateInstance|CloneTree)\s*[<(]|new\s+GameObject", read("Assets/Scripts/" + source)), source
 assert not any('m_Name: "Channel dial"' in body or 'm_Name: "Television cabinet"' in body for _, body in selection.values())
 canvas = next(body for kind, body in selection.values() if kind == 223)
 assert field(canvas, "m_RenderMode") == "1" and reference(canvas, "m_Camera") != 0
-assert len(scripts(selection, guid("Assets/Scripts/RoomRhythm/SafeRoomController.cs"))) == 1
+assert len(scripts(selection, guid("Assets/Scripts/Stages/SafeRoomController.cs"))) == 1
 assert len([1 for kind, _ in selection.values() if kind == 82]) == 1
-assert field(scripts(selection, guid("Assets/Scripts/RoomRhythm/SafeRoomController.cs"))[0], "exitInitiallyOpen") == "0"
+assert field(scripts(selection, guid("Assets/Scripts/Stages/SafeRoomController.cs"))[0], "exitInitiallyOpen") == "0"
 names = {id: field(body, "m_Name").strip('"') for id, (kind, body) in selection.items() if kind == 1}
 def named_transform(name):
     go = next(id for id, value in names.items() if value == name)
@@ -168,7 +168,7 @@ assert 0 < xy(field(station, "m_AnchoredPosition"))[1] < 200
 assert reference(controller, "station") == station_id
 assert reference(controller, "recordTransport") == named_transform("Record Transport")[0]
 assert reference(controller, "recordDock") == named_transform("Record dock")[0]
-safe = scripts(selection, guid("Assets/Scripts/RoomRhythm/SafeRoomController.cs"))[0]
+safe = scripts(selection, guid("Assets/Scripts/Stages/SafeRoomController.cs"))[0]
 assert reference(safe, "turntableInteractionPoint") == named_transform("Turntable interaction point")[0]
 assert len([name for name in names.values() if re.fullmatch(r"Record 0[1-6]", name)]) == 6
 assert not any(name in names.values() for name in ("Selected record", "Playing record", "Loose record"))
@@ -190,9 +190,9 @@ assert "Beat light" not in names.values()
 assert not any(name in controller for name in ("movingRecord:", "worldRecord:", "looseRecord:"))
 print("PASS: six cases with hidden original discs, separate Start action, song information, large left deck and upper-right rack; no beat pulse or map preview.")
 
-session_guid = guid("Assets/Scripts/RoomRhythm/RoomSession.cs")
-combat_guid = guid("Assets/Scripts/RoomRhythm/RoomCombat.cs")
-return_guid = guid("Assets/Scripts/RoomRhythm/StageProgression.cs")
+session_guid = guid("Assets/Scripts/Gameplay/RoomSession.cs")
+combat_guid = guid("Assets/Scripts/Combat/RoomCombat.cs")
+return_guid = guid("Assets/Scripts/Stages/StageProgression.cs")
 build = read("ProjectSettings/EditorBuildSettings.asset")
 steps = ((0, 1), (-1, 0), (0, -1), (1, 0))
 main = load("Assets/Scenes/Development/MainScene.unity")
@@ -263,7 +263,7 @@ for index in range(5):
     path = "Assets/Scenes/Opening/AwakeningScene.unity" if index == 0 else f"Assets/Scenes/SafeRooms/SafeRoom{index:02}.unity"
     objects = load(path)
     assert path in build and guid(path) in build
-    safe = scripts(objects, guid("Assets/Scripts/RoomRhythm/SafeRoomController.cs"))
+    safe = scripts(objects, guid("Assets/Scripts/Stages/SafeRoomController.cs"))
     assert len(safe) == 1
     assert field(safe[0], "nextScene").strip('"') == f"Stage{index+1:02}"
     assert field(safe[0], "exitInitiallyOpen") == "1"
@@ -272,7 +272,7 @@ for index in range(5):
 print("PASS: awakening -> five tutorials with four silent rest rooms -> turntable hub; clear and retreat routes resolve.")
 
 # The same prefab assets drive all 12 player scenes; bones and muzzle must remain linked.
-rig_guid = guid("Assets/Scripts/RoomRhythm/GeometricPlayerRig.cs")
+rig_guid = guid("Assets/Scripts/Characters/GeometricPlayerRig.cs")
 for path in (["Assets/Scenes/Development/MainScene.unity"]
              + [f"Assets/Scenes/Tutorials/Stage{i:02}.unity" for i in range(1, 6)]):
     objects = load(path)

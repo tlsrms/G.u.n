@@ -33,7 +33,7 @@
 5. **Animation 창 안의 작은 ▶**로 재생한다. 다음으로 **Mafia_02_DrawAK**, **Mafia_05_FireBurst3**, **Mafia_12_HitHead**를 골라 차이를 본다.
 6. 자세를 수정하려면 재생을 멈추고 원하는 시각을 선택한 다음 **Record**를 켜고 관절을 수정한다. 끝나면 **Record → Preview**를 끄고 **File → Save Project**로 저장한다.
 
-Preview를 끄면 보스가 씬에 원래 저장된 자세로 돌아온다. 클립의 변경 사항은 남는다. Animator 컴포넌트는 계속 꺼 두었다. **사무실 인트로는 흡연·총 꺼내기·견착·3발 클립을 곡 시각에 연결했다.** 방패·좌우 전환·부위 피격의 보스전 연결은 남아 있다.
+Preview를 끄면 보스가 씬에 원래 저장된 자세로 돌아온다. 클립의 변경 사항은 남는다. Animator 컴포넌트는 계속 꺼 두었다. **사무실 인트로는 흡연·총 꺼내기·견착·3발 클립을 곡 시각에 연결했다.** 방패 등장·대기·난사·퇴장은 독립 `MafiaShieldAmbush` 프리팹에서 사용한다. 배치 방법은 `Assets/Prefabs/Characters/MafiaShieldAmbush.md`를 참고한다. 좌우 전환·부위 피격의 보스전 연결은 남아 있다.
 
 몸 전체 느낌은 `Motion/Body`, 고개는 `Motion/Body/Neck`, 팔은 양쪽 `Shoulder → Elbow → Wrist`에서 수정한다. 두 손·총·어깨의 접점은 제작 시 맞춘 키프레임으로 저장했다. 총이나 한 팔을 바꾸면 다른 팔의 접점도 함께 맞춘다. 총을 꺼내는 동안 숨김은 `RightWrist/RifleGrip/AK`의 Scale 키로 처리하며, Preview 종료 시 원래 크기가 복원된다.
 

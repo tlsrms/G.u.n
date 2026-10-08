@@ -39,17 +39,17 @@
 
 ## 3. 현재 구현과 정리 방향
 
-아래 파일은 `Assets/Scripts/RoomRhythm/` 기준이다. 마피아 씬과 허브의 저장된 참조를 전체 채보로 갱신했다. 현재 사용하는 연출 코드는 후속 대체 구현까지 유지한다.
+아래 파일은 `Assets/Scripts/` 기준이다. 마피아 씬과 허브의 저장된 참조를 전체 채보로 갱신했다. 현재 사용하는 연출 코드는 후속 대체 구현까지 유지한다.
 
 | 현재 영역 | 확인한 상태 | 개편 방향 |
 | --- | --- | --- |
-| `RoomRun.cs`, `TimingRules.cs` | 세 액션의 판정 모델 | 유지. 동일 입력 재생 결과를 회귀 기준으로 고정 |
-| `RoomChart.cs`, `MapChart.cs`, `BeatChart.cs`, `MapTimelineEditing.cs` | 맵·박자 데이터와 실행 노트 변환 | 전체 채보 원본 유지, 안정적인 액션 식별·변경 알림 보완 |
-| `RoomSession.cs`, `SongTimeline.cs` | 하나의 전체 채보·음악·표시 연결. 구간 교체 경로 제거 완료 | 연출 평가 연결은 판정과 분리 |
-| `StageActionTarget.cs`, `StagePropTarget.cs`, `RoomCombat.cs` | 문/적의 역할·ID 기반 외형 대체와 시간별 표적 위치 | 작동 중인 계약 재사용. 이동 연출 연결을 별도 확장하고 이중 이벤트 제거 |
-| `MafiaStageDirector.cs` | 단일 채보에서 등장·전투·퇴장. 독립 `shots.time`, 루트·팔·색 제어 유지 | 중복 시각·직접 포즈 쓰기를 노트 기준 연출로 대체. 현재 시각 동작이 사라지지 않도록 후속 단계에서 전환 |
-| `StageResetState.cs`, `MafiaStageDirector.cs` | 공통 루트 복원과 Director의 실행 상태·직접 제어한 자세 초기화. 구형 미리보기 스냅샷 제거 완료 | 새 클립 평가기를 추가할 때 Animator·샘플링 상태의 복원 계약 확장 |
-| `Editor/MapSceneStore.cs` | 씬 적용 시 방·적 재작성, 외부 표적 소유권 검사 | 연출 참조를 보존하고 ID로 재연결. 씬 객체 참조만으로 재생성된 방을 추적하지 않음 |
+| `Gameplay/RoomRun.cs`, `Gameplay/TimingRules.cs` | 세 액션의 판정 모델 | 유지. 동일 입력 재생 결과를 회귀 기준으로 고정 |
+| `Charts/RoomChart.cs`, `Charts/MapChart.cs`, `Charts/BeatChart.cs`, `Charts/MapTimelineEditing.cs` | 맵·박자 데이터와 실행 노트 변환 | 전체 채보 원본 유지, 안정적인 액션 식별·변경 알림 보완 |
+| `Gameplay/RoomSession.cs`, `Audio/SongTimeline.cs` | 하나의 전체 채보·음악·표시 연결. 구간 교체 경로 제거 완료 | 연출 평가 연결은 판정과 분리 |
+| `Combat/StageActionTarget.cs`, `Combat/StagePropTarget.cs`, `Combat/RoomCombat.cs` | 문/적의 역할·ID 기반 외형 대체와 시간별 표적 위치 | 작동 중인 계약 재사용. 이동 연출 연결을 별도 확장하고 이중 이벤트 제거 |
+| `Stages/Mafia/MafiaStageDirector.cs` | 단일 채보에서 등장·전투·퇴장. 독립 `shots.time`, 루트·팔·색 제어 유지 | 중복 시각·직접 포즈 쓰기를 노트 기준 연출로 대체. 현재 시각 동작이 사라지지 않도록 후속 단계에서 전환 |
+| `Stages/StageResetState.cs`, `Stages/Mafia/MafiaStageDirector.cs` | 공통 루트 복원과 Director의 실행 상태·직접 제어한 자세 초기화. 구형 미리보기 스냅샷 제거 완료 | 새 클립 평가기를 추가할 때 Animator·샘플링 상태의 복원 계약 확장 |
+| `Editor/Charts/MapSceneStore.cs` | 씬 적용 시 방·적 재작성, 외부 표적 소유권 검사 | 연출 참조를 보존하고 ID로 재연결. 씬 객체 참조만으로 재생성된 방을 추적하지 않음 |
 
 마피아는 한 씬과 `Assets/RoomChart/Stage1_Full.asset` 하나를 사용한다. 분할 채보, 중복 시작 방·Combat, 구간 API, 일회성 제작·이관 도구 및 구간 제작 문서는 제거했다. 구형 등장 도구의 메뉴·Inspector 버튼·에셋 타입·미리보기 전용 연결도 제거했다.
 

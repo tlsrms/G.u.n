@@ -83,7 +83,7 @@ def prefab_value(component, key):
     override = re.search(pattern, instance)
     return override[1] if override else scalar(prefabs[prefab][int(source)][2], key)
 
-combat_guid = guid('Assets/Scripts/RoomRhythm/RoomCombat.cs')
+combat_guid = guid('Assets/Scripts/Combat/RoomCombat.cs')
 assert sum(kind == 114 and combat_guid in body for kind, _, body in objects.values()) == 1
 combat = objects[reference(session, 'combat')][2]
 enemy_ids = [prefab_value(i, 'enemyId') for i in references(combat, 'enemies')]
@@ -110,7 +110,7 @@ for key, name in [('rifleSound', 'MafiaAKShot'), ('glassSound', 'MafiaGlassBreak
     with wave.open(str(ROOT / 'Assets/Audio' / (name + '.wav'))) as audio:
         assert audio.getnchannels() == 1 and audio.getnframes() > 4000
 assert reference(director, 'combat') == reference(session, 'combat')
-assert guid('Assets/Scripts/RoomRhythm/RoomCamera.cs') in objects[reference(director, 'stageCamera')][2]
+assert guid('Assets/Scripts/Presentation/RoomCamera.cs') in objects[reference(director, 'stageCamera')][2]
 
 reset = objects[reference(session, 'resetState')][2]
 assert reference(director, 'boss') in references(reset, 'roots'), 'Boss hierarchy must be restored on restart'

@@ -178,7 +178,7 @@ def build_prefab(ui, sprite_guids, sprite_template, image_template, script_guid)
 
 
 def leg_component(ui):
-    script = guid(ROOT/'Assets/Scripts/RoomRhythm/TopDownLegMotion.cs', 'MonoImporter')
+    script = guid(ROOT/'Assets/Scripts/Characters/TopDownLegMotion.cs', 'MonoImporter')
     return ('MonoBehaviour:\n  m_ObjectHideFlags: 0\n  m_CorrespondingSourceObject: {fileID: 0}\n'
             '  m_PrefabInstance: {fileID: 0}\n  m_PrefabAsset: {fileID: 0}\n  m_GameObject: {fileID: 1000}\n'
             '  m_Enabled: 1\n  m_EditorHideFlags: 0\n'
@@ -193,7 +193,7 @@ def leg_component(ui):
 def main():
     ART.mkdir(parents=True,exist_ok=True);PREFABS.mkdir(parents=True,exist_ok=True)
     sprite_guids = textures()
-    script_guid = guid(ROOT/'Assets/Scripts/RoomRhythm/GeometricPlayerRig.cs','MonoImporter')
+    script_guid = guid(ROOT/'Assets/Scripts/Characters/GeometricPlayerRig.cs','MonoImporter')
     # Component templates are versioned beside this script; no scene reads are needed.
     sprite = (Path(__file__).parent / 'Templates/SpriteRenderer.template').read_text()
     image = (Path(__file__).parent / 'Templates/Image.template').read_text()

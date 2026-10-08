@@ -41,6 +41,12 @@ namespace Gun.RoomRhythm
         public RoomCinematics Cinematics => cinematics;
         public double PresentationTime => presentationTime;
         public RoomChart Chart => chart;
+        // Read-only presentation hooks. Optional scene effects never submit judgments.
+        public event Action RunReset;
+        public event Action<RoomActionResult> ActionPresented;
+        public RunPhase Phase => run?.Phase ?? RunPhase.Ready;
+        public int CompletedMoves => run?.CompletedMoves ?? 0;
+        public Transform Player => player;
         public bool IsCleared => stageCleared;
         public bool IsChartCompleted => run != null && run.Phase == RunPhase.Cleared;
         public double SongTime => timeline != null ? timeline.Time : 0;
@@ -56,6 +62,9 @@ namespace Gun.RoomRhythm
 
         private void Start()
         {
+            var progressHud = GetComponent<StageProgressHud>();
+            if (progressHud == null) progressHud = gameObject.AddComponent<StageProgressHud>();
+            progressHud.Configure(this, status != null ? status.font : null);
             restartTransition = GetComponent<RoomRestartTransition>();
             if (restartTransition == null) restartTransition = gameObject.AddComponent<RoomRestartTransition>();
             if (resetState != null) resetState.Capture();
@@ -292,13 +301,17 @@ namespace Gun.RoomRhythm
             foreach (var room in rooms) room.gameObject.SetActive(true);
             if (stageDirector != null) stageDirector.RestartStage();
             combat.ResetStageTargets();
+            RunReset?.Invoke();
             Present();
         }
 
         private void DispatchStage()
         {
             while (run.TryDequeueResult(out RoomActionResult result))
+            {
                 if (stageDirector != null) stageDirector.OnAction(result);
+                ActionPresented?.Invoke(result);
+            }
             if (IsChartCompleted && !chartCompletionSent)
             {
                 chartCompletionSent = true;

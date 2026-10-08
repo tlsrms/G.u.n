@@ -650,6 +650,7 @@ internal static class RoomRunChecks
         Console.WriteLine($"PASS: {checks} movement timing/state checks.");
         BeatChartChecks.Run();
         MapChartChecks.Run();
+        MafiaAmbushChecks.Run();
         OffsetCalibrationChecks.Run();
     }
 }

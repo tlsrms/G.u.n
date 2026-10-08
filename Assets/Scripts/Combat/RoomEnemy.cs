@@ -17,8 +17,10 @@ namespace Gun.RoomRhythm
         private Vector3 bodyPosition, bodyScale, defeatPosition, defeatDirection;
         private Quaternion bodyRotation, defeatRotation;
         private Color bodyColor;
+        private Sprite standingSprite;
+        private static Sprite fallenSprite;
         private float defeatedAt, defeatTurn;
-        private const float FallDuration = .34f, FadeStartsAt = .62f, DefeatDuration = .9f;
+        private const float FallDuration = .32f, FadeStartsAt = 1.05f, DefeatDuration = 1.45f;
         private const float OutlineRadius = 0.38f;
         private const int Segments = 128;
         public string Id => enemyId;
@@ -72,9 +74,12 @@ namespace Gun.RoomRhythm
                 bodyRotation = body.transform.localRotation;
                 bodyScale = body.transform.localScale;
                 bodyColor = body.color;
+                standingSprite = body.sprite;
                 hasBodyPose = true;
             }
+            if (fallenSprite == null) fallenSprite = Resources.Load<Sprite>("RegularEnemyFallen");
             defeated = false;
+            body.sprite = standingSprite;
             body.transform.localPosition = bodyPosition;
             body.transform.localRotation = bodyRotation;
             body.transform.localScale = bodyScale;
@@ -108,7 +113,7 @@ namespace Gun.RoomRhythm
             defeatRotation = body.transform.localRotation;
             direction.z = 0;
             defeatDirection = direction.sqrMagnitude > .0001f ? direction.normalized : -body.transform.up;
-            defeatTurn = Vector3.Dot(body.transform.right, defeatDirection) >= 0 ? -78f : 78f;
+            defeatTurn = Vector3.Dot(body.transform.right, defeatDirection) >= 0 ? -8f : 8f;
             judgmentFrame.gameObject.SetActive(false);
             outline.enabled = timingRing.enabled = false;
             PresentDefeat(true);
@@ -120,16 +125,21 @@ namespace Gun.RoomRhythm
             float elapsed = Mathf.Max(0, Time.unscaledTime - defeatedAt);
             visuals.SetActive(visible && elapsed < DefeatDuration);
             if (!visible || elapsed >= DefeatDuration) return;
-            float fall = Mathf.Clamp01((elapsed - .035f) / FallDuration);
-            float settle = 1 - (1 - fall) * (1 - fall) * (1 - fall);
-            float kick = 1 - Mathf.Pow(1 - Mathf.Clamp01(elapsed / .2f), 3);
-            float impact = Mathf.Sin(Mathf.Clamp01((elapsed - .27f) / .12f) * Mathf.PI);
-            body.transform.position = defeatPosition + defeatDirection * (.48f * kick);
+            // The standing art is a top view: spinning it cannot read as lying down.
+            // Under the hit flash, unfold a full-body fallen pose toward the floor.
+            float fall = Mathf.Clamp01((elapsed - .07f) / FallDuration);
+            float settle = Mathf.SmoothStep(0, 1, fall);
+            float kick = 1 - Mathf.Pow(1 - Mathf.Clamp01(elapsed / .24f), 3);
+            float impact = Mathf.Sin(Mathf.Clamp01((elapsed - .35f) / .12f) * Mathf.PI);
+            bool lying = elapsed >= .07f && fallenSprite != null;
+            body.sprite = lying ? fallenSprite : standingSprite;
+            body.transform.position = defeatPosition + defeatDirection * (.30f * kick);
             body.transform.localRotation = defeatRotation * Quaternion.Euler(0, 0, defeatTurn * settle);
             body.transform.localScale = Vector3.Scale(bodyScale,
-                new Vector3(1 + .12f * settle + .06f * impact, 1 - .34f * settle - .08f * impact, 1));
-            Color tint = Color.Lerp(bodyColor, new Color(.43f, .43f, .46f, bodyColor.a), settle);
-            tint = Color.Lerp(tint, Color.white, 1 - Mathf.Clamp01(elapsed / .065f));
+                new Vector3(1 + .035f * impact, lying ? .32f + .68f * settle - .04f * impact
+                    : 1 - .15f * Mathf.Clamp01(elapsed / .07f), 1));
+            Color tint = Color.Lerp(bodyColor, new Color(.66f, .66f, .69f, bodyColor.a), settle);
+            tint = Color.Lerp(tint, Color.white, 1 - Mathf.Clamp01(elapsed / .09f));
             tint.a = bodyColor.a * (1 - Mathf.SmoothStep(0, 1,
                 Mathf.InverseLerp(FadeStartsAt, DefeatDuration, elapsed)));
             body.color = tint;
