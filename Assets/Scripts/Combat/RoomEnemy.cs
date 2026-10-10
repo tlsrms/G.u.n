@@ -95,7 +95,7 @@ namespace Gun.RoomRhythm
                 line.useWorldSpace = false;
                 line.loop = true;
                 line.positionCount = Segments;
-                line.startWidth = line.endWidth = chart.enemyLineWidth;
+                line.startWidth = line.endWidth = ActionCueStyle.ShotLineWidth(chart.enemyLineWidth);
             }
             SetRadius(outline, OutlineRadius);
             outline.enabled = timingRing.enabled = true;
@@ -166,7 +166,7 @@ namespace Gun.RoomRhythm
             timingRing.enabled = showFrame;
             SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target,
                 OutlineRadius, chart.enemyLineWidth, chart.Timing));
-            ActionCueStyle.ApplyShotRings(outline, timingRing, shotPriority, chart.enemyLineWidth);
+            ActionCueStyle.ApplyShotRings(outline, timingRing, shotPriority, time, target, chart.Timing, chart.enemyLineWidth);
         }
     }
 }

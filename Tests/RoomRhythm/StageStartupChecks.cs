@@ -54,6 +54,19 @@ internal static class StageStartupChecks
 
     public static void Main()
     {
+        using (var rig = new Rig())
+        {
+            StageSelection.IsRecordRun = true; StageSelection.MusicVolume = .37f;
+            rig.Timeline.Begin(new AudioClip());
+            Near(rig.Audio.volume, .37, "selected stage volume reaches gameplay audio");
+            StageSelection.MusicVolume = 0;
+            rig.Timeline.Begin(new AudioClip());
+            Near(rig.Audio.volume, 0, "muted preview stays muted in gameplay");
+            StageSelection.IsRecordRun = false; rig.Audio.volume = .6f;
+            rig.Timeline.Begin(new AudioClip());
+            Near(rig.Audio.volume, .6, "non-record runs retain authored audio volume");
+            StageSelection.MusicVolume = 1;
+        }
         // Editor time and play time have different origins, just like the reported -13,218 s input.
         InputState.currentTime = 13218;
         AudioSettings.dspTime = 200;

@@ -39,8 +39,7 @@ G.u.n/
 │  ├─ Audio/                   음악·카운트인·스테이지 효과음
 │  ├─ Resources/               판정 설정 JSON, 화면 효과 셰이더·머티리얼
 │  ├─ Settings/                렌더 파이프라인·렌더러·씬 템플릿 설정
-│  ├─ UI Toolkit/              UI 테마
-│  └─ _Recovery/               기본 탐색 대상에서 제외; 복구 요청 때 확인
+│  └─ UI Toolkit/              UI 테마
 ├─ Tests/RoomRhythm/            C# 로직 검사, Python 에셋 검사, 실행 스크립트
 ├─ Tools/
 │  └─ Characters/              캐릭터 제작·미리보기 스크립트와 템플릿
@@ -48,7 +47,7 @@ G.u.n/
 └─ ProjectSettings/            Unity 프로젝트 설정
 ```
 
-루트의 `.csproj`, `.slnx`는 IDE·컴파일 관련 파일이다. 게임 기능 수정의 기본 진입점은 아니다. `Assets/InputSystem_Actions.inputactions`는 입력 액션 에셋이며, 실제 입력 처리 변경은 먼저 아래 코드 진입점에서 사용 관계를 확인한다. 루트 에셋인 `Assets/DefaultVolumeProfile.asset`, `Assets/UniversalRenderPipelineGlobalSettings.asset`는 화면·렌더링 설정 작업 때만 확인한다.
+루트의 `G.u.n.slnx`는 현재 IDE 솔루션이며 `Assembly-CSharp.csproj`, `Assembly-CSharp-Editor.csproj`를 연결한다. `.csproj`의 Unity 참조는 회귀 검사 컴파일에도 사용한다. 게임 기능 수정의 기본 진입점은 아니다. `Assets/InputSystem_Actions.inputactions`는 입력 액션 에셋이며, 실제 입력 처리 변경은 먼저 아래 코드 진입점에서 사용 관계를 확인한다. 루트 에셋인 `Assets/DefaultVolumeProfile.asset`, `Assets/UniversalRenderPipelineGlobalSettings.asset`는 화면·렌더링 설정 작업 때만 확인한다.
 
 ## 작업별 코드 진입점
 
@@ -71,17 +70,20 @@ G.u.n/
 | 적 좌표 입력·마우스 배치 | `Editor/Charts/MapChartWindow.cs`, `Editor/Charts/MapChartCanvas.cs` | `Gameplay/TimingRules.cs`의 `EnemyPlacement`가 기존 8방향 또는 방 기준 X/Y를 평가. `Charts/MapChart.cs`·`Charts/BeatChart.cs`·`Charts/MapTimelineEditing.cs`가 저장/변환/복제, `Editor/Charts/MapSceneStore.cs`·`Combat/RoomEnemy.cs`·`Combat/RoomCombat.cs`가 씬 적용/런타임 연결. `MapChartChecks.cs` 검사 |
 | Inspector 편집 | `Editor/Inspectors/RoomInspectors.cs` | 편집 대상 데이터 모델 |
 | 방·문·적의 씬 연결과 표시 | `World/RoomBinding.cs`, `World/RoomDoor.cs`, `Combat/RoomEnemy.cs` | `Gameplay/RoomSession.cs`, `Combat/RoomCombat.cs` |
-| 입력 순서 색상·이동 화살표 | `Gameplay/RoomRun.cs`의 `PreviewShots`, `Presentation/ActionCueStyle.cs` | 방·적·문의 표시 범위·밝기·판정선은 기존 채보 등장 규칙 사용. `RoomBinding`은 기존 전체 사각 테두리에 진입 방향 화살표만 추가. 적·문은 흰 고정 기준 링과 빨강(다음) → 주황(그다음) → 노랑(이후) 수축 링 사용. 미처리 적·문을 함께 시간순으로 비교하고 동시 시각은 같은 색, 처리·재시작 시 순서 갱신. `RoomSession`·`RoomCombat`이 일반 문·적·전용 표적에 같은 순서를 전달. 검사: `Tests/RoomRhythm/RoomRunChecks.cs`, `EnemyRestartChecks.cs` |
+| 입력 순서 색상·이동 화살표 | `Gameplay/RoomRun.cs`의 `PreviewCues`·`CueOrder`, `Presentation/ActionCueStyle.cs` | 이동·적·문을 함께 시간순으로 묶어 현재 판정선은 흰색이며, 색 전환과 실제 입력 판정은 동일한 `TimingWindow`를 사용해 이동 청록·사격 빨강으로 표시. `Presentation/ApproachGeometry.cs`는 허용 구간 시작에 기준선과 미세한 틈을 남기고, 정박에 겹친 뒤 Late 끝까지 유지하도록 이동을 계산. 설정된 판정 범위는 유지. 이후 판정선은 차례로 어두워지는 회색이며 동시 입력은 같은 순위. 흰 기준 링·방 벽·본체·등장 방식·방향 화살표는 유지. `RoomSession`·`RoomCombat`·`StagePropTarget`과 `Editor/Charts/MapChartCanvas.cs`가 같은 색 규칙 사용. 순서는 상태 변경 시 재계산하고 재시작·사망에 맞춰 갱신/유지. 검사: `Tests/RoomRhythm/RoomRunChecks.cs`, `EnemyRestartChecks.cs` |
 | 일반 적 피격·쓰러짐 | `Combat/RoomEnemy.cs`의 `Defeat`, `Combat/RoomCombat.cs`의 `PresentHit` | 명중 즉시 판정 대상에서 제외하고 피격 반동 뒤 `Assets/Resources/RegularEnemyFallen.png`의 누운 자세를 펼쳐 유지·페이드. 방 표시 수명에 맞춰 숨기며 `Configure`로 원래 스프라이트·자세·판정선을 복원. 자세 원본은 `Tools/Characters/BuildRegularEnemy.py`의 `FALLEN_SHAPES`(`--fallen-only`). 검사: `Tests/RoomRhythm/EnemyRestartChecks.cs` |
 | 조준·사격·대상 선택 | `Combat/RoomAim.cs`, `Combat/RoomCombat.cs`, `Combat/TargetSelection.cs` | `Combat/StageActionTarget.cs`, `Combat/StagePropTarget.cs` |
+| 이동 중 조준·옆걸음·뒷걸음 | `Characters/TopDownLegMotion.cs` | `RoomAim`의 상체 조준 회전 이후 이동을 몸 기준으로 평가. 좌우 골반 연결점 고정, 뒷걸음 디딤 반전, 옆걸음 보폭·회전 제한. `Assets/Prefabs/Characters/TopDownLegs.md` |
+| 총구 섬광·바닥 빛·적 그림자 | `Presentation/MuzzleLighting.cs`, `Assets/Resources/MuzzleGroundLight.shader` | `RoomAim.Configure`에서 생성하고 `Fire`에서 실제 총구 위치로 짧은 빛을 발생. `RoomBinding`의 방 경계로 바닥 빛을 제한하고 표시 중인 `RoomEnemy.Body` 위치·크기로 바닥에 투영한 그림자를 계산. 재시작·숨김 시 제거하며 기존 둥근 총구 스프라이트는 사용하지 않음. URP 그림자 캐스터 대신 탑뷰 바닥 평면에 빛·그림자를 합성 |
 | 카메라·판정 표시·사망/이동 연출 | `Presentation/RoomCamera.cs`, `Presentation/RoomFeedback.cs`, `UI/JudgmentPresentation.cs` | `Presentation/RoomCinematics.cs`, `Presentation/RoomRestartTransition.cs`, `UI/DebugTimingBar.cs` |
 | 화면 상단 채보 진행도 | `UI/StageProgressHud.cs` | `RoomSession.Start`에서 자동 생성하는 화면 고정 Canvas. 마지막 이동·적 판정까지의 시간으로 바·퍼센트를 표시하며 사망 시 정지, 재시작 시 초기화, 채보 완료 시 100%. 카메라 배율과 독립적이며 화면 안전 영역 반영 |
 | 적 등장 확대·판정 HUD 잘림 | `RoomCombat.HasVisibleEnemies`, `Gameplay/RoomSession.cs`의 `SetCombatFocus`, `Presentation/RoomCamera.cs`의 `FitHud` | 실제 등장한 현재 방 적만 전투 확대. 카메라 자식 판정 글자/바의 위치·크기는 배율 보정하며 판정 바는 기본 화면 안에 배치. 기본 맵 배율과 보스 인트로 구도는 별도 |
 | 스테이지 전용 진행·보스·재시작 | `Stages/StageDirector.cs`, `Stages/Mafia/MafiaStageDirector.cs` | `Stages/StageResetState.cs`, 아래 확장 문서 |
 | 마피아 복도·사무실·창문 탈출 | `Stages/Mafia/MafiaStageDirector.cs`, `Stages/Mafia/MafiaIntroTiming.cs` | `Stages/Mafia/MafiaOfficeSet.cs`의 소품·연기·탄환·음향, `Presentation/RoomCamera.cs`의 구도 전환, `RoomEnemy.TargetAt`·`RoomCombat`의 출현/조준 위치, `RoomDoor`의 외형 교체. 사용법은 `Assets/Scenes/Stages/MafiaStage01.md` |
 | 씬에서 복제하는 고기방패 등장·회피 연출 | `Stages/Mafia/MafiaShieldAmbush.cs`, `Stages/Mafia/MafiaAmbushTiming.cs` | `Assets/Prefabs/Characters/MafiaShieldAmbush.prefab`과 같은 이름의 사용 안내. `Editor/Inspectors/MafiaShieldAmbushInspector.cs`에서 이동 채보·벽 방향·선행 박자 지정. `RoomSession.RunReset`·`ActionPresented`로 복원/판정 결과만 구독하며 기존 맵 에디터는 그대로 사용. 검사: `MafiaAmbushChecks.cs`, `MafiaAmbushAssetChecks.py` |
-| 클리어 후 이동·안전지대 | `Stages/StageProgression.cs`, `Stages/SafeRoomController.cs` | `Assets/Scenes/README.md` |
-| 허브·곡 선택·턴테이블 | `UI/StageSelectScene.cs`, `UI/StageSelectSurface.cs`, `Stages/StageSelection.cs` | `Assets/Scenes/Hub/`, `Assets/Scenes/README.md` |
+| 클리어 후 이동·안전지대 | `Stages/StageProgression.cs`, `Stages/SafeRoomController.cs`, `Stages/SafeRoomTransit.cs` | 튜토리얼 5개가 `Assets/Scenes/SafeRooms/SafeRoom.unity` 하나를 공유. `StageProgression.nextTutorialScene`을 일회성 전환 상태로 전달하며 왼쪽 통로 입장→입구 문 닫힘→오른쪽 출구 개방 순서로 진행. Esc 복귀는 해당 튜토리얼 재입장 경로를 전달. 5번 클리어 후 안전방 출구는 허브. 허브에서 고른 곡의 클리어/Esc는 기존 허브 복귀 유지. `Assets/Scenes/README.md`, `Tests/RoomRhythm/SafeRoomChecks.cs`, `SafeRoomSceneChecks.py` |
+| 허브·곡 선택·턴테이블 | `UI/StageSelectScene.cs`, `UI/StageSelectTurntable.cs` | `StageSelectScene`은 전환·선택·맵 상태와 씬 연결을 담당. `StageSelectTurntable.Layout.cs`는 흑백 데크·레코드·톤암·볼륨 UI 생성, 본 파일은 조작과 표시 갱신을 담당. `RecordDiscDrag`로 판과 구역을 회전하며 글자는 수평 유지. `RecordSelectionGeometry`가 바늘 도착점 아래 구역을 강조하고 `RecordTurntableState`가 톤암·재생 단계를 관리. 길이가 고정된 톤암 클릭 시 재생·중앙 기록 표시, 재클릭 시 선택 복귀. `RecordDialGraphic`·`StageSelectSurface`는 CanvasRenderer를 갖춘 그래픽. 맵 턴테이블·배경 페이드·데크 등장/퇴장·E 재진입 유지. START 후 맵 출구로 진입하며 `Stages/StageSelection.cs`는 씬 사이 선택 상태 전달만 담당. 안내: `Assets/Scenes/README.md`; 검사: `Tests/RoomRhythm/RecordTurntableChecks.cs`, `StageStartupChecks.cs` |
+| 선택 곡 미리듣기·곡별 볼륨 | `Audio/StageMusicPreview.cs`, `Stages/StageVolumeStore.cs` | `StageSelectScene`이 미리듣기를 생성·정지하고 화면 전환 중에도 unscaled 시간으로 갱신. 로딩 완료/실패 이벤트로 톤암 재생 상태를 연결하며 취소·곡 교체 후 이전 로딩 결과를 무시. `StageVolumeStore`는 기존 PlayerPrefs 키로 곡별 음량을 보존. 선택된 음량은 `StageSelection.MusicVolume`을 통해 `Audio/SongTimeline.cs`가 플레이에 적용. 검사: `Tests/RoomRhythm/StageMusicPreviewChecks.cs`, `StageRecordStoreChecks.cs` |
 | 최고 기록 저장 | `Stages/StageRecordStore.cs` | `Tests/RoomRhythm/StageRecordStoreChecks.cs` |
 | 플레이어 관절·걷기 | `Characters/GeometricPlayerRig.cs`, `Characters/TopDownLegMotion.cs` | `Assets/Prefabs/Characters/README.md`, `TopDownLegs.md` |
 | 아날로그 화면 효과 | `Presentation/AnalogScreenFeature.cs` | `Assets/Resources/AnalogScreen.shader`, `RetroVideo.shader`, 관련 렌더링 설정 |
@@ -93,6 +95,7 @@ G.u.n/
 - 일반 적의 선택적 자유 배치는 맵·비트·실행 노트에 `EnemyPlacement`로 보존한다. 에디터 미리보기·씬 배치·게임 설정/검증은 같은 좌표 평가를 사용한다. 보스 전용 표적의 위치는 기존 `StageActionTarget.PositionAt`이 계속 소유한다.
 - 일반 적의 재시작 배치 검증은 `RoomEnemy.PlacementPosition`(설정된 채보 기준 위치)을 사용하고, 등장·조준은 `TargetAt(time)`을 사용한다. 최초 실행/에디터 검증에서는 실제 씬 위치를 검사한다. 복도 등장 연출 후 반복 재시작 검사는 `Tests/RoomRhythm/EnemyRestartChecks.cs`에 있다.
 - `RoomSession`은 채보, `SongTimeline`, `RoomKeyboard`, `RoomRun`, 방 연결과 전투·피드백을 연결하는 런타임 진입점이다. 판정 문제는 `RoomRun`부터, 표시 문제는 해당 표시 컴포넌트부터 확인한다.
+- 입력 판정의 기준은 `Gameplay/TimingRules.cs`의 `TimingWindow`다. `Presentation/ActionCueStyle.cs`와 `ApproachGeometry.cs`는 같은 범위를 받아 색과 위치만 계산하며, 표시 보정을 위해 입력 허용 시간을 별도로 변경하지 않는다.
 - `StageDirector`는 스테이지별 진행 확장점이다. `RoomSession`의 한 채보 판정 결과에 반응하고 채보 완료 뒤 퇴장을 진행한다. 재시작은 `StageResetState` 및 `Stages/StageDirector.md`를 확인한다.
 - 마피아 씬과 허브는 `Stage1_Full.asset` 하나를 참조한다. 사용자 새 채보의 복도 뒤 2칸 폭 사무실에서 15박 인트로를 거쳐 위쪽 창문을 깨고 탈출한다. `MafiaStageDirector`는 방 ID와 실제 적용 노트로 시각·위치를 다시 연결하며 `MafiaOfficeSet`의 소품은 맵 재생성 계층 밖에 둔다. 구형 고정 Shots·보스 표적 경로는 제거했다. 이후 보스전·범용 연출 편집기는 후속 작업이다.
 - 마피아 모션 편집은 Unity 기본 Animation 창과 `Assets/Animations/Mafia/`를 사용한다. 15개 클립과 기존 연습 클립을 Controller에서 선택한다. 게임에서는 Animator 자동 재생을 끄고 `MafiaStageDirector`가 흡연·총 꺼내기·견착·3발 클립을 음악 시각으로 샘플링한다. 방패 등장·대기·난사·퇴장 4개는 독립 `MafiaShieldAmbush` 프리팹이 사용하며 좌우 전환·부위 피격 연결은 후속 작업이다.

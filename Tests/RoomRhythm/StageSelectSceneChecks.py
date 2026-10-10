@@ -206,8 +206,8 @@ for index in range(1, 6):
     session = sessions[0]
     assert field(session, "restartOnClear") == "0"
     progression = scripts(objects, return_guid)[0]
-    assert field(progression, "nextSafeScene").strip('"') == (f"SafeRoom{index:02}" if index < 5 else "StageSelectScene")
-    assert field(progression, "entrySafeScene").strip('"') == ("AwakeningScene" if index == 1 else f"SafeRoom{index-1:02}")
+    assert field(progression, "nextSafeScene").strip('"') == "SafeRoom"
+    assert field(progression, "entrySafeScene").strip('"') == ("AwakeningScene" if index == 1 else "SafeRoom")
     chart_path = f"Assets/RoomChart/Tutorial_{index}.asset"
     assert guid(chart_path) in field(session, "chart")
     chart = read(chart_path)
@@ -285,7 +285,7 @@ for path in (["Assets/Scenes/Development/MainScene.unity"]
     for renderer in (910000012, 910000022, 910000032):
         assert field(objects[renderer][1], "m_Enabled") == "0", "Duplicate pistol geometry"
 for path in (["Assets/Scenes/Hub/StageSelectScene.unity", "Assets/Scenes/Opening/AwakeningScene.unity"]
-             + [f"Assets/Scenes/SafeRooms/SafeRoom{i:02}.unity" for i in range(1, 5)]):
+             + ["Assets/Scenes/SafeRooms/SafeRoom.unity"]):
     objects = load(path)
     assert 4100000065 not in objects, "Old flattened player Image still attached"
     check_graphic_components(objects, path)

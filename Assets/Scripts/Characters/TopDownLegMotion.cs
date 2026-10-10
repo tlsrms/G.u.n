@@ -14,7 +14,7 @@ namespace Gun.RoomRhythm
         [SerializeField, Min(.1f)] private float teleportDistance = 4;
         private Vector3 lastPosition, leftRest, rightRest, leftScale, rightScale;
         private Quaternion leftRotation, rightRotation, leftKneeRotation, rightKneeRotation;
-        private float phase, movingTime;
+        private float phase, movingTime, strideHeading, strideDirection = 1;
         private bool ready, visible = true, moving;
 
         private void Awake()
@@ -60,7 +60,8 @@ namespace Gun.RoomRhythm
                 Hide();
                 return;
             }
-            if (!moving)
+            bool starting = !moving;
+            if (starting)
             {
                 phase = 0;
                 movingTime = 0;
@@ -71,18 +72,31 @@ namespace Gun.RoomRhythm
             movingTime += Time.unscaledDeltaTime;
             phase = (phase + Time.unscaledDeltaTime * cyclesPerSecond * 2 * Mathf.PI) % (2 * Mathf.PI);
             float step = Mathf.Sin(phase) * Mathf.SmoothStep(0, 1, movingTime / .08f);
-            Quaternion heading = Quaternion.Euler(0, 0, Mathf.Atan2(local.y, local.x) * Mathf.Rad2Deg - 90);
+            // Keep the pelvis attached to the facing torso. Backpedalling reverses
+            // the stride rather than turning the entire lower body through 180 degrees.
+            Vector3 travel = local.normalized;
+            float backward = travel.y < 0 ? -1 : 1;
+            Vector3 facingTravel = travel * backward;
+            float angle = Mathf.Atan2(facingTravel.y, facingTravel.x) * Mathf.Rad2Deg - 90;
+            float targetHeading = Mathf.Clamp(angle, -55, 55);
+            // Turning the aim across the strafe/backpedal boundary must not flip
+            // the feet in one frame while a room transition is still running.
+            strideHeading = starting ? targetHeading : Mathf.LerpAngle(strideHeading, targetHeading,
+                1 - Mathf.Exp(-Time.unscaledDeltaTime * 22));
+            strideDirection = starting ? backward : Mathf.MoveTowards(strideDirection, backward, Time.unscaledDeltaTime * 18);
+            Quaternion heading = Quaternion.Euler(0, 0, strideHeading);
             // Project a forward/backward step onto the floor. Passing through zero
             // tucks the leg under the torso; the hip never leaves its attachment.
-            leftHip.localPosition = heading * leftRest;
-            rightHip.localPosition = heading * rightRest;
-            float reach = step * Mathf.Clamp(stride / .265f, 0, 1.6f);
+            leftHip.localPosition = leftRest;
+            rightHip.localPosition = rightRest;
+            float reach = step * strideDirection * Mathf.Lerp(.7f, 1, Mathf.Abs(travel.y))
+                * Mathf.Clamp(stride / .265f, 0, 1.6f);
             leftHip.localScale = Vector3.Scale(leftScale, new Vector3(1, -reach, 1));
             rightHip.localScale = Vector3.Scale(rightScale, new Vector3(1, reach, 1));
-            leftHip.localRotation = heading;
-            rightHip.localRotation = heading;
-            leftKnee.localRotation = Quaternion.identity;
-            rightKnee.localRotation = Quaternion.identity;
+            leftHip.localRotation = heading * leftRotation;
+            rightHip.localRotation = heading * rightRotation;
+            leftKnee.localRotation = leftKneeRotation;
+            rightKnee.localRotation = rightKneeRotation;
         }
 
         private void Hide()

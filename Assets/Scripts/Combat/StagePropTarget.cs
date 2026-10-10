@@ -40,7 +40,7 @@ namespace Gun.RoomRhythm
             {
                 line.useWorldSpace = false; line.loop = true; line.positionCount = Segments;
                 line.transform.localScale = Vector3.one;
-                line.startWidth = line.endWidth = settings.enemyLineWidth;
+                line.startWidth = line.endWidth = ActionCueStyle.ShotLineWidth(settings.enemyLineWidth);
             }
             SetRing(outline, radius);
             visuals.SetActive(false);
@@ -69,7 +69,7 @@ namespace Gun.RoomRhythm
             SetRing(outline, radius);
             timingRing.enabled = showFrame;
             SetRing(timingRing, (float)ApproachGeometry.Radius(time, hitAt, radius, chart.enemyLineWidth, chart.Timing));
-            ActionCueStyle.ApplyShotRings(outline, timingRing, shotPriority, chart.enemyLineWidth);
+            ActionCueStyle.ApplyShotRings(outline, timingRing, shotPriority, time, hitAt, chart.Timing, chart.enemyLineWidth);
         }
 
         public override void OnHit(double time) => visuals.SetActive(false);

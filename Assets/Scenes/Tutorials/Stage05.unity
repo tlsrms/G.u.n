@@ -21834,8 +21834,9 @@ MonoBehaviour:
   m_Name: ""
   m_EditorClassIdentifier: ""
   session: {fileID: 820000545}
-  nextSafeScene: "StageSelectScene"
-  entrySafeScene: "SafeRoom04"
+  nextSafeScene: "SafeRoom"
+  entrySafeScene: "SafeRoom"
+  nextTutorialScene: "StageSelectScene"
   fade: {fileID: 4100000008}
   clearHold: 1.2
 --- !u!1001 &9500000000

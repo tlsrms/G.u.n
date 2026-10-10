@@ -30,6 +30,7 @@ namespace Gun.RoomRhythm
                 throw new System.ArgumentException("음악 재생 전 대기 시간은 0 이상의 유한한 값이어야 합니다.");
             source.Stop();
             source.clip = clip;
+            if (StageSelection.IsRecordRun) source.volume = StageSelection.MusicVolume;
             inputOffset = inputOffsetMs / 1000;
             source.loop = loopMusic;
             double dspNow = AudioSettings.dspTime;

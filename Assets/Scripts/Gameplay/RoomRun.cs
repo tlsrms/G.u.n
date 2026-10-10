@@ -3,22 +3,30 @@ using System.Collections.Generic;
 
 namespace Gun.RoomRhythm
 {
-    // Two distinct pending shot times. Simultaneous targets share the same color.
-    public struct ShotPreview
+    // Reusable chronological groups for every pending input, including movement.
+    public sealed class CueOrder
     {
         private const double SimultaneousTolerance = .000001;
-        private double first, second;
-        public static ShotPreview Empty => new ShotPreview {
-            first = double.PositiveInfinity, second = double.PositiveInfinity
-        };
+        private readonly List<double> times = new List<double>();
+        public void Clear() => times.Clear();
         public void Include(double time)
         {
-            if (time < first - SimultaneousTolerance) { second = first; first = time; }
-            else if (time > first + SimultaneousTolerance && time < second) second = time;
+            int index = times.BinarySearch(time);
+            if (index >= 0) return;
+            index = ~index;
+            if (index > 0 && Math.Abs(times[index - 1] - time) <= SimultaneousTolerance
+                || index < times.Count && Math.Abs(times[index] - time) <= SimultaneousTolerance) return;
+            times.Insert(index, time);
         }
-        // 0: red, 1: orange, 2: yellow. This never limits target visibility.
-        public int Priority(double time) => Math.Abs(time - first) <= SimultaneousTolerance ? 0
-            : Math.Abs(time - second) <= SimultaneousTolerance ? 1 : 2;
+        public int Priority(double time)
+        {
+            int index = times.BinarySearch(time);
+            if (index >= 0) return index;
+            index = ~index;
+            if (index > 0 && Math.Abs(times[index - 1] - time) <= SimultaneousTolerance) return index - 1;
+            if (index < times.Count && Math.Abs(times[index] - time) <= SimultaneousTolerance) return index;
+            return int.MaxValue;
+        }
     }
 
     public enum RunPhase { Ready, Waiting, Moving, Dead, Cleared }
@@ -43,7 +51,9 @@ namespace Gun.RoomRhythm
     // Pure state machine: caller submits timestamped input before advancing to frame time.
     public sealed class RoomRun
     {
-        private ShotPreview deathPreview = ShotPreview.Empty;
+        private readonly CueOrder cueOrder = new CueOrder();
+        private int cueVersion = -1, cueMoves = -1;
+        private RunPhase cuePhase;
         private readonly MoveNote[] notes;
         private readonly TimingWindow window;
         private readonly double moveDuration;
@@ -154,6 +164,8 @@ namespace Gun.RoomRhythm
 
         public void Reset()
         {
+            cueVersion = -1;
+            cueOrder.Clear();
             results.Clear();
             Phase = RunPhase.Ready;
             Failure = FailureReason.None;
@@ -341,18 +353,22 @@ namespace Gun.RoomRhythm
 
         public bool DoorBroken(int index) => brokenDoors[index];
 
-        public ShotPreview PreviewShots()
+        // Borrowed presentation data; reused until the run state changes.
+        public CueOrder PreviewCues()
         {
-            var preview = ShotPreview.Empty;
-            if (Phase == RunPhase.Dead) return deathPreview;
-            if (Phase == RunPhase.Ready || Phase == RunPhase.Cleared) return preview;
+            if (Phase == RunPhase.Dead) return cueOrder;
+            if (cueVersion == JudgmentVersion && cueMoves == CompletedMoves && cuePhase == Phase) return cueOrder;
+            cueVersion = JudgmentVersion; cueMoves = CompletedMoves; cuePhase = Phase;
+            cueOrder.Clear();
+            if (Phase == RunPhase.Ready || Phase == RunPhase.Cleared) return cueOrder;
             for (int i = CompletedMoves; i < notes.Length; i++)
             {
-                if (notes[i].hasDoor && !brokenDoors[i]) preview.Include(notes[i].doorTime);
+                if (Phase != RunPhase.Moving || i != CompletedMoves) cueOrder.Include(notes[i].HitTime);
+                if (notes[i].hasDoor && !brokenDoors[i]) cueOrder.Include(notes[i].doorTime);
             }
             for (int i = 0; i < enemies.Length; i++)
-                if (enemyRooms[i] >= CompletedMoves && !defeatedEnemies[i]) preview.Include(enemies[i].time);
-            return preview;
+                if (enemyRooms[i] >= CompletedMoves && !defeatedEnemies[i]) cueOrder.Include(enemies[i].time);
+            return cueOrder;
         }
 
         public bool RoomVisible(int index, double time, int previousOccurrence = -1)
@@ -452,7 +468,7 @@ namespace Gun.RoomRhythm
                 && (!notes[CompletedMoves].hasDoor || brokenDoors[CompletedMoves]);
             Death = FailedEnemy >= 0 ? DeathPresentation.Execution : earlyExit ? DeathPresentation.Departure
                 : movementInput.HasValue ? DeathPresentation.Collision : DeathPresentation.Execution;
-            deathPreview = PreviewShots();
+            PreviewCues();
             Phase = RunPhase.Dead;
             Failure = reason;
             LastGrade = grade;

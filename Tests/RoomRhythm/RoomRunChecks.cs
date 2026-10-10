@@ -140,6 +140,21 @@ internal static class RoomRunChecks
 
     public static void Main(string[] args)
     {
+        RecordTurntableChecks.Run();
+        foreach (int count in new[] { 1, 5, 8, 12 })
+        {
+            for (int i = 0; i < count; i++)
+            {
+                double angle = RecordSelectionGeometry.CenterAngle(i, count) * Math.PI / 180;
+                Check(RecordSelectionGeometry.SectorAt(Math.Cos(angle) * 220, Math.Sin(angle) * 220, count, 110, 310) == i,
+                    "tonearm drop selects its stationary sector center");
+                double boundary = (90 - (i + .00001) * 360 / count) * Math.PI / 180;
+                Check(RecordSelectionGeometry.SectorAt(Math.Cos(boundary) * 220, Math.Sin(boundary) * 220, count, 110, 310) == i,
+                    "clockwise sector boundaries select the adjacent intended stage");
+            }
+            Check(RecordSelectionGeometry.SectorAt(0, 0, count, 110, 310) == -1, "record center does not select a stage");
+            Check(RecordSelectionGeometry.SectorAt(311, 0, count, 110, 310) == -1, "drop outside vinyl does not select a stage");
+        }
         CheckAutomaticPlayback();
         if (args.Length > 0)
         {
@@ -238,55 +253,52 @@ internal static class RoomRunChecks
         Check(batched.Failure == FailureReason.TooLate, "batch ordering does not extend the success deadline");
         batched = NewRun(); batched.Advance(2.08); batched.Advance(2.14);
         Check(batched.Failure == FailureReason.TooLate, "missing input expires when input batch reaches deadline");
-        foreach (double lead in new[] { .05, .25, 1.0, 8.0 })
+        foreach (var timing in new[] { Window, new TimingWindow { early = .25, accurate = .05, late = .375 } })
         {
-            double start = 10 - lead;
-            double R(double time) => ApproachGeometry.FixedStartRadius(time, start, 10, 6, 3);
-            Check(Math.Abs(R(start) - 6) < 1e-9, "Every room starts at the same size regardless of lead time");
-            Check(Math.Abs(R(start + lead * .5) - 4.5) < 1e-9, "Each room scales using its own remaining duration");
-            Check(Math.Abs(R(10) - 3) < 1e-9, "Room frame reaches the wall on the exact beat");
-            Check(R(10 + lead * .1) < 3, "Room frame keeps shrinking past a missed beat");
-            Check(R(start - 1) == 6, "Seeking before appearance does not inflate the fixed starting size");
-        }
-        Check(ApproachGeometry.FixedStartRadius(2, 2, 2, 6, 3) == 3, "Zero lead time resolves immediately without division by zero");
-        Check(ApproachGeometry.FixedStartRadius(1, 0, 2, 6, 9) == 7.5,
-            "A twelve-unit frame can expand toward an eighteen-unit room side");
-        Check(ApproachGeometry.FixedStartRadius(2, 0, 2, 6, 9) == 9,
-            "An expanding frame reaches the room edge on the exact beat");
-        Check(ApproachGeometry.FixedStartRadius(1, 0, 2, 6, 6) == 6,
-            "Equal starting and target sizes remain stable");
-        Check(ApproachGeometry.FixedStartRadius(.1, 0, .25, 6, 3)
-            < ApproachGeometry.FixedStartRadius(.1, 0, 2, 6, 3), "Short lead time shrinks faster than long lead time");
-        foreach (double radius in new[] { .38, 3.0 })
-        foreach (double width in new[] { .1, .2, .3 })
-        foreach (var timing in new[] { Window, new TimingWindow { early = .25, accurate = .05, late = .375 }.Symmetric })
-        {
-            double R(double time) => ApproachGeometry.Radius(time, 2, radius, width, timing);
-            Check(Math.Abs(R(2) - radius) < 1e-10, "centerlines coincide at exact timing");
-            Check(Math.Abs(R(2 - timing.early) - radius - width) < 1e-10, "outer contact matches early window start");
-            Check(R(2 - timing.early - .001) - radius > width, "no overlap before success window");
-            Check(Math.Abs(R(2 - timing.early + .001) - radius) < width, "positive overlap just inside early window");
-            Check(R(2 + timing.late * .5) < radius && radius - R(2 + timing.late * .5) < width,
-                "late approach keeps shrinking inside white outline");
-            Check(Math.Abs(radius - R(2 + timing.late) - width) < 1e-10
-                && timing.Judge(2 + timing.late, 2) == TimingGrade.Late, "last contact is an inclusive late success");
-            Check(R(2 + timing.late + .01) < R(2 + timing.late), "failure frame moves past contact instead of clamping to white outline");
-            double step = .01;
-            double distance = ApproachGeometry.Speed(width, timing) * step;
-            foreach (double time in new[] { -3.0, 0, 2 - timing.early, 2.0, 2 + timing.late * .5 })
-                Check(Math.Abs(R(time) - R(time + step) - distance) < 1e-10,
-                    "constant speed through anticipation, early and late windows");
-            if (radius == 3)
-                foreach (double offset in new[] { -1.01, -.9999, -.8, -.2, 0, .2, .8, .9999, 1, 1.01 }) {
-                    double time = 2 + offset * timing.early;
-                    TimingGrade grade = timing.Judge(time, 2);
-                    bool accepted = grade == TimingGrade.Early || grade == TimingGrade.Accurate || grade == TimingGrade.Late;
-                    Check(RoomStrokesOverlap(R(time), width) == accepted,
-                        "actual wall/approach rectangles including corners agree with judgment");
-                    double growing = ApproachGeometry.ExpandingRadius(time, 2, radius, width, timing);
-                    Check(RoomStrokesOverlap(growing, width) == accepted,
-                        "expanding door outline overlaps for the same success window");
-                }
+            double opens = 10 - timing.early, closes = 10 + timing.late;
+            foreach (double lead in new[] { 0, .05, .25, 1.0, 8.0 })
+            foreach (double targetRadius in new[] { 3.0, 6.0, 9.0 })
+            {
+                const double width = .1;
+                double start = 10 - lead;
+                double direction = Math.Sign(6 - targetRadius);
+                double gap = Math.Min(ApproachGeometry.EntryDistance(width), Math.Abs(6 - targetRadius));
+                double R(double time) => ApproachGeometry.FixedStartRadius(time, start, 10, 6, targetRadius, timing, width);
+                Check(R(start - 1) == 6, "Seeking before appearance preserves start size");
+                if (start < opens)
+                    Check(Math.Abs(R(start) - 6) < 1e-9, "Room starts at authored size");
+                Check(Math.Abs(R(opens) - targetRadius - direction * gap) < 1e-9,
+                    "Room reaches a small gap at the actual early boundary");
+                Check(Math.Abs(R((opens + 10) * .5) - targetRadius - direction * gap * .5) < 1e-9,
+                    "Room closes its remaining gap during the accepted early interval");
+                foreach (double time in new[] { 10, closes - .001, closes })
+                    Check(R(time) == targetRadius, "Room holds at the wall from the beat through late");
+                if (start < opens)
+                    Check(Math.Abs(R(opens - 1e-8) - R(opens)) < 1e-5,
+                        "Visible room approach is continuous at the color change");
+                double after = R(closes + .001);
+                Check(targetRadius == 6 ? after == 6 : (after - targetRadius) * (targetRadius - 6) > 0,
+                    "Room resumes only after expiry");
+            }
+            foreach (double radius in new[] { .38, 3.0 })
+            foreach (double width in new[] { .1, .2, .3 })
+            {
+                double R(double time) => ApproachGeometry.Radius(time, 10, radius, width, timing);
+                double E(double time) => ApproachGeometry.ExpandingRadius(time, 10, radius, width, timing);
+                double gap = ApproachGeometry.EntryDistance(width);
+                Check(Math.Abs(R(opens) - radius - gap) < 1e-9 && gap > width * 1.08,
+                    "Shot strokes remain slightly separated when actual input opens");
+                Check(Math.Abs(E(opens) - radius + gap) < 1e-9,
+                    "Expanding geometry uses the same entry gap");
+                Check(Math.Abs(R((opens + 10) * .5) - radius - gap * .5) < 1e-9,
+                    "Ring smoothly closes the gap during early success");
+                foreach (double time in new[] { 10, closes - .001, closes })
+                    Check(R(time) == radius && E(time) == radius, "Rings hold from beat through late");
+                Check(Math.Abs(R(opens - 1e-8) - R(opens)) < 1e-5,
+                    "Ring approach is continuous at color change");
+                Check(R(opens - .001) > radius + gap && R(closes + .001) < radius,
+                    "Ring stays outside before input opens and resumes after expiry");
+            }
         }
         var symmetric = new TimingWindow { early = .25, accurate = .05, late = .375 }.Symmetric;
         Check(symmetric.early == symmetric.late && symmetric.early + symmetric.late == .625,
@@ -647,7 +659,7 @@ internal static class RoomRunChecks
         combat.Press(MoveDirection.Down, 6);
         Check(combat.ShootEnemy(2, 7) && combat.ShootEnemy(3, 7.5) && combat.ShootEnemy(4, 8)
             && combat.Phase == RunPhase.Cleared, "full scene enemy-door-movement chart clears");
-        CheckShotOrder();
+        CheckCueOrder();
         Console.WriteLine($"PASS: {checks} movement timing/state checks.");
         BeatChartChecks.Run();
         MapChartChecks.Run();
@@ -655,7 +667,7 @@ internal static class RoomRunChecks
         OffsetCalibrationChecks.Run();
     }
 
-    private static void CheckShotOrder()
+    private static void CheckCueOrder()
     {
         var moves = new[] {
             new MoveNote { destinationId = "north", direction = MoveDirection.Up, hasDoor = true, doorTime = 2, moveDelay = 1 },
@@ -671,31 +683,36 @@ internal static class RoomRunChecks
         var run = new RoomRun(moves, Window, .2, enemies);
         run.Begin();
         Check(run.RoomVisible(3, 0) && run.RoomFrameVisible(3, 0) && run.EnemyVisible(3, 0),
-            "original authored visibility allows distant rooms, frames and enemies");
-        var preview = run.PreviewShots();
-        Check(preview.Priority(1) == 0 && preview.Priority(2) == 1 && preview.Priority(4) == 2,
-            "enemy and door shot order is red, orange, yellow");
+            "cue colors do not limit authored visibility");
+        var preview = run.PreviewCues();
+        Check(preview.Priority(1) == 0 && preview.Priority(2) == 1 && preview.Priority(3) == 2
+            && preview.Priority(4) == 3 && preview.Priority(6) == 4 && preview.Priority(8) == 5 && preview.Priority(9) == 6,
+            "movement, doors and enemies share a complete chronological order");
+        Check(ReferenceEquals(preview, run.PreviewCues()), "unchanged frames reuse cue storage");
         Check(run.ShootEnemy(0, 1), "first shot succeeds");
-        preview = run.PreviewShots();
-        Check(preview.Priority(2) == 0 && preview.Priority(4) == 1 && preview.Priority(9) == 2,
-            "door becomes red and later enemies advance their colors");
+        preview = run.PreviewCues();
+        Check(preview.Priority(2) == 0 && preview.Priority(3) == 1 && preview.Priority(4) == 2,
+            "consumed enemy promotes door then movement then next enemy");
         Check(run.ShootDoor(0, 2), "door shot succeeds");
-        preview = run.PreviewShots();
-        Check(preview.Priority(4) == 0 && preview.Priority(4 + 1e-8) == 0 && preview.Priority(9) == 1,
-            "simultaneous enemies share a color and movement does not consume a shot color");
+        preview = run.PreviewCues();
+        Check(preview.Priority(3) == 0 && preview.Priority(4) == 1 && preview.Priority(4 + 1e-8) == 1,
+            "movement becomes active and simultaneous enemies share the next shade");
         run.Press(MoveDirection.Up, 3);
-        Check(run.PreviewShots().Priority(4) == 0, "moving preserves the next shot color");
+        Check(run.PreviewCues().Priority(4) == 0 && run.PreviewCues().Priority(3) == int.MaxValue,
+            "consumed movement no longer holds the active color");
         Check(run.ShootEnemy(1, 4), "first simultaneous shot succeeds");
-        Check(run.PreviewShots().Priority(4 + 1e-8) == 0, "remaining simultaneous enemy stays red");
+        Check(run.PreviewCues().Priority(4 + 1e-8) == 0, "remaining simultaneous enemy stays active");
         Check(run.ShootEnemy(2, 4 + 1e-8), "second simultaneous shot succeeds");
-        Check(run.PreviewShots().Priority(9) == 0, "last pending shot is red");
+        Check(run.PreviewCues().Priority(6) == 0 && run.PreviewCues().Priority(9) == 2,
+            "next movement takes priority over distant shooting");
         run.Press(MoveDirection.Right, 6); run.Press(MoveDirection.Down, 8);
-        Check(run.ShootEnemy(3, 9) && run.Phase == RunPhase.Cleared, "full shot sequence clears normally");
+        Check(run.ShootEnemy(3, 9) && run.Phase == RunPhase.Cleared, "full sequence clears normally");
+        Check(run.PreviewCues().Priority(9) == int.MaxValue, "cleared run has no active cue");
         run.Reset(); run.Begin();
-        Check(run.PreviewShots().Priority(1) == 0 && run.RoomVisible(3, 0),
-            "restart restores initial shot order and original room visibility");
+        Check(run.PreviewCues().Priority(1) == 0 && run.RoomVisible(3, 0),
+            "restart restores initial order without changing visibility");
         run.Advance(1.2);
-        Check(run.Phase == RunPhase.Dead && run.PreviewShots().Priority(1) == 0,
-            "death preserves shot colors");
+        Check(run.Phase == RunPhase.Dead && run.PreviewCues().Priority(1) == 0,
+            "death preserves the pending cue order");
     }
 }

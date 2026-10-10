@@ -10,6 +10,7 @@ $compiler = Join-Path $unityData 'DotNetSdkRoslyn/csc.dll'
 $runtime = Join-Path $unityData 'NetCoreRuntime/dotnet.exe'
 $standard = [string]($references | Where-Object Include -eq 'netstandard').HintPath
 $rules = Join-Path $root 'Assets/Scripts/Gameplay/TimingRules.cs'
+$approach = Join-Path $root 'Assets/Scripts/Presentation/ApproachGeometry.cs'
 $model = Join-Path $root 'Assets/Scripts/Gameplay/RoomRun.cs'
 $selection = Join-Path $root 'Assets/Scripts/Combat/TargetSelection.cs'
 $test = Join-Path $PSScriptRoot 'RoomRunChecks.cs'
@@ -27,6 +28,10 @@ $response = Join-Path $output 'checks.rsp'
     ("/reference:`"$standard`""),("`"$rules`""),("`"$model`""),("`"$selection`""),("`"$test`""),("`"$beatSource`""),("`"$beatTest`""),("`"$mapSource`""),("`"$timelineEditingSource`""),("`"$mapTest`""),("`"$offsetSource`""),("`"$offsetTest`"")) |
     Set-Content -LiteralPath $response
 ('"' + $stageTest + '"') | Add-Content -LiteralPath $response
+('"' + $approach + '"') | Add-Content -LiteralPath $response
+('"' + (Join-Path $root 'Assets/Scripts/UI/RecordSelectionGeometry.cs') + '"') | Add-Content -LiteralPath $response
+('"' + (Join-Path $root 'Assets/Scripts/UI/RecordTurntableState.cs') + '"') | Add-Content -LiteralPath $response
+('"' + (Join-Path $PSScriptRoot 'RecordTurntableChecks.cs') + '"') | Add-Content -LiteralPath $response
 ('"' + (Join-Path $root 'Assets/Scripts/Stages/Mafia/MafiaIntroTiming.cs') + '"') | Add-Content -LiteralPath $response
 ('"' + (Join-Path $root 'Assets/Scripts/Stages/Mafia/MafiaAmbushTiming.cs') + '"') | Add-Content -LiteralPath $response
 ('"' + (Join-Path $PSScriptRoot 'MafiaAmbushChecks.cs') + '"') | Add-Content -LiteralPath $response
@@ -47,15 +52,24 @@ if ($LASTEXITCODE -ne 0) { throw 'Song offset checks failed.' }
 
 $recordsDll = Join-Path $output 'StageRecordStoreChecks.dll'
 & $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 "/out:$recordsDll" "/reference:$standard" `
-    (Join-Path $root 'Assets/Scripts/Stages/StageRecordStore.cs') (Join-Path $PSScriptRoot 'StageRecordStoreChecks.cs')
+    (Join-Path $root 'Assets/Scripts/Stages/StageRecordStore.cs') (Join-Path $root 'Assets/Scripts/Stages/StageVolumeStore.cs') (Join-Path $PSScriptRoot 'StageRecordStoreChecks.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Stage record checks did not compile.' }
 Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'StageRecordStoreChecks.runtimeconfig.json')
 & dotnet $recordsDll
 if ($LASTEXITCODE -ne 0) { throw 'Stage record checks failed.' }
 
+$previewDll = Join-Path $output 'StageMusicPreviewChecks.dll'
+& $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 "/out:$previewDll" "/reference:$standard" `
+    (Join-Path $root 'Assets/Scripts/Audio/StageMusicPreview.cs') (Join-Path $root 'Assets/Scripts/UI/RecordTurntableState.cs') `
+    (Join-Path $PSScriptRoot 'StageMusicPreviewChecks.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Stage preview checks did not compile.' }
+Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'StageMusicPreviewChecks.runtimeconfig.json')
+& dotnet $previewDll
+if ($LASTEXITCODE -ne 0) { throw 'Stage preview checks failed.' }
+
 $startupDll = Join-Path $output 'StageStartupChecks.dll'
 & $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 /nowarn:0649 "/out:$startupDll" "/reference:$standard" `
-    $rules $model (Join-Path $root 'Assets/Scripts/Stages/StageProgression.cs') `
+    $rules $model (Join-Path $root 'Assets/Scripts/Stages/StageProgression.cs') (Join-Path $root 'Assets/Scripts/Stages/SafeRoomTransit.cs') `
     (Join-Path $root 'Assets/Scripts/Input/RoomKeyboard.cs') (Join-Path $root 'Assets/Scripts/Audio/SongTimeline.cs') `
     (Join-Path $PSScriptRoot 'StageStartupChecks.cs') (Join-Path $PSScriptRoot 'StageStartupTestDoubles.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Stage startup checks did not compile.' }
@@ -63,9 +77,18 @@ Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -D
 & dotnet $startupDll
 if ($LASTEXITCODE -ne 0) { throw 'Stage startup checks failed.' }
 
+$safeRoomDll = Join-Path $output 'SafeRoomChecks.dll'
+& $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 /nowarn:0649 "/out:$safeRoomDll" "/reference:$standard" `
+    (Join-Path $root 'Assets/Scripts/Stages/SafeRoomTransit.cs') (Join-Path $root 'Assets/Scripts/Stages/SafeRoomController.cs') `
+    (Join-Path $root 'Assets/Scripts/Stages/StageProgression.cs') (Join-Path $PSScriptRoot 'SafeRoomChecks.cs')
+if ($LASTEXITCODE -ne 0) { throw 'Safe room checks did not compile.' }
+Copy-Item -LiteralPath (Join-Path $output 'RoomRunChecks.runtimeconfig.json') -Destination (Join-Path $output 'SafeRoomChecks.runtimeconfig.json')
+& dotnet $safeRoomDll
+if ($LASTEXITCODE -ne 0) { throw 'Safe room checks failed.' }
+
 $enemyRestartDll = Join-Path $output 'EnemyRestartChecks.dll'
 & $runtime $compiler /nologo /target:exe /nostdlib+ /langversion:9 /nowarn:0649 "/out:$enemyRestartDll" "/reference:$standard" `
-    $rules $model $selection (Join-Path $root 'Assets/Scripts/Combat/RoomEnemy.cs') `
+    $rules $approach $model $selection (Join-Path $root 'Assets/Scripts/Combat/RoomEnemy.cs') `
     (Join-Path $root 'Assets/Scripts/Presentation/ActionCueStyle.cs') `
     (Join-Path $root 'Assets/Scripts/Combat/RoomCombat.cs') (Join-Path $PSScriptRoot 'EnemyRestartChecks.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Enemy restart checks did not compile.' }

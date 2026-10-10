@@ -92,7 +92,7 @@ namespace Gun.RoomRhythm
 
         public void Present(bool visible, bool current, bool future, float progress, bool showFrame,
             double time, double target, float frameProgress = -1, bool sealExit = false, double frameStart = 0,
-            double arrivedAt = double.NegativeInfinity)
+            double arrivedAt = double.NegativeInfinity, int priority = 0)
         {
             // Keep the hierarchy alive: room surfaces and timing frames have separate lifetimes.
             visuals.SetActive(true);
@@ -148,13 +148,11 @@ namespace Gun.RoomRhythm
             if (judgmentFrame == null) return;
             judgmentFrame.localScale = Vector3.one;
             float radiusX = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
-                chart.roomFrameStartSize * .5f, Size.x * .5f);
+                chart.roomFrameStartSize * .5f, Size.x * .5f, chart.Timing, chart.judgmentLineWidth);
             float radiusY = (float)ApproachGeometry.FixedStartRadius(time, frameStart, target,
-                chart.roomFrameStartSize * .5f, Size.y * .5f);
+                chart.roomFrameStartSize * .5f, Size.y * .5f, chart.Timing, chart.judgmentLineWidth);
             if (frameDirections == null || frameDirections.Length != frameEdges.Length) RefreshFrameDirections();
-            float frameAlpha = frameProgress < 0 ? alpha : chart.AppearanceAlpha(frameProgress);
-            Color cue = future ? new Color(.6f, .6f, .6f, frameAlpha) : new Color(.3f, 1f, .8f, frameAlpha);
-            cue = RoomPalette.Tint(Color.Lerp(cue, Color.white, flash));
+            Color cue = ActionCueStyle.Timing(ActionCueKind.Move, priority, time, target, chart.Timing);
             for (int i = 0; i < frameEdges.Length; i++)
             {
                 SpriteRenderer edge = frameEdges[i];

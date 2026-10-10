@@ -20,6 +20,40 @@ internal static class EnemyRestartChecks
         { Check(error.Message == "Enemy scene position differs from chart: mafia_corridor_01", message); return; }
         throw new Exception("FAIL: " + message);
     }
+    private static void CheckTimingColors()
+    {
+        var window = new TimingWindow { early = .125, accurate = .03, late = .25 };
+        var outline = new LineRenderer { sortingLayerID = 7, sortingOrder = 12 };
+        var timingRing = new LineRenderer();
+        ActionCueStyle.ApplyShotRings(outline, timingRing, 0, 1, 1, window, .1f);
+        Check(timingRing.sortingLayerID == outline.sortingLayerID && timingRing.sortingOrder > outline.sortingOrder,
+            "held timing ring renders over its coincident white reference");
+        foreach (var kind in new[] { ActionCueKind.Move, ActionCueKind.Shot })
+        {
+            foreach (double time in new[] { .865, .874999, 1.250001 })
+            {
+                Color color = ActionCueStyle.Timing(kind, 0, time, 1, window);
+                Check(color.r == 1 && color.g == 1 && color.b == 1 && color.a == 1,
+                    "active cue is opaque white outside the actual input window");
+            }
+            foreach (double time in new[] { .875, 1.0, 1.25 })
+            {
+                Color color = ActionCueStyle.Timing(kind, 0, time, 1, window);
+                Color accent = ActionCueStyle.Accent(kind);
+                Check(color.r == accent.r && color.g == accent.g && color.b == accent.b,
+                    "accent matches both actual judgment boundaries");
+            }
+            float previous = .5f;
+            for (int priority = 1; priority <= 12; priority++)
+            {
+                Color color = ActionCueStyle.Timing(kind, priority, 1, 1, window);
+                Check(color.r == color.g && color.g == color.b && color.r < previous && color.a == 1,
+                    "future cues stay progressively darker neutral gray even inside overlapping windows");
+                previous = color.r;
+            }
+        }
+    }
+
     private static void CheckShotColors()
     {
         Application.isPlaying = true;
@@ -56,18 +90,18 @@ internal static class EnemyRestartChecks
         Check(rings[0].enabled && rings[1].enabled && rings[2].enabled
             && bodies[0].color.r == 1 && bodies[1].color.r == 1 && bodies[2].color.r == 1,
             "later enemies retain original body brightness and timing rings");
-        Check(rings[0].startColor.g < rings[1].startColor.g && rings[1].startColor.g < rings[2].startColor.g,
-            "pending enemies use red then orange then yellow");
+        Check(rings[0].startColor.g > rings[1].startColor.g && rings[1].startColor.g > rings[2].startColor.g,
+            "active enemy is white and later enemies are progressively darker gray");
         Check(run.ShootEnemy(0, 1), "first colored enemy is defeated");
         combat.Present(1);
-        Check(rings[1].startColor.g == ActionCueStyle.Shot(0).g
-            && rings[2].startColor.g == ActionCueStyle.Shot(1).g,
+        Check(rings[1].startColor.g == 1f
+            && rings[2].startColor.g == ActionCueStyle.Timing(ActionCueKind.Shot, 1, 0, 3, chart.Timing).g,
             "remaining targets advance their colors without hiding or dimming");
         run.Reset(); combat.Present(0);
         Check(!visuals[0].activeSelf && !visuals[1].activeSelf && !visuals[2].activeSelf, "ready hides enemies");
         run.Begin(); combat.Present(0);
-        Check(visuals[2].activeSelf && rings[0].startColor.g == ActionCueStyle.Shot(0).g
-            && rings[2].startColor.g == ActionCueStyle.Shot(2).g, "retry restores all authored targets and their initial colors");
+        Check(visuals[2].activeSelf && rings[0].startColor.g == 1f
+            && rings[2].startColor.g == ActionCueStyle.Timing(ActionCueKind.Shot, 2, 0, 3, chart.Timing).g, "retry restores all authored targets and their initial colors");
     }
     public static void Main()
     {
@@ -230,14 +264,14 @@ internal static class EnemyRestartChecks
         Check(visuals.activeSelf && body.color.r == 1 && outline.enabled && !ring.enabled,
             "authored frame delay hides only the approach ring, preserving the body and fixed outline");
         enemy.Present(true, 1, 5, 5, true, 2);
-        Check(frame.gameObject.activeSelf && ring.enabled && ring.startColor.g == ActionCueStyle.Shot(2).g,
-            "later targets retain visible yellow timing rings");
+        Check(frame.gameObject.activeSelf && ring.enabled && ring.startColor.g == ActionCueStyle.Timing(ActionCueKind.Shot, 2, 0, 3, chart.Timing).g,
+            "later targets retain visible gray timing rings");
         Check(outline.startColor.r == 1 && outline.startColor.g == 1 && outline.startColor.b == 1,
             "fixed reference ring stays white");
         float width = ring.startWidth;
         enemy.Present(true, 1, 5.05, 5, true, 0);
-        Check(ring.startWidth == width && ring.startColor.g == ActionCueStyle.Shot(0).g,
-            "next shot remains red with original constant line width");
+        Check(ring.startWidth == width && ring.startColor.g == ActionCueStyle.Accent(ActionCueKind.Shot).g,
+            "active shot turns red inside the timing window with constant line width");
         var changedNote = chart.enemies[0];
         changedNote.placement.x += 1;
         chart.enemies[0] = changedNote;
@@ -252,6 +286,7 @@ internal static class EnemyRestartChecks
         combat.ValidateConfiguration(chart, path, run);
         Check(true, "corrected editor placement validates");
         CheckShotColors();
+        CheckTimingColors();
         Console.WriteLine($"PASS: {checks} enemy entrance/fall/death/restart checks (engine test doubles; no Unity play mode).");
     }
 }
@@ -297,7 +332,7 @@ namespace UnityEngine
     public sealed class LineRenderer : MonoBehaviour
     {
         public bool useWorldSpace, loop;
-        public int positionCount;
+        public int positionCount, sortingLayerID, sortingOrder;
         public float startWidth, endWidth;
         public Color startColor, endColor;
         public void SetPosition(int index, Vector3 value) { }

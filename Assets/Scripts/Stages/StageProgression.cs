@@ -11,6 +11,7 @@ namespace Gun.RoomRhythm
         [SerializeField] private RoomSession session;
         [SerializeField] private string nextSafeScene;
         [SerializeField] private string entrySafeScene;
+        [SerializeField] private string nextTutorialScene;
         [SerializeField] private CanvasGroup fade;
         [SerializeField, Min(0)] private float clearHold = 1.2f;
         private bool transitioning, recordRun;
@@ -33,22 +34,31 @@ namespace Gun.RoomRhythm
             {
                 if (!session.IsDebugRun)
                     StageRecordStore.SaveClear(gameObject.scene.name, session.AccuracyPercent);
-                StartCoroutine(Travel(recordRun ? StageSelection.ReturnScene : nextSafeScene, clearHold));
+                StartCoroutine(Travel(recordRun ? StageSelection.ReturnScene : nextSafeScene, clearHold,
+                    !recordRun && nextSafeScene == SafeRoomTransit.SceneName ? nextTutorialScene : null, true));
                 return;
             }
             bool back = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame
                 || Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame;
-            if (back) StartCoroutine(Travel(recordRun ? StageSelection.ReturnScene : entrySafeScene, 0));
+            if (back) StartCoroutine(Travel(recordRun ? StageSelection.ReturnScene : entrySafeScene, 0,
+                !recordRun && entrySafeScene == SafeRoomTransit.SceneName ? gameObject.scene.name : null, false));
             // Start can run before the Input System switches to the play-mode clock.
             // Retry from Update until ready, but never auto-start a reset run.
             else if (!session.HasStarted) session.TryBeginRun();
         }
 
-        private IEnumerator Travel(string destination, float delay)
+        private IEnumerator Travel(string destination, float delay, string onward, bool showArrival)
         {
             if (!Application.CanStreamedLevelBeLoaded(destination))
             {
                 Debug.LogError("Stage progression destination is not in Build Settings: " + destination, this);
+                enabled = false;
+                yield break;
+            }
+            if (destination == SafeRoomTransit.SceneName
+                && (string.IsNullOrWhiteSpace(onward) || !Application.CanStreamedLevelBeLoaded(onward)))
+            {
+                Debug.LogError("Safe room onward destination is not in Build Settings: " + onward, this);
                 enabled = false;
                 yield break;
             }
@@ -61,6 +71,7 @@ namespace Gun.RoomRhythm
                 yield return null;
             }
             fade.alpha = 1;
+            if (destination == SafeRoomTransit.SceneName) SafeRoomTransit.Prepare(onward, showArrival);
             yield return SceneManager.LoadSceneAsync(destination);
         }
     }

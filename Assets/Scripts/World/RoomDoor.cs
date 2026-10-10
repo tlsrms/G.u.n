@@ -38,7 +38,7 @@ namespace Gun.RoomRhythm
             line.sortingLayerID = leftPanel.sortingLayerID;
             line.sortingOrder = leftPanel.sortingOrder + 2;
             line.useWorldSpace = false; line.loop = true; line.positionCount = 128;
-            line.startWidth = line.endWidth = chart.enemyLineWidth;
+            line.startWidth = line.endWidth = ActionCueStyle.ShotLineWidth(chart.enemyLineWidth);
             line.enabled = false;
             return line;
         }
@@ -60,11 +60,11 @@ namespace Gun.RoomRhythm
             leftPanel.transform.localPosition = new Vector3(-offset, 0, 0);
             rightPanel.transform.localPosition = new Vector3(offset, 0, 0);
             float flash = Mathf.Clamp01(1 - (float)(time - appearedAt - CloseDuration(chart, appearedAt, target)) / .12f);
-            Color color = future ? Color.gray : ActionCueStyle.Shot(priority);
+            Color color = future ? Color.gray : ActionCueStyle.Accent(ActionCueKind.Shot);
             leftPanel.color = rightPanel.color = RoomPalette.Tint(Color.Lerp(color, Color.white, close >= 1 ? flash : 0));
             SetRadius(outline, OutlineRadius);
             SetRadius(timingRing, (float)ApproachGeometry.Radius(time, target, OutlineRadius, chart.enemyLineWidth, chart.Timing));
-            ActionCueStyle.ApplyShotRings(outline, timingRing, priority, chart.enemyLineWidth);
+            ActionCueStyle.ApplyShotRings(outline, timingRing, priority, time, target, chart.Timing, chart.enemyLineWidth);
         }
         public static double CloseDuration(RoomChart chart, double appearedAt, double target)
             => System.Math.Max(.001, System.Math.Min(chart.doorCloseDuration, target - appearedAt));

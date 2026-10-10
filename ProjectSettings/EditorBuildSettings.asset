@@ -12,26 +12,17 @@ EditorBuildSettings:
     path: Assets/Scenes/Tutorials/Stage01.unity
     guid: f9f2d194a33050ccb4fd452af60a4d0c
   - enabled: 1
-    path: Assets/Scenes/SafeRooms/SafeRoom01.unity
+    path: Assets/Scenes/SafeRooms/SafeRoom.unity
     guid: 8c695d654e525aecbfbbf07a8945c46e
   - enabled: 1
     path: Assets/Scenes/Tutorials/Stage02.unity
     guid: 7153a055e6a45236afac304bfa085ae0
   - enabled: 1
-    path: Assets/Scenes/SafeRooms/SafeRoom02.unity
-    guid: fd5bf42538f450949fd628ad580537bd
-  - enabled: 1
     path: Assets/Scenes/Tutorials/Stage03.unity
     guid: aa6bf3ea98275dd6bcc9128ba908d632
   - enabled: 1
-    path: Assets/Scenes/SafeRooms/SafeRoom03.unity
-    guid: b2bbf434626650c9a72b89640f27fdf3
-  - enabled: 1
     path: Assets/Scenes/Tutorials/Stage04.unity
     guid: 1a5ff7c96c675e2fba5a79fb27de673a
-  - enabled: 1
-    path: Assets/Scenes/SafeRooms/SafeRoom04.unity
-    guid: b10e4deaff1b5702b33246514547803c
   - enabled: 1
     path: Assets/Scenes/Tutorials/Stage05.unity
     guid: 4b9a86b322b658daae8d6872b57160dc

@@ -5,10 +5,13 @@ namespace Gun.RoomRhythm
 {
     // A rounded face or outline for authored UI parts. This only renders its own RectTransform.
     [AddComponentMenu("UI/Stage Select Surface")]
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class StageSelectSurface : MaskableGraphic
     {
         [SerializeField, Min(0)] private float cornerRadius;
         [SerializeField, Min(0)] private float outlineWidth;
+        public void SetShape(float radius, float outline = 0)
+        { cornerRadius = radius; outlineWidth = outline; SetVerticesDirty(); }
         protected override void OnPopulateMesh(VertexHelper mesh)
         {
             mesh.Clear();

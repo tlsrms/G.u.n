@@ -21,33 +21,6 @@ namespace Gun.RoomRhythm
             early = ToleranceMs / 1000, late = ToleranceMs / 1000, accurate = AccurateMs / 1000
         };
     }
-    // Equal-width strokes touch when their centerlines are one stroke width apart.
-    // This maps the SAME timing window used by Judge to the visible overlap.
-    public static class ApproachGeometry
-    {
-        // Each room travels the same distance over its own authored lead time.
-        // Continue past the target so a missed note does not look like a held success.
-        public static double FixedStartRadius(double time, double start, double target, double startRadius, double targetRadius)
-        {
-            if (target <= start) return time < target ? startRadius : targetRadius;
-            double progress = Math.Max(0, (time - start) / (target - start));
-            return Math.Max(0, startRadius + (targetRadius - startRadius) * progress);
-        }
-
-        public static double ExpandingRadius(double time, double target, double radius, double width, TimingWindow window)
-            => Math.Max(0, radius + (time - target) * Speed(width, window));
-
-        public static double Speed(double width, TimingWindow window) => width / window.Symmetric.early;
-
-        public static double Radius(double time, double target, double radius, double width, TimingWindow window)
-        {
-            // No separate anticipation phase: spawn size follows time remaining at the same speed.
-            // Keep moving past separation. Clamping at radius-width leaves the two strokes
-            // touching forever on the failure screen, falsely suggesting a valid overlap.
-            return Math.Max(0, radius + (target - time) * Speed(width, window));
-        }
-    }
-
     public enum MoveDirection { Up, Left, Down, Right }
     public enum MovementEase { Smooth, Linear, EaseIn, EaseOut }
     public static class MovementProfile

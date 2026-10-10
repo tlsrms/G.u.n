@@ -225,9 +225,9 @@ namespace Gun.RoomRhythm
             }
         }
 
-        public void Present(double time) => Present(time, run.PreviewShots());
+        public void Present(double time) => Present(time, run.PreviewCues());
 
-        public void Present(double time, ShotPreview preview)
+        public void Present(double time, CueOrder preview)
         {
             displayedTime = time;
             for (int i = 0; i < orderedEnemies.Length; i++)

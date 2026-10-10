@@ -40,7 +40,7 @@ namespace Gun.RoomRhythm
             get
             {
                 float t = Mathf.Clamp01((Time.unscaledTime - focusChangedAt) / (combatFocus ? .12f : .35f));
-                return Mathf.Lerp(zoomFrom, combatFocus ? .82f : 1f, Mathf.SmoothStep(0, 1, t));
+                return Mathf.Lerp(zoomFrom, combatFocus ? .74f : 1f, Mathf.SmoothStep(0, 1, t));
             }
         }
         public bool PlayerVisible => Death == DeathPresentation.None

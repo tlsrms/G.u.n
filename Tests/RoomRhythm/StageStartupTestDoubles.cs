@@ -23,6 +23,7 @@ namespace UnityEngine
     {
         public AudioClip clip;
         public bool loop, isPlaying;
+        public float volume = 1;
         public int PlayCount;
         public double ScheduledTime;
         public void Stop() => isPlaying = false;
@@ -114,7 +115,7 @@ namespace UnityEngine.InputSystem.Controls
 }
 namespace Gun.RoomRhythm
 {
-    public static class StageSelection { public static bool IsRecordRun; public static string ReturnScene; }
+    public static class StageSelection { public static bool IsRecordRun; public static string ReturnScene; public static float MusicVolume = 1; }
     public static class StageRecordStore { public static void SaveClear(string scene, float accuracy) { } }
 
     // Session boundary double: actual chart state and music, without room meshes, combat or scene bindings.

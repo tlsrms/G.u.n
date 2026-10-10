@@ -387,7 +387,7 @@ namespace Gun.RoomRhythm
         {
             int current = run.CompletedMoves;
             double time = presentationTime;
-            ShotPreview preview = run.PreviewShots();
+            CueOrder preview = run.PreviewCues();
             for (int i = 0; i < path.Length; i++)
             {
                 bool isCurrent = i == current;
@@ -401,7 +401,7 @@ namespace Gun.RoomRhythm
                 double frameStart = note.customAppearance ? note.frameStartTime : note.appearTime;
                 path[i].Present(visible, isCurrent, future, progress, deathFrames != null ? deathFrames[i] : run.RoomFrameVisible(i, time),
                     time, note.HitTime, Progress(time, frameStart, note.HitTime), isCurrent && run.Death == DeathPresentation.Collision,
-                    frameStart, isCurrent ? run.RoomArrivedAt : double.NegativeInfinity);
+                    frameStart, isCurrent ? run.RoomArrivedAt : double.NegativeInfinity, preview.Priority(note.HitTime));
                 if (path[i].Door != null)
                     path[i].Door.Present(i > current && note.hasDoor && !run.DoorBroken(i - 1)
                         && combat.FindOverride(StageTargetRole.Breakthrough, note.destinationId) == null

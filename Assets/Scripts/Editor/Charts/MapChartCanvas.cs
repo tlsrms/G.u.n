@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
@@ -28,6 +28,7 @@ namespace Gun.RoomRhythm.Editor
         private string pendingBeat = "";
         private bool focusPending;
         private readonly List<(Rect rect, MapRoom room)> roomLabels = new List<(Rect, MapRoom)>();
+        private readonly CueOrder cueOrder = new CueOrder();
         private Vector2 ScreenPoint(Vector2 world, Rect canvas)
             => canvas.size * .5f + pan + new Vector2((world.x - Map.originX) * zoom / Map.roomSize, -(world.y - Map.originY) * zoom / Map.roomSize);
         private Vector2 WorldPoint(Vector2 point, Rect canvas)
@@ -107,6 +108,7 @@ namespace Gun.RoomRhythm.Editor
             for (float y = origin.y % zoom; y < canvas.height; y += zoom)
                 Stroke(new Color(.13f, .16f, .2f), 1, new Vector2(0, y), new Vector2(canvas.width, y));
             Vector2 player = IdealPlayer(out string current);
+            if (preview) UpdateCueOrder();
             foreach (var room in Map.rooms) DrawRoom(room, canvas, current);
             foreach (var room in Map.rooms) DrawDoor(room, canvas, current);
             if (preview) foreach (var room in Map.rooms) DrawRoomFrames(room, canvas, current);
@@ -252,11 +254,11 @@ namespace Gun.RoomRhythm.Editor
             float close = preview ? RoomDoor.CloseProgress(chart, time, start, target) : 1;
             float offset = passage * (1 - close);
             float flash = close >= 1 && preview ? Mathf.Clamp01(1 - (float)(time - start - RoomDoor.CloseDuration(chart, start, target)) / .12f) : 0;
-            Color shotColor = preview ? ActionCueStyle.Shot(ShotPriority(room.doorBeat)) : Orange;
-            Color color = Color.Lerp(shotColor, Color.white, flash);
+            Color shotColor = ActionCueStyle.Timing(ActionCueKind.Shot, CuePriority(room.doorBeat), time, target, PreviewTiming);
+            Color color = Color.Lerp(preview ? ActionCueStyle.Accent(ActionCueKind.Shot) : Orange, Color.white, flash);
             Stroke(color, width, entrance - tangent * (passage + offset), entrance - tangent * offset);
             Stroke(color, width, entrance + tangent * offset, entrance + tangent * (passage + offset));
-            float ringWidth = chart.enemyLineWidth * zoom / Map.roomSize;
+            float ringWidth = ActionCueStyle.ShotLineWidth(chart.enemyLineWidth) * zoom / Map.roomSize;
             Circle(entrance, RoomDoor.OutlineRadius * zoom / Map.roomSize, Color.white, ringWidth);
             if (preview)
                 Circle(entrance, (float)ApproachGeometry.Radius(time, target, RoomDoor.OutlineRadius, chart.enemyLineWidth, PreviewTiming) * zoom / Map.roomSize, shotColor, ringWidth);
@@ -271,15 +273,16 @@ namespace Gun.RoomRhythm.Editor
             {
                 double seconds = Map.settings.Seconds(cursor), startSeconds = Map.settings.Seconds(start), hit = Map.settings.Seconds(room.hitBeat);
                 var half = new Vector2(
-                    (float)ApproachGeometry.FixedStartRadius(seconds, startSeconds, hit, chart.roomFrameStartSize * .5, Map.Width(room) * .5),
-                    (float)ApproachGeometry.FixedStartRadius(seconds, startSeconds, hit, chart.roomFrameStartSize * .5, Map.Height(room) * .5)) * (zoom / Map.roomSize);
-                Color color = Mint; color.a = Fade(start, room.hitBeat); Rectangle(center, half, color, width);
+                    (float)ApproachGeometry.FixedStartRadius(seconds, startSeconds, hit, chart.roomFrameStartSize * .5, Map.Width(room) * .5, PreviewTiming, chart.judgmentLineWidth),
+                    (float)ApproachGeometry.FixedStartRadius(seconds, startSeconds, hit, chart.roomFrameStartSize * .5, Map.Height(room) * .5, PreviewTiming, chart.judgmentLineWidth)) * (zoom / Map.roomSize);
+                Color color = ActionCueStyle.Timing(ActionCueKind.Move, CuePriority(room.hitBeat), seconds, hit, PreviewTiming);
+                Rectangle(center, half, color, width);
             }
         }
         private void DrawEnemy(MapEnemy enemy, Rect canvas, string current)
         {
             if (!EnemyVisible(enemy)) return;
-            Vector2 p = EnemyPoint(enemy, canvas); float radius = .38f * zoom / Map.roomSize, width = chart.enemyLineWidth * zoom / Map.roomSize;
+            Vector2 p = EnemyPoint(enemy, canvas); float radius = .38f * zoom / Map.roomSize, width = ActionCueStyle.ShotLineWidth(chart.enemyLineWidth) * zoom / Map.roomSize;
             Circle(p, radius, Color.white, width);
             if (!ReadOnly && ActiveTool == MapTool.Select)
                 EditorGUIUtility.AddCursorRect(new Rect(p - Vector2.one * Mathf.Max(radius, 9), Vector2.one * Mathf.Max(radius, 9) * 2), MouseCursor.MoveArrow);
@@ -287,18 +290,23 @@ namespace Gun.RoomRhythm.Editor
             if (preview && cursor >= enemy.frameBeat)
             {
                 float r = (float)ApproachGeometry.Radius(Map.settings.Seconds(cursor), Map.settings.Seconds(enemy.hitBeat), .38, chart.enemyLineWidth, PreviewTiming) * zoom / Map.roomSize;
-                Circle(p, r, ActionCueStyle.Shot(ShotPriority(enemy.hitBeat)), width);
+                Circle(p, r, ActionCueStyle.Timing(ActionCueKind.Shot, CuePriority(enemy.hitBeat),
+                    Map.settings.Seconds(cursor), Map.settings.Seconds(enemy.hitBeat), PreviewTiming), width);
             }
         }
-        private int ShotPriority(double beat)
+        private int CuePriority(double beat) => cueOrder.Priority(Map.settings.Seconds(beat));
+
+        private void UpdateCueOrder()
         {
-            var order = ShotPreview.Empty;
+            cueOrder.Clear();
             foreach (var enemy in Map.enemies)
-                if (enemy.hitBeat > cursor) order.Include(Map.settings.Seconds(enemy.hitBeat));
+                if (enemy.hitBeat > cursor) cueOrder.Include(Map.settings.Seconds(enemy.hitBeat));
             foreach (var room in Map.rooms)
-                if (room.door && room.id != Map.settings.startingRoomId && room.doorBeat > cursor)
-                    order.Include(Map.settings.Seconds(room.doorBeat));
-            return order.Priority(Map.settings.Seconds(beat));
+            {
+                if (room.id == Map.settings.startingRoomId) continue;
+                if (room.hitBeat > cursor) cueOrder.Include(Map.settings.Seconds(room.hitBeat));
+                if (room.door && room.doorBeat > cursor) cueOrder.Include(Map.settings.Seconds(room.doorBeat));
+            }
         }
         private bool RoomVisible(MapRoom room, string current)
         {

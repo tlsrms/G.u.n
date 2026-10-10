@@ -16,6 +16,7 @@ namespace Gun.RoomRhythm
         [SerializeField, Min(.075f)] private float bulletDuration = .075f;
         private float FlightDuration => Mathf.Max(.075f, bulletDuration);
         private SpriteRenderer trailCore, trailGlow;
+        private MuzzleLighting muzzleLighting;
         [SerializeField, Min(0f)] private float recoilAngle = 12f;
         [SerializeField] private Transform gun;
         [SerializeField] private GeometricPlayerRig characterRig;
@@ -42,7 +43,11 @@ namespace Gun.RoomRhythm
         public void Configure(float radius, float halfAngle, RoomFeedback feedback)
         {
             feedback.PrepareEffects();
-            muzzle.sprite = bullet.sprite = bulletGlow.sprite = feedback.GlowSprite;
+            bullet.sprite = bulletGlow.sprite = feedback.GlowSprite;
+            muzzle.gameObject.SetActive(false);
+            if (muzzleLighting == null)
+                muzzleLighting = gameObject.GetComponent<MuzzleLighting>() ?? gameObject.AddComponent<MuzzleLighting>();
+            muzzleLighting.Configure();
             shotTrace.localScale = Vector3.one;
             var legacyTrace = shotTrace.GetComponent<SpriteRenderer>();
             if (legacyTrace != null) legacyTrace.enabled = false;
@@ -60,7 +65,7 @@ namespace Gun.RoomRhythm
                 var renderer = segment.GetComponent<SpriteRenderer>();
                 if (renderer != null)
                 {
-                    Color tint = ActionCueStyle.Shot(0);
+                    Color tint = ActionCueStyle.Accent(ActionCueKind.Shot);
                     tint.a = .55f;
                     renderer.color = tint;
                 }
@@ -89,6 +94,7 @@ namespace Gun.RoomRhythm
             shotTrace.gameObject.SetActive(true);
             PoseWeapon(origin);
             bulletStart = BarrelTip();
+            muzzleLighting?.Fire(bulletStart, direction, origin);
             RenderWeapon();
         }
 
@@ -98,6 +104,7 @@ namespace Gun.RoomRhythm
             if (gunBody != null) gunBody.color = gunBodyColor;
             if (gunBarrel != null) gunBarrel.color = gunBarrelColor;
             shotTrace.gameObject.SetActive(false); traceUntil = 0; firedAt = -10;
+            muzzleLighting?.Clear();
             if (muzzle != null) muzzle.gameObject.SetActive(false);
             if (bullet != null) bullet.gameObject.SetActive(false);
             if (bulletGlow != null) bulletGlow.gameObject.SetActive(false);
@@ -108,7 +115,7 @@ namespace Gun.RoomRhythm
             if (gun == null) return;
             float elapsed = Mathf.Max(0, Time.unscaledTime - firedAt);
             PoseWeapon(player.position);
-            muzzle.gameObject.SetActive(elapsed < .04f);
+            muzzle.gameObject.SetActive(false);
             bool show = Time.unscaledTime < traceUntil;
             bullet.gameObject.SetActive(show); bulletGlow.gameObject.SetActive(show);
             shotTrace.gameObject.SetActive(show);
@@ -156,6 +163,8 @@ namespace Gun.RoomRhythm
             if (arc != null) arc.gameObject.SetActive(visible);
             if (!visible)
             {
+                muzzleLighting?.Clear();
+                muzzle.gameObject.SetActive(false);
                 shotTrace.gameObject.SetActive(false);
                 if (bullet != null) bullet.gameObject.SetActive(false);
                 if (bulletGlow != null) bulletGlow.gameObject.SetActive(false);
